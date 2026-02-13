@@ -132,29 +132,7 @@ export const createPlato = async (req, res) => {
     }
 }
 
-/**
- * Obtiene todos los platos con filtrado y paginación
- * Endpoint: GET /get
- * Acceso: Público (sin autenticación requerida)
- * 
- * @async
- * @param {Object} req - Objeto de solicitud Express
- * @param {number} [req.query.page=1] - Número de página para paginación
- * @param {number} [req.query.limit=10] - Cantidad de platos por página
- * @param {boolean} [req.query.isActive=true] - Filtrar por estado activo (true/false)
- * @param {string} [req.query.restaurantID] - Filtrar por ID del restaurante (opcional)
- * @param {string} [req.query.categoria] - Filtrar por categoría (opcional)
- * @param {Object} res - Objeto de respuesta Express
- * 
- * @returns {Object} JSON con:
- *  - success (boolean): Indica si la operación fue exitosa
- *  - data (Array): Lista de platos filtrados
- *  - pagination (Object): Detalles de paginación (currentPage, totalPages, totalRecords, limit)
- * 
- * @example
- * GET /get?restaurantID=507f1f77bcf86cd799439011&categoria=pizzas&page=1&limit=10
- * Response: { success: true, data: [...], pagination: {...} }
- */
+
 export const getPlatos = async (req, res) => {
 
     try {
