@@ -64,8 +64,25 @@ ADMIN_ALLOWED_ORIGINS=http://localhost:5173
 ⚠️ **Importante**: No puedes hacer login si no has verificado tu email primero.
 
 ---
+## 👥 Roles de Usuario
 
-## �📍 Endpoints Funcionales
+- **CLIENT**: Usuario cliente (puede hacer reservas, ver menú)
+- **RESTAURANT_ADMIN**: Administrador de restaurante (puede gestionar su restaurante, platos y mesas)
+- **PLATFORM_ADMIN**: Administrador de plataforma (control total, puede activar/desactivar restaurantes)
+
+---
+
+## 🍽️ Categorías de Platos
+
+Las categorías válidas para los platos son:
+- **ENTRADA** - Aperitivos y entradas
+- **FUERTE** - Platos principales
+- **POSTRE** - Postres y dulces
+- **BEBIDA** - Bebidas (alcohólicas y no alcohólicas)
+
+---
+
+## 📍 Endpoints Funcionales
 
 ### 🔐 AUTENTICACIÓN (`/api/auth`) - 10 endpoints
 
@@ -160,7 +177,7 @@ Sin body necesario.
 
 ### 🏢 RESTAURANTES (`/api/restaurants`) - 6 endpoints
 
-#### `POST /api/restaurants/create` - Requiere token de ADMIN
+#### `POST /api/restaurants/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```json
 {
   "name": "Mi Restaurante",
@@ -172,7 +189,7 @@ Sin body necesario.
 }
 ```
 ```bash
-Authorization: Bearer {token_de_admin}
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 
 #### `GET /api/restaurants/get` - Público
@@ -181,7 +198,7 @@ Sin autenticación requerida.
 #### `GET /api/restaurants/:id` - Público
 Sin autenticación requerida.
 
-#### `PUT /api/restaurants/:id` - Requiere token de ADMIN
+#### `PUT /api/restaurants/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```json
 {
   "name": "Restaurante Actualizado",
@@ -192,18 +209,18 @@ Sin autenticación requerida.
 }
 ```
 ```bash
-Authorization: Bearer {token_de_admin}
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 
-#### `PUT /api/restaurants/:id/activate` - Requiere token de ADMIN
+#### `PUT /api/restaurants/:id/activate` - Requiere token de PLATFORM_ADMIN
 ```bash
-Authorization: Bearer {token_de_admin}
+Authorization: Bearer {token_de_platform_admin}
 ```
 Sin body necesario.
 
-#### `PUT /api/restaurants/:id/deactivate` - Requiere token de ADMIN
+#### `PUT /api/restaurants/:id/deactivate` - Requiere token de PLATFORM_ADMIN
 ```bash
-Authorization: Bearer {token_de_admin}
+Authorization: Bearer {token_de_platform_admin}
 ```
 Sin body necesario.
 
@@ -211,16 +228,16 @@ Sin body necesario.
 
 ### 🍴 PLATOS/MENÚ (`/api/platos`) - 7 endpoints
 
-#### `POST /api/platos/create` - Requiere token de ADMIN
+#### `POST /api/platos/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
 Content-Type: multipart/form-data
-Authorization: Bearer {token_de_admin}
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 
 Form data:
 - nombre: "Tacos al Pastor"
 - descripcion: "Deliciosos tacos con piña"
 - precio: 35.50
-- categoria: "Comida Mexicana"
+- categoria: "FUERTE"
 - restaurantID: "507f1f77bcf86cd799439011"
 - ingredientes: ["tortilla", "cerdo", "piña", "cilantro"]
 - image: [archivo.jpg]
@@ -235,28 +252,28 @@ Sin autenticación requerida.
 #### `GET /api/platos/menu/:restaurantID` - Público
 Sin autenticación requerida.
 
-#### `PUT /api/platos/:id` - Requiere token de ADMIN
+#### `PUT /api/platos/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
 Content-Type: multipart/form-data
-Authorization: Bearer {token_de_admin}
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 
 Form data:
 - nombre: "Tacos Premium"
 - descripcion: "Tacos mejorados"
 - precio: 45.00
-- categoria: "Comida Mexicana"
+- categoria: "FUERTE"
 - image: [nuevo_archivo.jpg] (opcional)
 ```
 
-#### `PUT /api/platos/:id/activate` - Requiere token de ADMIN
+#### `PUT /api/platos/:id/activate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
-Authorization: Bearer {token_de_admin}
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 Sin body necesario.
 
-#### `PUT /api/platos/:id/deactivate` - Requiere token de ADMIN
+#### `PUT /api/platos/:id/deactivate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
-Authorization: Bearer {token_de_admin}
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 Sin body necesario.
 
@@ -264,7 +281,7 @@ Sin body necesario.
 
 ### 📊 MESAS (`/api/mesas`) - 5 endpoints
 
-#### `POST /api/mesas/create` - Requiere token de ADMIN
+#### `POST /api/mesas/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```json
 {
   "number": 5,
@@ -275,7 +292,7 @@ Sin body necesario.
 }
 ```
 ```bash
-Authorization: Bearer {token_de_admin}
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 
 #### `GET /api/mesas/get` - Público
@@ -284,7 +301,7 @@ Sin autenticación requerida.
 #### `GET /api/mesas/:id` - Público
 Sin autenticación requerida.
 
-#### `PUT /api/mesas/:id` - Requiere token de ADMIN
+#### `PUT /api/mesas/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```json
 {
   "number": 5,
@@ -294,12 +311,12 @@ Sin autenticación requerida.
 }
 ```
 ```bash
-Authorization: Bearer {token_de_admin}
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 
-#### `DELETE /api/mesas/:id` - Requiere token de ADMIN
+#### `DELETE /api/mesas/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
-Authorization: Bearer {token_de_admin}
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 Sin body necesario.
 
