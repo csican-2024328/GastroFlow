@@ -4,11 +4,14 @@ import { getRestaurants } from './Restaurant.controller.js';
 import { getRestaurantById } from './Restaurant.controller.js';
 import { updateRestaurant } from './Restaurant.controller.js';
 import { changeRestaurantStatus } from './Restaurant.controller.js';
+import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 
 const router = Router();
 
 router.post(
-    '/create', 
+    '/create',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
     createRestaurant
 );
 
@@ -23,16 +26,22 @@ router.get(
 );
 
 router.put(
-    '/:id', 
+    '/:id',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
     updateRestaurant
 );
 
 router.put(
-    '/:id/activate', 
+    '/:id/activate',
+    autenticar,
+    autorizarRole('PLATFORM_ADMIN'),
     changeRestaurantStatus
 );
 router.put(
-    '/:id/deactivate', 
+    '/:id/deactivate',
+    autenticar,
+    autorizarRole('PLATFORM_ADMIN'),
     changeRestaurantStatus
 );
 
