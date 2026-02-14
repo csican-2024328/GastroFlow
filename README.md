@@ -1,172 +1,76 @@
-# 🍽️ GastroFlow - Backend API
+# GastroFlow API
 
-Sistema de gestión de restaurantes con autenticación JWT, verificación de email y roles basados en acceso.
+## Total de Endpoints: 28
 
-## 📋 Requisitos Previos
+## Configuración Importante
+⚠️ **IMPORTANTE**: Crear archivo `.env` con las credenciales necesarias (no se sube al repositorio por seguridad)
 
-- Node.js v25+
-- pnpm o npm
-- MongoDB local o remoto
-- Gmail SMTP configurado (para envío de emails)
+### 📝 Contenido del archivo `.env`
 
-## ⚡ Instalación y Ejecución
-
-```bash
-# Instalar dependencias
-pnpm install
-
-# Iniciar servidor en desarrollo
-pnpm run dev
-
-# Puerto por defecto: 3006
-```
-
-## 🔑 Configuración `.env`
+Copia este contenido en un archivo `.env` en la raíz del proyecto:
 
 ```env
-NODE_ENV=development
-PORT=3006
+NODE_ENV = development
+PORT = 3006
 
-# Base de datos
 URI_MONGO=mongodb://localhost:27017/GastroFlow
 
-# JWT
 JWT_SECRET=MyVerySecretKeyForJWTTokenAuthenticationWith256Bits!
 JWT_EXPIRES_IN=30m
 JWT_REFRESH_EXPIRES_IN=7d
 JWT_ISSUER=AuthService
 JWT_AUDIENCE=AuthService
 
-# SMTP (Gmail)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_ENABLE_SSL=true
-SMTP_USERNAME=tu_email@gmail.com
-SMTP_PASSWORD=tu_app_password
+SMTP_USERNAME=kinalsports@gmail.com
+SMTP_PASSWORD=yrsd prvf kwat toee
+EMAIL_FROM=kinalsports@gmail.com
+EMAIL_FROM_NAME=AuthDotnet App
 
-# Frontend
+# Verification Tokens (en horas)
+VERIFICATION_EMAIL_EXPIRY_HOURS=24
+PASSWORD_RESET_EXPIRY_HOURS=1
+
+# Frontend URL (para enlaces en emails)
 FRONTEND_URL=http://localhost:5173
 
-# CORS
+# Cloudinary (upload de imágenes de perfil)
+CLOUDINARY_CLOUD_NAME=dut08rmaz
+CLOUDINARY_API_KEY=279612751725163
+CLOUDINARY_API_SECRET=UxGMRqU1iB580Kxb2AlDR4n4hu0
+CLOUDINARY_BASE_URL=https://res.cloudinary.com/dut08rmaz/image/upload/
+CLOUDINARY_FOLDER=gastroflow/profiles
+CLOUDINARY_DEFAULT_AVATAR_FILENAME=default-avatar_ewzxwx.png
+
+# File Upload (alternativa local)
+UPLOAD_PATH=./uploads
+
+# CORS Configuration
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:3006
+ADMIN_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
 ---
 
-## 🗂️ Estructura del Proyecto
+## � Flujo de Activación de Cuenta
 
-```
-GastroFlow/
-├── src/
-│   ├── User/              # Autenticación y usuarios
-│   ├── Restaurant/        # Gestión de restaurantes
-│   ├── Platos/           # Gestión de platos/menú
-│   ├── Mesas/            # Gestión de mesas
-│   └── utils/
-├── configs/              # Configuración del servidor
-├── middlewares/          # Middlewares de autenticación y validación
-├── helper/               # Servicios auxiliares (emails)
-├── index.js
-└── .env
-```
+1. **Al registrarse**: La cuenta se crea con `status: "INACTIVO"` y `emailVerified: false`
+2. **Se envía email**: Con un token de verificación (válido 24 horas)
+3. **Al verificar email**: La cuenta cambia a `status: "ACTIVO"` y `emailVerified: true`
+4. **Login permitido**: Solo después de verificar el email
+
+⚠️ **Importante**: No puedes hacer login si no has verificado tu email primero.
 
 ---
 
-## 📍 Rutas API
+## �📍 Endpoints Funcionales
 
-### 🔐 **AUTENTICACIÓN** (`/api/auth`)
+### 🔐 AUTENTICACIÓN (`/api/auth`) - 10 endpoints
 
-#### Públicas (sin token)
-
-| Método | Ruta | Descripción | Body |
-|--------|------|-------------|------|
-| `POST` | `/registro` | Registrar nuevo usuario | `{ name, surname, email, password, phone, role }` |
-| `POST` | `/login` | Iniciar sesión | `{ email, password }` |
-| `POST` | `/verificar-email` | Verificar email del usuario | `{ token }` o `?token=...` |
-| `POST` | `/refresh` | Obtener nuevo access token | `{ refreshToken }` |
-| `POST` | `/olvide-contraseña` | Solicitar reset de contraseña | `{ email }` |
-| `PUT` | `/reset-contraseña/:token` | Resetear contraseña | `{ password }` |
-
-#### Privadas (requieren `Authorization: Bearer {token}`)
-
-| Método | Ruta | Descripción | Requiere |
-|--------|------|-------------|----------|
-| `GET` | `/me` | Obtener perfil del usuario autenticado | Token válido |
-| `PUT` | `/actualizar` | Actualizar datos del perfil | Token válido |
-| `PUT` | `/cambiar-contraseña` | Cambiar contraseña | Token válido |
-| `POST` | `/logout` | Cerrar sesión | Token válido |
-
----
-
-### 🏢 **RESTAURANTES** (`/api/restaurants`)
-
-| Método | Ruta | Descripción | Requiere |
-|--------|------|-------------|----------|
-| `POST` | `/create` | Crear nuevo restaurante | `{ name, email, phone, address, city, openingHours }` |
-| `GET` | `/get` | Obtener todos los restaurantes | - |
-| `GET` | `/:id` | Obtener restaurante por ID | - |
-| `PUT` | `/:id` | Actualizar restaurante | Token (ADMIN) |
-| `PUT` | `/:id/activate` | Activar restaurante | Token (ADMIN) |
-| `PUT` | `/:id/deactivate` | Desactivar restaurante | Token (ADMIN) |
-
----
-
-### 🍴 **PLATOS/MENÚ** (`/api/platos`)
-
-| Método | Ruta | Descripción | Requiere |
-|--------|------|-------------|----------|
-| `POST` | `/create` | Crear nuevo plato | Token (ADMIN) + multipart/form-data (imagen) |
-| `GET` | `/get` | Obtener todos los platos | - |
-| `GET` | `/:id` | Obtener plato por ID | - |
-| `GET` | `/menu/:restaurantID` | Obtener menú del restaurante | - |
-| `PUT` | `/:id` | Actualizar plato | Token (ADMIN) + multipart/form-data (imagen) |
-| `PUT` | `/:id/activate` | Activar plato | Token (ADMIN) |
-| `PUT` | `/:id/deactivate` | Desactivar plato | Token (ADMIN) |
-
----
-
-### 📊 **MESAS** (`/api/mesas`)
-
-| Método | Ruta | Descripción | Requiere |
-|--------|------|-------------|----------|
-| `POST` | `/create` | Crear nueva mesa | Token (ADMIN) |
-| `GET` | `/get` | Obtener todas las mesas | - |
-| `GET` | `/:id` | Obtener mesa por ID | - |
-| `PUT` | `/:id` | Actualizar mesa | Token (ADMIN) |
-| `DELETE` | `/:id` | Eliminar mesa | Token (ADMIN) |
-
----
-
-## 🔐 Roles de Usuario
-
-| Rol | Descripción |
-|-----|-------------|
-| `CLIENT` | Cliente que reserva y comenta |
-| `RESTAURANT_ADMIN` | Administrador de restaurante |
-| `PLATFORM_ADMIN` | Administrador de plataforma |
-
-
----
-
-## 📧 Sistema de Emails
-
-- ✅ **Verificación de Email** - Se envía al registrarse
-- ✅ **Bienvenida** - Se envía al verificar email
-- ✅ **Reset de Contraseña** - Se envía al solicitar reset
-- ✅ **Cambio de Contraseña** - Se envía al cambiar contraseña
-
-**Nota:** En modo `DEVELOPMENT`, los emails se loguean en la consola.
-
----
-
-## 🧪 Ejemplos de Peticiones en Postman
-
-### 1️⃣ Registrarse
-
-```http
-POST http://localhost:3006/api/auth/registro
-Content-Type: application/json
-
+#### `POST /api/auth/registro` - Público
+```json
 {
   "name": "Juan",
   "surname": "Pérez",
@@ -176,120 +80,227 @@ Content-Type: application/json
   "role": "CLIENT"
 }
 ```
+📧 **Nota**: Al registrarse, la cuenta queda con `status: "INACTIVO"`. Debes verificar el email para activarla.
 
-### 2️⃣ Verificar Email
-
-```http
-POST http://localhost:3006/api/auth/verificar-email?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-### 3️⃣ Iniciar Sesión
-
-```http
-POST http://localhost:3006/api/auth/login
-Content-Type: application/json
-
+#### `POST /api/auth/login` - Público
+```json
 {
   "email": "juan@example.com",
   "password": "Password123!"
 }
 ```
+⚠️ **Nota**: Solo funciona si el email ha sido verificado. Si no, recibirás un error 403.
 
-### 4️⃣ Obtener Perfil (con token)
+#### `POST /api/auth/verificar-email` - Público
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+También puedes usar: `GET /api/auth/verificar-email?token=...`
 
-```http
-GET http://localhost:3006/api/auth/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+✅ **Nota**: Este endpoint cambia el `status: "ACTIVO"` y permite hacer login.
+
+#### `POST /api/auth/refresh` - Público
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
 ```
 
-### 5️⃣ Crear Restaurante
+#### `POST /api/auth/olvide-contraseña` - Público
+```json
+{
+  "email": "juan@example.com"
+}
+```
 
-```http
-POST http://localhost:3006/api/restaurants/create
-Authorization: Bearer {token_de_admin}
-Content-Type: application/json
+#### `PUT /api/auth/reset-contraseña/:token` - Público
+```json
+{
+  "password": "NuevaPassword123!"
+}
+```
 
+#### `GET /api/auth/me` - Requiere token de USUARIO
+```bash
+Authorization: Bearer {token_de_cualquier_usuario}
+```
+
+#### `PUT /api/auth/actualizar` - Requiere token de USUARIO
+```json
+{
+  "name": "Juan Carlos",
+  "surname": "Pérez López",
+  "phone": "50212345679"
+}
+```
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+
+#### `PUT /api/auth/cambiar-contraseña` - Requiere token de USUARIO
+```json
+{
+  "currentPassword": "Password123!",
+  "newPassword": "NuevaPassword456!"
+}
+```
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+
+#### `POST /api/auth/logout` - Requiere token de USUARIO
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+Sin body necesario.
+
+---
+
+### 🏢 RESTAURANTES (`/api/restaurants`) - 6 endpoints
+
+#### `POST /api/restaurants/create` - Requiere token de ADMIN
+```json
 {
   "name": "Mi Restaurante",
   "email": "admin@restaurante.com",
   "phone": "50212345678",
   "address": "Calle Principal 123",
-  "city": "Ciudad de Guatemala"
+  "city": "Ciudad de Guatemala",
+  "openingHours": "Lun-Vie 9:00-18:00"
 }
 ```
-
-### 6️⃣ Crear Plato con Imagen
-
-```http
-POST http://localhost:3006/api/platos/create
-Authorization: Bearer {token_de_admin}
-Content-Type: multipart/form-data
-
-Form-data:
-- nombre: "Tacos al Pastor"
-- descripcion: "Deliciosos tacos"
-- precio: 35.50
-- imagen: [archivo.jpg]
-```
-
----
-
-## 📱 Estados de Cuenta
-
-| Estado | Descripción |
-|--------|-------------|
-| `INACTIVO` | Creado pero email no verificado (por defecto) |
-| `ACTIVO` | Email verificado y cuenta activa |
-| `SUSPENDIDO` | Suspendida por administrador |
-
----
-
-## ⚠️ Códigos de Error
-
-| Código | Significado |
-|--------|-----------|
-| `200` | OK - Solicitud exitosa |
-| `201` | Created - Recurso creado |
-| `400` | Bad Request - Datos inválidos |
-| `401` | Unauthorized - Token inválido/expirado |
-| `403` | Forbidden - No tienes permiso |
-| `404` | Not Found - Recurso no encontrado |
-| `409` | Conflict - Recurso duplicado |
-| `500` | Server Error - Error del servidor |
-
----
-
-## 🔄 Flujo de Autenticación
-
-```
-1. REGISTRO → Status: INACTIVO, emailVerified: false
-   ↓
-2. VERIFICAR EMAIL → Status: ACTIVO, emailVerified: true
-   ↓
-3. LOGIN → Token de acceso + Refresh token
-   ↓
-4. USAR RUTAS PROTEGIDAS → Con Authorization header
-```
-
----
-
-## 📦 Dependencias Principales
-
-- `express` - Framework web
-- `mongodb` + `mongoose` - Base de datos
-- `jsonwebtoken` - Autenticación JWT
-- `bcryptjs` - Hash de contraseñas
-- `nodemailer` - Envío de emails
-- `cors` - Control de CORS
-- `dotenv` - Variables de entorno
-
----
-
-## 👨‍💻 Desarrollo
-
-**Servidor en watch mode:**
 ```bash
-pnpm run dev
+Authorization: Bearer {token_de_admin}
 ```
+
+#### `GET /api/restaurants/get` - Público
+Sin autenticación requerida.
+
+#### `GET /api/restaurants/:id` - Público
+Sin autenticación requerida.
+
+#### `PUT /api/restaurants/:id` - Requiere token de ADMIN
+```json
+{
+  "name": "Restaurante Actualizado",
+  "email": "nuevo@restaurante.com",
+  "phone": "50287654321",
+  "address": "Avenida Central 456",
+  "city": "Antigua Guatemala"
+}
+```
+```bash
+Authorization: Bearer {token_de_admin}
+```
+
+#### `PUT /api/restaurants/:id/activate` - Requiere token de ADMIN
+```bash
+Authorization: Bearer {token_de_admin}
+```
+Sin body necesario.
+
+#### `PUT /api/restaurants/:id/deactivate` - Requiere token de ADMIN
+```bash
+Authorization: Bearer {token_de_admin}
+```
+Sin body necesario.
+
+---
+
+### 🍴 PLATOS/MENÚ (`/api/platos`) - 7 endpoints
+
+#### `POST /api/platos/create` - Requiere token de ADMIN
+```bash
+Content-Type: multipart/form-data
+Authorization: Bearer {token_de_admin}
+
+Form data:
+- nombre: "Tacos al Pastor"
+- descripcion: "Deliciosos tacos con piña"
+- precio: 35.50
+- categoria: "Comida Mexicana"
+- restaurantID: "507f1f77bcf86cd799439011"
+- ingredientes: ["tortilla", "cerdo", "piña", "cilantro"]
+- image: [archivo.jpg]
+```
+
+#### `GET /api/platos/get` - Público
+Sin autenticación requerida.
+
+#### `GET /api/platos/:id` - Público
+Sin autenticación requerida.
+
+#### `GET /api/platos/menu/:restaurantID` - Público
+Sin autenticación requerida.
+
+#### `PUT /api/platos/:id` - Requiere token de ADMIN
+```bash
+Content-Type: multipart/form-data
+Authorization: Bearer {token_de_admin}
+
+Form data:
+- nombre: "Tacos Premium"
+- descripcion: "Tacos mejorados"
+- precio: 45.00
+- categoria: "Comida Mexicana"
+- image: [nuevo_archivo.jpg] (opcional)
+```
+
+#### `PUT /api/platos/:id/activate` - Requiere token de ADMIN
+```bash
+Authorization: Bearer {token_de_admin}
+```
+Sin body necesario.
+
+#### `PUT /api/platos/:id/deactivate` - Requiere token de ADMIN
+```bash
+Authorization: Bearer {token_de_admin}
+```
+Sin body necesario.
+
+---
+
+### 📊 MESAS (`/api/mesas`) - 5 endpoints
+
+#### `POST /api/mesas/create` - Requiere token de ADMIN
+```json
+{
+  "number": 5,
+  "capacity": 4,
+  "location": "Terraza",
+  "restaurantID": "507f1f77bcf86cd799439011",
+  "isActive": true
+}
+```
+```bash
+Authorization: Bearer {token_de_admin}
+```
+
+#### `GET /api/mesas/get` - Público
+Sin autenticación requerida.
+
+#### `GET /api/mesas/:id` - Público
+Sin autenticación requerida.
+
+#### `PUT /api/mesas/:id` - Requiere token de ADMIN
+```json
+{
+  "number": 5,
+  "capacity": 6,
+  "location": "Terraza VIP",
+  "isActive": true
+}
+```
+```bash
+Authorization: Bearer {token_de_admin}
+```
+
+#### `DELETE /api/mesas/:id` - Requiere token de ADMIN
+```bash
+Authorization: Bearer {token_de_admin}
+```
+Sin body necesario.
 
 
