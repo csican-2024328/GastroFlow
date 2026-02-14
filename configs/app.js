@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { dbConnection } from './db.js';
+import { createPlatformAdmin } from './createPlatformAdmin.js';
 import authRoutes from '../src/User/auth.routes.js';
 
 export const initServer = async () => {
@@ -22,14 +23,19 @@ export const initServer = async () => {
     app.use('/api/auth', authRoutes);
 
     try {
-        dbConnection().catch(err => console.error('DB connection error:', err));
+        await dbConnection();
+
+        console.log('Base de datos conectada');
+
+        await createPlatformAdmin();
 
         app.listen(PORT, () => {
             console.log(`GastroFlow Admin server running on port ${PORT}`);
             console.log(`CORS enabled for: ${allowedOrigins.join(', ')}`);
         });
+
     } catch (error) {
         console.error(`Error starting server: ${error.message}`);
         process.exit(1);
     }
-}
+};

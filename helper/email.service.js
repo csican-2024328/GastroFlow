@@ -46,17 +46,17 @@ export const verificarConexionSMTP = async () => {
     }
     
     if (!transporter || !smtpConfigured) {
-        console.log('ℹ️  Email service: SMTP no configurado. Los emails se procesarán en background.');
+        console.log('ℹEmail service: SMTP no configurado. Los emails se procesarán en background.');
         return false;
     }
 
     try {
         await transporter.verify();
-        console.log('✅ Email service: Conectado correctamente a SMTP');
+        console.log('Email service: Conectado correctamente a SMTP');
         return true;
     } catch (error) {
-        console.warn('⚠️  Email service: No se pudo conectar a SMTP - ' + error.message);
-        console.log('ℹ️  Los emails NO se enviarán pero la aplicación continuará funcionando.');
+        console.warn('Email service: No se pudo conectar a SMTP - ' + error.message);
+        console.log('ℹLos emails NO se enviarán pero la aplicación continuará funcionando.');
         return false;
     }
 };
@@ -66,10 +66,9 @@ export const enviarEmailVerificacion = async (email, nombre, token) => {
         initializeEmailService();
     }
     
-    // Si SMTP no está configurado, loguear en development y continuar
     if (!transporter || !smtpConfigured) {
         if (process.env.NODE_ENV === 'development') {
-            console.log(`📧 [DEVELOPMENT] Email de verificación:`);
+            console.log(`   [DEVELOPMENT] Email de verificación:`);
             console.log(`   Para: ${email}`);
             console.log(`   Nombre: ${nombre}`);
             console.log(`   Link: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/verificar-email?token=${token.substring(0, 30)}...`);
@@ -85,10 +84,10 @@ export const enviarEmailVerificacion = async (email, nombre, token) => {
         const mailOptions = {
             from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
             to: email,
-            subject: '🔐 Verifica tu cuenta en GastroFlow',
+            subject: 'Verifica tu cuenta en GastroFlow',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>¡Bienvenido a GastroFlow! 🍽️</h2>
+                    <h2>¡Bienvenido a GastroFlow! </h2>
                     <p>Hola <strong>${nombre}</strong>,</p>
                     <p>Gracias por registrarte en GastroFlow. Para completar tu registro y verificar tu cuenta, haz clic en el botón de abajo:</p>
                     
@@ -122,11 +121,11 @@ export const enviarEmailVerificacion = async (email, nombre, token) => {
         };
 
         const result = await transporter.sendMail(mailOptions);
-        console.log(`✅ Email de verificación enviado a ${email}`);
+        console.log(`Email de verificación enviado a ${email}`);
         return { success: true, messageId: result.messageId };
 
     } catch (error) {
-        console.error('❌ Error enviando email de verificación:', error.message);
+        console.error('Error enviando email de verificación:', error.message);
         if (process.env.NODE_ENV === 'development') {
             return { success: true, isDevelopment: true };
         }
@@ -139,10 +138,9 @@ export const enviarEmailResetPassword = async (email, nombre, token) => {
         initializeEmailService();
     }
     
-    // Si SMTP no está configurado, loguear en development y continuar
     if (!transporter || !smtpConfigured) {
         if (process.env.NODE_ENV === 'development') {
-            console.log(`📧 [DEVELOPMENT] Email de reset de contraseña:`);
+            console.log(`   [DEVELOPMENT] Email de reset de contraseña:`);
             console.log(`   Para: ${email}`);
             console.log(`   Nombre: ${nombre}`);
             console.log(`   Link: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token.substring(0, 30)}...`);
@@ -158,10 +156,10 @@ export const enviarEmailResetPassword = async (email, nombre, token) => {
         const mailOptions = {
             from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
             to: email,
-            subject: '🔑 Resetea tu contraseña en GastroFlow',
+            subject: 'Resetea tu contraseña en GastroFlow',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>Reset de Contraseña 🔑</h2>
+                    <h2>Reset de Contraseña </h2>
                     <p>Hola <strong>${nombre}</strong>,</p>
                     <p>Recibimos una solicitud para resetear tu contraseña. Haz clic en el botón de abajo para crear una nueva contraseña:</p>
                     
@@ -185,7 +183,7 @@ export const enviarEmailResetPassword = async (email, nombre, token) => {
                     </p>
 
                     <p style="color: #d32f2f; font-weight: bold;">
-                        ⚠️ Este enlace expira en ${process.env.PASSWORD_RESET_EXPIRY_HOURS || 1} hora(s).
+                        Este enlace expira en ${process.env.PASSWORD_RESET_EXPIRY_HOURS || 1} hora(s).
                     </p>
                     
                     <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
@@ -197,11 +195,11 @@ export const enviarEmailResetPassword = async (email, nombre, token) => {
         };
 
         const result = await transporter.sendMail(mailOptions);
-        console.log(`✅ Email de reset enviado a ${email}`);
+        console.log(`Email de reset enviado a ${email}`);
         return { success: true, messageId: result.messageId };
 
     } catch (error) {
-        console.error('❌ Error enviando email de reset:', error.message);
+        console.error('Error enviando email de reset:', error.message);
         if (process.env.NODE_ENV === 'development') {
             return { success: true, isDevelopment: true };
         }
@@ -214,10 +212,9 @@ export const enviarEmailBienvenida = async (email, nombre) => {
         initializeEmailService();
     }
     
-    // Si SMTP no está configurado, loguear en development y continuar
     if (!transporter || !smtpConfigured) {
         if (process.env.NODE_ENV === 'development') {
-            console.log(`📧 [DEVELOPMENT] Email de bienvenida:`);
+            console.log(`   [DEVELOPMENT] Email de bienvenida:`);
             console.log(`   Para: ${email}`);
             console.log(`   Nombre: ${nombre}`);
             return { success: true, isDevelopment: true };
@@ -231,18 +228,18 @@ export const enviarEmailBienvenida = async (email, nombre) => {
         const mailOptions = {
             from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
             to: email,
-            subject: '🎉 ¡Bienvenido a GastroFlow!',
+            subject: '¡Bienvenido a GastroFlow!',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>¡Cuenta Verificada! 🎉</h2>
+                    <h2>¡Cuenta Verificada! </h2>
                     <p>Hola <strong>${nombre}</strong>,</p>
                     <p>Tu cuenta ha sido verificada exitosamente. Ya puedes disfrutar de todos los beneficios de GastroFlow:</p>
                     
                     <ul style="line-height: 1.8;">
-                        <li>🍽️ Reservar en los mejores restaurantes</li>
-                        <li>⭐ Calificar y comentar restaurantes</li>
-                        <li>🔔 Recibir notificaciones especiales</li>
-                        <li>💳 Gestionar tus reservaciones</li>
+                        <li>Reservar en los mejores restaurantes</li>
+                        <li>Calificar y comentar restaurantes</li>
+                        <li>Recibir notificaciones especiales</li>
+                        <li>Gestionar tus reservaciones</li>
                     </ul>
 
                     <p style="margin-top: 30px; text-align: center;">
@@ -268,11 +265,11 @@ export const enviarEmailBienvenida = async (email, nombre) => {
         };
 
         const result = await transporter.sendMail(mailOptions);
-        console.log(`✅ Email de bienvenida enviado a ${email}`);
+        console.log(`Email de bienvenida enviado a ${email}`);
         return { success: true, messageId: result.messageId };
 
     } catch (error) {
-        console.error('❌ Error enviando email de bienvenida:', error.message);
+        console.error('Error enviando email de bienvenida:', error.message);
         if (process.env.NODE_ENV === 'development') {
             return { success: true, isDevelopment: true };
         }
@@ -285,10 +282,9 @@ export const enviarEmailContraseñaCambiada = async (email, nombre) => {
         initializeEmailService();
     }
     
-    // Si SMTP no está configurado, loguear en development y continuar
     if (!transporter || !smtpConfigured) {
         if (process.env.NODE_ENV === 'development') {
-            console.log(`📧 [DEVELOPMENT] Email de contraseña cambiada:`);
+            console.log(`   [DEVELOPMENT] Email de contraseña cambiada:`);
             console.log(`   Para: ${email}`);
             console.log(`   Nombre: ${nombre}`);
             return { success: true, isDevelopment: true };
@@ -300,10 +296,10 @@ export const enviarEmailContraseñaCambiada = async (email, nombre) => {
         const mailOptions = {
             from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
             to: email,
-            subject: '🔐 Tu contraseña ha sido cambiada',
+            subject: 'Tu contraseña ha sido cambiada',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>Contraseña Actualizada 🔐</h2>
+                    <h2>Contraseña Actualizada </h2>
                     <p>Hola <strong>${nombre}</strong>,</p>
                     <p>Tu contraseña ha sido actualizada exitosamente.</p>
                     <p>Si no realizaste este cambio, por favor contacta con nuestro equipo de soporte inmediatamente.</p>
@@ -317,11 +313,11 @@ export const enviarEmailContraseñaCambiada = async (email, nombre) => {
         };
 
         const result = await transporter.sendMail(mailOptions);
-        console.log(`✅ Email de cambio de contraseña enviado a ${email}`);
+        console.log(`Email de cambio de contraseña enviado a ${email}`);
         return { success: true, messageId: result.messageId };
 
     } catch (error) {
-        console.error('❌ Error enviando email de cambio de contraseña:', error.message);
+        console.error('Error enviando email de cambio de contraseña:', error.message);
         if (process.env.NODE_ENV === 'development') {
             return { success: true, isDevelopment: true };
         }

@@ -39,7 +39,7 @@ export const registro = async (req, res) => {
         );
 
         if (!emailEnviado.success) {
-            console.warn('⚠️ Email de verificación no se envió, pero usuario fue registrado');
+            console.warn('Email de verificación no se envió, pero usuario fue registrado');
         }
         res.status(201).json({
             success: true,
@@ -168,7 +168,6 @@ export const verificarEmail = async (req, res) => {
             });
         }
 
-        // Buscar usuario
         const usuario = await User.findById(decoded.id);
         if (!usuario) {
             return res.status(404).json({
@@ -261,7 +260,6 @@ export const refreshToken = async (req, res) => {
             });
         }
 
-        // Buscar usuario
         const usuario = await User.findById(decoded.id);
         if (!usuario) {
             return res.status(404).json({
@@ -462,7 +460,7 @@ export const solicitarResetPassword = async (req, res) => {
         );
 
         if (!emailEnviado.success) {
-            console.error('⚠️ Error enviando email de reset:', emailEnviado.error);
+            console.error('Error enviando email de reset:', emailEnviado.error);
             return res.status(503).json({
                 success: false,
                 message: 'No se pudo enviar el email de reset. Por favor intenta más tarde.'
@@ -516,7 +514,6 @@ export const resetPassword = async (req, res) => {
             });
         }
 
-        // Buscar usuario
         const usuario = await User.findById(decoded.id);
         if (!usuario) {
             return res.status(404).json({
@@ -525,7 +522,6 @@ export const resetPassword = async (req, res) => {
             });
         }
 
-        // Actualizar contraseña
         usuario.password = passwordNueva;
         usuario.resetPasswordToken = undefined;
         usuario.resetPasswordExpires = undefined;
