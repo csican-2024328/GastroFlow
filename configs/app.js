@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { dbConnection } from './db.js';
-import { createPlatformAdmin } from './createPlatformAdmin.js';
+import { createPlatformAdmin } from '../helper/createPlatformAdmin.js';
 import authRoutes from '../src/User/auth.routes.js';
 
 export const initServer = async () => {
