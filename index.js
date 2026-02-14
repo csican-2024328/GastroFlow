@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import { initServer } from './configs/app.js';
-import { initializeEmailService, verificarConexionSMTP } from './helper/email.service.js';
+import { initializeEmailService, verificarConexionSMTP } from './helper/email-service.js';
 
 dotenv.config();
 

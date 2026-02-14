@@ -1,6 +1,6 @@
 import User from './User.model.js';
 import jwt from 'jsonwebtoken';
-import { enviarEmailVerificacion, enviarEmailResetPassword, enviarEmailBienvenida, enviarEmailContraseñaCambiada } from '../../helper/email.service.js';
+import { enviarEmailVerificacion, enviarEmailResetPassword, enviarEmailBienvenida, enviarEmailContraseñaCambiada } from '../../helper/email-service.js';
 
 export const registro = async (req, res) => {
     try {
