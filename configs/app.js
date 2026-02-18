@@ -5,6 +5,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { dbConnection } from './db.js';
+import { connectMongoDB } from './mongodb.js';
 import { corsOptions } from './cors-configuration.js';
 import { helmetConfiguration } from './helmet-configuration.js';
 import { requestLimit } from '../middlewares/request-limit.js';
@@ -46,7 +47,11 @@ export const initServer = async () => {
   app.set('trust proxy', 1);
 
   try {
+    // Conectar PostgreSQL (usuarios, auth)
     await dbConnection();
+
+    // Conectar MongoDB (restaurantes, mesas, platos)
+    await connectMongoDB();
 
     const { seedInitialData } = await import('../seeders/dataSeeder.js');
     await seedInitialData();

@@ -1,75 +1,55 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from '../../configs/db.js';
-import { generateUserId } from '../../helper/uuid-generator.js';
+'use strict';
 
-export const Restaurant = sequelize.define(
-  'Restaurant',
+import mongoose from 'mongoose';
+
+const restaurantSchema = mongoose.Schema(
   {
-    Id: {
-      type: DataTypes.STRING(16),
-      primaryKey: true,
-      field: 'id',
-      defaultValue: () => generateUserId(),
+    name: {
+      type: String,
+      required: [true, 'El nombre del restaurante es obligatorio'],
+      trim: true,
+      maxLength: [100, 'El nombre no puede exceder 100 caracteres'],
     },
-    Name: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      field: 'name',
-      validate: {
-        notEmpty: { msg: 'El nombre del restaurante es obligatorio.' },
-      },
-    },
-    Email: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
+    email: {
+      type: String,
+      required: [true, 'El email es obligatorio'],
       unique: true,
-      field: 'email',
-      validate: {
-        isEmail: { msg: 'El email debe ser válido.' },
-      },
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, 'El email debe ser válido'],
     },
-    Phone: {
-      type: DataTypes.STRING(20),
-      allowNull: false,
-      field: 'phone',
+    phone: {
+      type: String,
+      required: [true, 'El teléfono es obligatorio'],
+      trim: true,
     },
-    Address: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-      field: 'address',
+    address: {
+      type: String,
+      required: [true, 'La dirección es obligatoria'],
+      trim: true,
     },
-    City: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      field: 'city',
+    city: {
+      type: String,
+      required: [true, 'La ciudad es obligatoria'],
+      trim: true,
     },
-    OpeningHours: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      field: 'opening_hours',
+    openingHours: {
+      type: String,
+      required: [true, 'El horario de apertura es obligatorio'],
+      trim: true,
     },
-    IsActive: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-      field: 'is_active',
-    },
-    CreatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-      field: 'created_at',
-    },
-    UpdatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-      field: 'updated_at',
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   {
-    tableName: 'restaurants',
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    versionKey: false,
   }
 );
+
+restaurantSchema.index({ isActive: 1 });
+restaurantSchema.index({ city: 1 });
+
+export default mongoose.model('Restaurant', restaurantSchema);

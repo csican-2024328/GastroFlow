@@ -1,4 +1,4 @@
-import { Restaurant } from './Restaurant.model.js';
+import Restaurant from './Restaurant.model.js';
 import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
 
 export const createRestaurant = asyncHandler(async (req, res) => {
@@ -12,9 +12,7 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       });
     }
 
-    const existingRestaurant = await Restaurant.findOne({
-      where: { Email: email },
-    });
+    const existingRestaurant = await Restaurant.findOne({ email });
 
     if (existingRestaurant) {
       return res.status(409).json({
@@ -24,13 +22,13 @@ export const createRestaurant = asyncHandler(async (req, res) => {
     }
 
     const restaurant = await Restaurant.create({
-      Name: name,
-      Email: email,
-      Phone: phone,
-      Address: address,
-      City: city,
-      OpeningHours: openingHours,
-      IsActive: true,
+      name,
+      email,
+      phone,
+      address,
+      city,
+      openingHours,
+      isActive: true,
     });
 
     res.status(201).json({
@@ -50,9 +48,7 @@ export const createRestaurant = asyncHandler(async (req, res) => {
 
 export const getRestaurants = asyncHandler(async (req, res) => {
   try {
-    const restaurants = await Restaurant.findAll({
-      where: { IsActive: true },
-    });
+    const restaurants = await Restaurant.find({ isActive: true });
 
     res.status(200).json({
       success: true,
@@ -72,7 +68,7 @@ export const getRestaurantById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
-    const restaurant = await Restaurant.findByPk(id);
+    const restaurant = await Restaurant.findById(id);
 
     if (!restaurant) {
       return res.status(404).json({
@@ -100,7 +96,18 @@ export const updateRestaurant = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { name, email, phone, address, city, openingHours } = req.body;
 
-    const restaurant = await Restaurant.findByPk(id);
+    const restaurant = await Restaurant.findByIdAndUpdate(
+      id,
+      {
+        name,
+        email,
+        phone,
+        address,
+        city,
+        openingHours,
+      },
+      { new: true, runValidators: true }
+    );
 
     if (!restaurant) {
       return res.status(404).json({
@@ -108,15 +115,6 @@ export const updateRestaurant = asyncHandler(async (req, res) => {
         message: 'Restaurante no encontrado',
       });
     }
-
-    await restaurant.update({
-      Name: name || restaurant.Name,
-      Email: email || restaurant.Email,
-      Phone: phone || restaurant.Phone,
-      Address: address || restaurant.Address,
-      City: city || restaurant.City,
-      OpeningHours: openingHours || restaurant.OpeningHours,
-    });
 
     res.status(200).json({
       success: true,
@@ -137,7 +135,11 @@ export const activateRestaurant = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
-    const restaurant = await Restaurant.findByPk(id);
+    const restaurant = await Restaurant.findByIdAndUpdate(
+      id,
+      { isActive: true },
+      { new: true }
+    );
 
     if (!restaurant) {
       return res.status(404).json({
@@ -145,8 +147,6 @@ export const activateRestaurant = asyncHandler(async (req, res) => {
         message: 'Restaurante no encontrado',
       });
     }
-
-    await restaurant.update({ IsActive: true });
 
     res.status(200).json({
       success: true,
@@ -167,7 +167,11 @@ export const deactivateRestaurant = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
-    const restaurant = await Restaurant.findByPk(id);
+    const restaurant = await Restaurant.findByIdAndUpdate(
+      id,
+      { isActive: false },
+      { new: true }
+    );
 
     if (!restaurant) {
       return res.status(404).json({
@@ -175,8 +179,6 @@ export const deactivateRestaurant = asyncHandler(async (req, res) => {
         message: 'Restaurante no encontrado',
       });
     }
-
-    await restaurant.update({ IsActive: false });
 
     res.status(200).json({
       success: true,
