@@ -67,9 +67,10 @@ export const registro = async (req, res) => {
     }
 };
 
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
+
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
@@ -77,7 +78,10 @@ export const login = async (req, res) => {
             });
         }
 
-        const usuario = await User.findOne({ email: email.toLowerCase() }).select('+password');
+        const usuario = await User
+            .findOne({ email: email.toLowerCase() })
+            .select('+password');
+
         if (!usuario) {
             return res.status(401).json({
                 success: false,
@@ -85,44 +89,58 @@ export const login = async (req, res) => {
             });
         }
 
+        if (usuario.lockUntil && usuario.lockUntil > Date.now()) {
+            return res.status(403).json({
+                success: false,
+                message: 'Cuenta bloqueada temporalmente por múltiples intentos fallidos',
+                errorCode: 'ACCOUNT_LOCKED'
+            });
+        }
+
         if (!usuario.emailVerified) {
             return res.status(403).json({
                 success: false,
-                message: 'Tu cuenta está inactiva. Por favor verifica tu email para activar la cuenta.',
-                usuarioId: usuario._id,
-                emailVerificado: false
+                message: 'Debes verificar tu email antes de iniciar sesión',
+                errorCode: 'EMAIL_NOT_VERIFIED'
             });
         }
 
-        if (usuario.status === 'INACTIVO') {
+        if (usuario.status !== 'ACTIVO') {
             return res.status(403).json({
                 success: false,
-                message: 'Tu cuenta ha sido desactivada por el administrador',
-                usuarioId: usuario._id
-            });
-        }
-
-        if (usuario.status === 'SUSPENDIDO') {
-            return res.status(403).json({
-                success: false,
-                message: 'Tu cuenta ha sido suspendida',
-                usuarioId: usuario._id
+                message: `Cuenta ${usuario.status.toLowerCase()}`,
+                errorCode: 'ACCOUNT_INACTIVE'
             });
         }
 
         const passwordValido = await usuario.matchPassword(password);
+
         if (!passwordValido) {
+            usuario.loginAttempts += 1;
+
+            if (usuario.loginAttempts >= 5) {
+                usuario.status = 'SUSPENDIDO';
+                usuario.lockUntil = new Date(Date.now() + 30 * 60 * 1000); 
+            }
+
+            await usuario.save();
+
             return res.status(401).json({
                 success: false,
-                message: 'Credenciales inválidas'
+                message: 'Credenciales inválidas',
+                errorCode: 'INVALID_CREDENTIALS'
             });
         }
 
+        usuario.loginAttempts = 0;
+        usuario.lockUntil = null;
         usuario.lastLogin = new Date();
         await usuario.save();
-        const token = usuario.generarJWT();
+
+        const accessToken = usuario.generarJWT();
         const refreshToken = usuario.generarRefreshJWT();
-        res.status(200).json({
+
+        return res.status(200).json({
             success: true,
             message: 'Login exitoso',
             data: {
@@ -130,21 +148,15 @@ export const login = async (req, res) => {
                     id: usuario._id,
                     name: usuario.name,
                     email: usuario.email,
-                    role: usuario.role,
-                    phone: usuario.phone
+                    role: usuario.role
                 },
-                token,
+                accessToken,
                 refreshToken
             }
         });
 
     } catch (error) {
-        console.error('Error en login:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error en el login',
-            error: error.message
-        });
+        next(error); 
     }
 };
 
@@ -238,20 +250,18 @@ export const verificarEmail = async (req, res) => {
     }
 };
 
-export const refreshToken = async (req, res) => {
+export const refreshToken = async (req, res, next) => {
     try {
-        const { refreshToken: token } = req.body;
-        if (!token) {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
             return res.status(400).json({
                 success: false,
                 message: 'Refresh token requerido'
             });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET, {
-            issuer: process.env.JWT_ISSUER,
-            audience: process.env.JWT_AUDIENCE
-        });
+        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
 
         if (decoded.tipo !== 'refresh') {
             return res.status(401).json({
@@ -261,36 +271,26 @@ export const refreshToken = async (req, res) => {
         }
 
         const usuario = await User.findById(decoded.id);
-        if (!usuario) {
-            return res.status(404).json({
+
+        if (!usuario || usuario.status !== 'ACTIVO') {
+            return res.status(401).json({
                 success: false,
-                message: 'Usuario no encontrado'
+                message: 'Usuario no válido'
             });
         }
 
-        const nuevoToken = usuario.generarJWT();
+        const nuevoAccessToken = usuario.generarJWT();
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: 'Token renovado',
             data: {
-                token: nuevoToken
+                accessToken: nuevoAccessToken
             }
         });
 
     } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({
-                success: false,
-                message: 'Refresh token expirado'
-            });
-        }
-        
-        res.status(401).json({
-            success: false,
-            message: 'Token inválido',
-            error: error.message
-        });
+        next(error);
     }
 };
 
