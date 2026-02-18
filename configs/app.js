@@ -3,6 +3,7 @@ import cors from 'cors';
 import { dbConnection } from './db.js';
 import { createPlatformAdmin } from '../helper/createPlatformAdmin.js';
 import authRoutes from '../src/User/auth.routes.js';
+import { errorMiddleware } from '../middlewares/error.middleware.js';
 
 export const initServer = async () => {
     const app = express();
@@ -20,11 +21,13 @@ export const initServer = async () => {
 
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
+
     app.use('/api/auth', authRoutes);
+
+    app.use(errorMiddleware);
 
     try {
         await dbConnection();
-
         console.log('Base de datos conectada');
 
         await createPlatformAdmin();
