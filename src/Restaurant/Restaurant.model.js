@@ -1,47 +1,75 @@
-'use strict';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../../configs/db.js';
+import { generateUserId } from '../../helper/uuid-generator.js';
 
-import mongoose from "mongoose";
-
-const restaurantSchema = mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: [true, 'El nombre del restaurante es requerido'],
-            trim: true,
-            maxLength: [100, 'El nombre no puede exceder 100 caracteres']
-        },
-        address: {
-            type: String,
-            required: [true, 'La dirección es requerida'],
-            trim: true,
-            maxLength: [200, 'La dirección no puede exceder 200 caracteres']
-        },
-        category: {
-            type: String,
-            required: [true, 'La categoría gastronómica es requerida'],
-            enum: {
-                values: ['COMIDA_RAPIDA', 'TRADICIONAL', 'ITALIANA', 'MEXICANA', 'ASIATICA', 'OTRA'],
-                message: 'Categoría gastronómica no válida'
-            }
-        },
-        schedule: {
-            type: String,
-            required: [true, 'El horario es requerido'],
-            trim: true
-        },
-        isActive: {
-            type: Boolean,
-            default: true
-        }
+export const Restaurant = sequelize.define(
+  'Restaurant',
+  {
+    Id: {
+      type: DataTypes.STRING(16),
+      primaryKey: true,
+      field: 'id',
+      defaultValue: () => generateUserId(),
     },
-    {
-        timestamps: true,
-        versionKey: false
-    }
+    Name: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      field: 'name',
+      validate: {
+        notEmpty: { msg: 'El nombre del restaurante es obligatorio.' },
+      },
+    },
+    Email: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      unique: true,
+      field: 'email',
+      validate: {
+        isEmail: { msg: 'El email debe ser válido.' },
+      },
+    },
+    Phone: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      field: 'phone',
+    },
+    Address: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      field: 'address',
+    },
+    City: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      field: 'city',
+    },
+    OpeningHours: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      field: 'opening_hours',
+    },
+    IsActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      field: 'is_active',
+    },
+    CreatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: 'created_at',
+    },
+    UpdatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: 'updated_at',
+    },
+  },
+  {
+    tableName: 'restaurants',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  }
 );
-
-restaurantSchema.index({ isActive: 1 });
-restaurantSchema.index({ category: 1 });
-restaurantSchema.index({ isActive: 1, category: 1 });
-
-export default mongoose.model('Restaurant', restaurantSchema);

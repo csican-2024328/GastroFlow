@@ -1,168 +1,327 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../../configs/db.js';
+import { generateUserId } from '../../helper/uuid-generator.js';
 
-const UserSchema = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: [true, 'El nombre es obligatorio'],
-            trim: true
-        },
-        surname: {
-            type: String,
-            required: [true, 'El apellido es obligatorio'],
-            trim: true
-        },
-        email: {
-            type: String,
-            required: [true, 'El correo es obligatorio'],
-            unique: true,
-            lowercase: true,
-            match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Por favor ingresa un correo válido']
-        },
-        password: {
-            type: String,
-            required: [true, 'La contraseña es obligatoria'],
-            minlength: [6, 'La contraseña debe tener mínimo 6 caracteres'],
-            select: false
-        },
-        phone: {
-            type: String,
-            required: [true, 'El teléfono es necesario para notificaciones'],
-            match: [/^[0-9]{7,15}$/, 'Por favor ingresa un teléfono válido']
-        },
-        address: {
-            type: String,
-            trim: true
-        },
-        profileImage: {
-            type: String,
-            default: null
-        },
-        role: {
-            type: String,
-            enum: ['PLATFORM_ADMIN', 'RESTAURANT_ADMIN', 'CLIENT'],
-            default: 'CLIENT',
-            required: true
-        },
-        status: {
-            type: String,
-            enum: ['ACTIVO', 'INACTIVO', 'SUSPENDIDO'],
-            default: 'INACTIVO',
-            required: true  
-        },
-        emailVerified: {
-            type: Boolean,
-            default: false
-        },
-        verificationToken: {
-            type: String,
-            default: null,
-            select: false
-        },
-        resetPasswordToken: {
-            type: String,
-            default: null,
-            select: false
-        },
-        resetPasswordExpires: {
-            type: Date,
-            default: null,
-            select: false
-        },
-
+export const Role = sequelize.define(
+  'Role',
+  {
+    Id: {
+      type: DataTypes.STRING(16),
+      primaryKey: true,
+      field: 'id',
+      defaultValue: () => generateUserId(),
     },
-    { timestamps: true }
+    Name: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      unique: true,
+      field: 'name',
+      validate: {
+        notEmpty: { msg: 'El nombre del rol es obligatorio.' },
+      },
+    },
+    CreatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: 'created_at',
+    },
+    UpdatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: 'updated_at',
+    },
+  },
+  {
+    tableName: 'roles',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  }
 );
 
-UserSchema.pre('save', async function() {
-    if (!this.isModified('password')) {
-        return;
-    }
+export const User = sequelize.define(
+  'User',
+  {
+    Id: {
+      type: DataTypes.STRING(16),
+      primaryKey: true,
+      field: 'id',
+      defaultValue: () => generateUserId(),
+    },
+    Name: {
+      type: DataTypes.STRING(25),
+      allowNull: false,
+      field: 'name',
+      validate: {
+        notEmpty: { msg: 'El nombre es obligatorio.' },
+        len: {
+          args: [1, 25],
+          msg: 'El nombre no puede tener más de 25 caracteres.',
+        },
+      },
+    },
+    Surname: {
+      type: DataTypes.STRING(25),
+      allowNull: false,
+      field: 'surname',
+      validate: {
+        notEmpty: { msg: 'El apellido es obligatorio.' },
+        len: {
+          args: [1, 25],
+          msg: 'El apellido no puede tener más de 25 caracteres.',
+        },
+      },
+    },
+    Username: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      unique: true,
+      field: 'username',
+      validate: {
+        notEmpty: { msg: 'El nombre de usuario es obligatorio.' },
+        len: {
+          args: [1, 50],
+          msg: 'El nombre de usuario no puede tener más de 50 caracteres.',
+        },
+      },
+    },
+    Email: {
+      type: DataTypes.STRING(150),
+      allowNull: false,
+      unique: true,
+      field: 'email',
+      validate: {
+        notEmpty: { msg: 'El correo electrónico es obligatorio.' },
+        isEmail: { msg: 'El correo electrónico no tiene un formato válido.' },
+        len: {
+          args: [1, 150],
+          msg: 'El correo electrónico no puede tener más de 150 caracteres.',
+        },
+      },
+    },
+    Password: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      field: 'password',
+      validate: {
+        notEmpty: { msg: 'La contraseña es obligatoria.' },
+        len: {
+          args: [8, 255],
+          msg: 'La contraseña debe tener entre 8 y 255 caracteres.',
+        },
+      },
+    },
+    Status: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+      field: 'status',
+    },
+    CreatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: 'created_at',
+    },
+    UpdatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: 'updated_at',
+    },
+  },
+  {
+    tableName: 'users',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  }
+);
 
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-    } catch (error) {
-        throw error;
-    }
+export const UserProfile = sequelize.define(
+  'UserProfile',
+  {
+    Id: {
+      type: DataTypes.STRING(16),
+      primaryKey: true,
+      field: 'id',
+      defaultValue: () => generateUserId(),
+    },
+    UserId: {
+      type: DataTypes.STRING(16),
+      allowNull: false,
+      field: 'user_id',
+      references: {
+        model: User,
+        key: 'id',
+      },
+    },
+    ProfilePicture: {
+      type: DataTypes.STRING(512),
+      defaultValue: '',
+      field: 'profile_picture',
+    },
+    Phone: {
+      type: DataTypes.STRING(8),
+      allowNull: false,
+      field: 'phone',
+      validate: {
+        notEmpty: { msg: 'El número de teléfono es obligatorio.' },
+        len: {
+          args: [8, 8],
+          msg: 'El número de teléfono debe tener exactamente 8 dígitos.',
+        },
+        isNumeric: { msg: 'El teléfono solo debe contener números.' },
+      },
+    },
+  },
+  {
+    tableName: 'user_profiles',
+    timestamps: false,
+  }
+);
+
+export const UserEmail = sequelize.define(
+  'UserEmail',
+  {
+    Id: {
+      type: DataTypes.STRING(16),
+      primaryKey: true,
+      field: 'id',
+      defaultValue: () => generateUserId(),
+    },
+    UserId: {
+      type: DataTypes.STRING(16),
+      allowNull: false,
+      field: 'user_id',
+      references: {
+        model: User,
+        key: 'id',
+      },
+    },
+    EmailVerified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'email_verified',
+    },
+    EmailVerificationToken: {
+      type: DataTypes.STRING(256),
+      allowNull: true,
+      field: 'email_verification_token',
+    },
+    EmailVerificationTokenExpiry: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'email_verification_token_expiry',
+    },
+  },
+  {
+    tableName: 'user_emails',
+    timestamps: false,
+  }
+);
+
+export const UserPasswordReset = sequelize.define(
+  'UserPasswordReset',
+  {
+    Id: {
+      type: DataTypes.STRING(16),
+      primaryKey: true,
+      field: 'id',
+      defaultValue: () => generateUserId(),
+    },
+    UserId: {
+      type: DataTypes.STRING(16),
+      allowNull: false,
+      field: 'user_id',
+      references: {
+        model: User,
+        key: 'id',
+      },
+    },
+    PasswordResetToken: {
+      type: DataTypes.STRING(256),
+      allowNull: true,
+      field: 'password_reset_token',
+    },
+    PasswordResetTokenExpiry: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'password_reset_token_expiry',
+    },
+  },
+  {
+    tableName: 'user_password_resets',
+    timestamps: false,
+  }
+);
+
+export const UserRole = sequelize.define(
+  'UserRole',
+  {
+    Id: {
+      type: DataTypes.STRING(16),
+      primaryKey: true,
+      field: 'id',
+      defaultValue: () => generateUserId(),
+    },
+    UserId: {
+      type: DataTypes.STRING(16),
+      allowNull: false,
+      field: 'user_id',
+      references: {
+        model: User,
+        key: 'id',
+      },
+    },
+    RoleId: {
+      type: DataTypes.STRING(16),
+      allowNull: false,
+      field: 'role_id',
+      references: {
+        model: Role,
+        key: 'id',
+      },
+    },
+    CreatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: 'created_at',
+    },
+    UpdatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: 'updated_at',
+    },
+  },
+  {
+    tableName: 'user_roles',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  }
+);
+
+// Associations
+Role.hasMany(UserRole, { foreignKey: 'role_id', as: 'UserRoles' });
+UserRole.belongsTo(Role, { foreignKey: 'role_id', as: 'Role' });
+
+User.hasMany(UserRole, { foreignKey: 'user_id', as: 'UserRoles' });
+UserRole.belongsTo(User, { foreignKey: 'user_id', as: 'User' });
+
+User.hasOne(UserProfile, { foreignKey: 'user_id', as: 'UserProfile' });
+UserProfile.belongsTo(User, { foreignKey: 'user_id', as: 'User' });
+
+User.hasOne(UserEmail, { foreignKey: 'user_id', as: 'UserEmail' });
+UserEmail.belongsTo(User, { foreignKey: 'user_id', as: 'User' });
+
+User.hasOne(UserPasswordReset, {
+  foreignKey: 'user_id',
+  as: 'UserPasswordReset',
 });
-
-UserSchema.methods.matchPassword = async function(passwordIngresada) {
-    try {
-        return await bcrypt.compare(passwordIngresada, this.password);
-    } catch (error) {
-        throw error;
-    }
-};
-
-UserSchema.methods.generarJWT = function() {
-    const token = jwt.sign(
-        {
-            id: this._id,
-            email: this.email,
-            role: this.role
-        },
-        process.env.JWT_SECRET,
-        {
-            expiresIn: process.env.JWT_EXPIRES_IN || '30m',
-            issuer: process.env.JWT_ISSUER,
-            audience: process.env.JWT_AUDIENCE
-        }
-    );
-    return token;
-};
-
-UserSchema.methods.generarRefreshJWT = function() {
-    const refreshToken = jwt.sign(
-        {
-            id: this._id,
-            email: this.email,
-            type: 'refresh'
-        },
-        process.env.JWT_SECRET,
-        {
-            expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-            issuer: process.env.JWT_ISSUER
-        }
-    );
-    return refreshToken;
-};
-
-UserSchema.methods.generarVerificationToken = function() {
-    const token = jwt.sign(
-        {
-            id: this._id,
-            email: this.email,
-            tipo: 'email_verification'
-        },
-        process.env.JWT_SECRET,
-        {
-            expiresIn: `${process.env.VERIFICATION_EMAIL_EXPIRY_HOURS || 24}h`
-        }
-    );
-    
-    this.verificationToken = token;
-    return token;
-};
-
-UserSchema.methods.generarResetPasswordToken = function() {
-    const token = jwt.sign(
-        {
-            id: this._id,
-            email: this.email,
-            tipo: 'password_reset'
-        },
-        process.env.JWT_SECRET,
-        {
-            expiresIn: `${process.env.PASSWORD_RESET_EXPIRY_HOURS || 1}h`
-        }
-    );
-    
-    this.resetPasswordToken = token;
-    this.resetPasswordExpires = new Date(Date.now() + (process.env.PASSWORD_RESET_EXPIRY_HOURS || 1) * 60 * 60 * 1000);
-    return token;
-};
-
-export default mongoose.model('User', UserSchema);
+UserPasswordReset.belongsTo(User, { foreignKey: 'user_id', as: 'User' });

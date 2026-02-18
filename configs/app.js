@@ -1,41 +1,70 @@
+'use strict';
+
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import { dbConnection } from './db.js';
-import { createPlatformAdmin } from '../helper/createPlatformAdmin.js';
-import authRoutes from '../src/User/auth.routes.js';
+import { corsOptions } from './cors-configuration.js';
+import { helmetConfiguration } from './helmet-configuration.js';
+import { requestLimit } from '../middlewares/request-limit.js';
+import {
+  errorHandler,
+  notFound,
+} from '../middlewares/server-genericError-handler.js';
+import authRoutes from '../src/auth/auth.routes.js';
+import restaurantRoutes from '../src/Restaurant/Restaurant.routes.js';
+
+const BASE_PATH = '/api/v1';
+
+const middlewares = (app) => {
+  app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+  app.use(express.json({ limit: '10mb' }));
+  app.use(cors(corsOptions));
+  app.use(helmet(helmetConfiguration));
+  app.use(requestLimit);
+  app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
+};
+
+const routes = (app) => {
+  app.use(`${BASE_PATH}/auth`, authRoutes);
+  app.use(`${BASE_PATH}/restaurants`, restaurantRoutes);
+
+  app.get(`${BASE_PATH}/health`, (req, res) => {
+    res.status(200).json({
+      status: 'Healthy',
+      timestamp: new Date().toISOString(),
+      service: 'GastroFlow',
+    });
+  });
+  app.use(notFound);
+};
 
 export const initServer = async () => {
-    const app = express();
-    const PORT = parseInt(process.env.PORT, 10) || 3006;
-    const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3006')
-        .split(',')
-        .map(origin => origin.trim());
+  const app = express();
+  const PORT = process.env.PORT;
+  app.set('trust proxy', 1);
 
-    app.use(cors({
-        origin: allowedOrigins,
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization']
-    }));
+  try {
+    await dbConnection();
 
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
-    app.use('/api/auth', authRoutes);
+    const { seedInitialData } = await import('../seeders/dataSeeder.js');
+    await seedInitialData();
 
-    try {
-        await dbConnection();
+    middlewares(app);
+    routes(app);
 
-        console.log('Base de datos conectada');
+    app.use(errorHandler);
 
-        await createPlatformAdmin();
+    const server = app.listen(PORT, () => {
+      console.log(`GastroFlow API running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
 
-        app.listen(PORT, () => {
-            console.log(`GastroFlow Admin server running on port ${PORT}`);
-            console.log(`CORS enabled for: ${allowedOrigins.join(', ')}`);
-        });
-
-    } catch (error) {
-        console.error(`Error starting server: ${error.message}`);
-        process.exit(1);
-    }
+    return server;
+  } catch (error) {
+    console.error(`Error starting server:`, error.message);
+    console.error('Stack trace:', error.stack);
+    process.exit(1);
+  }
 };

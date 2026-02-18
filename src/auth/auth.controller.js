@@ -41,8 +41,18 @@ export const register = asyncHandler(async (req, res) => {
 
 export const login = asyncHandler(async (req, res) => {
   try {
-    const { emailOrUsername, password } = req.body;
-    const result = await loginUserHelper(emailOrUsername, password);
+    const { emailOrUsername, email, username, password } = req.body;
+    const credential = emailOrUsername || email || username;
+    
+    if (!credential || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email o Username y contraseña son requeridos',
+        error: 'Credenciales incompletas',
+      });
+    }
+
+    const result = await loginUserHelper(credential, password);
 
     res.status(200).json(result);
   } catch (error) {

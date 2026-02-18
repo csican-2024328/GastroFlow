@@ -1,146 +1,194 @@
-'use strict';
+import { Restaurant } from './Restaurant.model.js';
+import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
 
-import Restaurant from './Restaurant.model.js';
+export const createRestaurant = asyncHandler(async (req, res) => {
+  try {
+    const { name, email, phone, address, city, openingHours } = req.body;
 
-export const createRestaurant = async (req, res) => {
-    try {
-        const restaurant = new Restaurant(req.body);
-        await restaurant.save();
-
-        res.status(201).json({
-            success: true,
-            message: 'Restaurante creado exitosamente',
-            data: restaurant
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: 'Error al crear restaurante',
-            error: error.message
-        });
-    }
-};
-
-export const getRestaurants = async (req, res) => {
-    try {
-        const { page = 1, limit = 10, isActive = true } = req.query;
-
-        const filter = { isActive };
-
-        const restaurants = await Restaurant.find(filter)
-            .limit(limit * 1)
-            .skip((page - 1) * limit)
-            .sort({ createdAt: -1 });
-
-        const total = await Restaurant.countDocuments(filter);
-
-        res.status(200).json({
-            success: true,
-            data: restaurants,
-            pagination: {
-                currentPage: page,
-                totalPages: Math.ceil(total / limit),
-                totalRecords: total,
-                limit
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener restaurantes',
-            error: error.message
-        });
-    }
-};
-
-export const getRestaurantById = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const restaurant = await Restaurant.findById(id);
-
-        if (!restaurant) {
-            return res.status(404).json({
-                success: false,
-                message: 'Restaurante no encontrado'
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            data: restaurant
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener restaurante',
-            error: error.message
-        });
-    }
-};
-
-export const updateRestaurant = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const restaurant = await Restaurant.findByIdAndUpdate(
-            id,
-            req.body,
-            { new: true, runValidators: true }
-        );
-
-        if (!restaurant) {
-            return res.status(404).json({
-                success: false,
-                message: 'Restaurante no encontrado'
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: 'Restaurante actualizado exitosamente',
-            data: restaurant
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar restaurante',
-            error: error.message
-        });
-    }
-};
-
-export const changeRestaurantStatus = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const isActive = req.url.includes('/activate');
-        const action = isActive ? 'activado' : 'desactivado';
-
-        const restaurant = await Restaurant.findByIdAndUpdate(
-            id,
-            { isActive },
-            { new: true }
-        );
-
-        if (!restaurant) {
-            return res.status(404).json({
-                success: false,
-                message: 'Restaurante no encontrado'
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: `Restaurante ${action} exitosamente`,
-            data: restaurant
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al cambiar el estado del restaurante',
-            error: error.message
-        });
+    if (!name || !email || !phone || !address || !city || !openingHours) {
+      return res.status(400).json({
+        success: false,
+        message: 'Todos los campos son requeridos',
+      });
     }
 
-    
-};
+    const existingRestaurant = await Restaurant.findOne({
+      where: { Email: email },
+    });
+
+    if (existingRestaurant) {
+      return res.status(409).json({
+        success: false,
+        message: 'El email del restaurante ya está registrado',
+      });
+    }
+
+    const restaurant = await Restaurant.create({
+      Name: name,
+      Email: email,
+      Phone: phone,
+      Address: address,
+      City: city,
+      OpeningHours: openingHours,
+      IsActive: true,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Restaurante creado exitosamente',
+      data: restaurant,
+    });
+  } catch (error) {
+    console.error('Error creating restaurant:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al crear el restaurante',
+      error: error.message,
+    });
+  }
+});
+
+export const getRestaurants = asyncHandler(async (req, res) => {
+  try {
+    const restaurants = await Restaurant.findAll({
+      where: { IsActive: true },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: restaurants,
+    });
+  } catch (error) {
+    console.error('Error fetching restaurants:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener restaurantes',
+      error: error.message,
+    });
+  }
+});
+
+export const getRestaurantById = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const restaurant = await Restaurant.findByPk(id);
+
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Restaurante no encontrado',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: restaurant,
+    });
+  } catch (error) {
+    console.error('Error fetching restaurant:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener el restaurante',
+      error: error.message,
+    });
+  }
+});
+
+export const updateRestaurant = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone, address, city, openingHours } = req.body;
+
+    const restaurant = await Restaurant.findByPk(id);
+
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Restaurante no encontrado',
+      });
+    }
+
+    await restaurant.update({
+      Name: name || restaurant.Name,
+      Email: email || restaurant.Email,
+      Phone: phone || restaurant.Phone,
+      Address: address || restaurant.Address,
+      City: city || restaurant.City,
+      OpeningHours: openingHours || restaurant.OpeningHours,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Restaurante actualizado exitosamente',
+      data: restaurant,
+    });
+  } catch (error) {
+    console.error('Error updating restaurant:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar el restaurante',
+      error: error.message,
+    });
+  }
+});
+
+export const activateRestaurant = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const restaurant = await Restaurant.findByPk(id);
+
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Restaurante no encontrado',
+      });
+    }
+
+    await restaurant.update({ IsActive: true });
+
+    res.status(200).json({
+      success: true,
+      message: 'Restaurante activado',
+      data: restaurant,
+    });
+  } catch (error) {
+    console.error('Error activating restaurant:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al activar el restaurante',
+      error: error.message,
+    });
+  }
+});
+
+export const deactivateRestaurant = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const restaurant = await Restaurant.findByPk(id);
+
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Restaurante no encontrado',
+      });
+    }
+
+    await restaurant.update({ IsActive: false });
+
+    res.status(200).json({
+      success: true,
+      message: 'Restaurante desactivado',
+      data: restaurant,
+    });
+  } catch (error) {
+    console.error('Error deactivating restaurant:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al desactivar el restaurante',
+      error: error.message,
+    });
+  }
+});
