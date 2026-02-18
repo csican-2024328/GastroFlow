@@ -3,11 +3,13 @@ import cors from 'cors';
 import { dbConnection } from './db.js';
 import { createPlatformAdmin } from '../helper/createPlatformAdmin.js';
 import authRoutes from '../src/User/auth.routes.js';
+import reportsRoutes from '../src/Reports/reports.routes.js';
 import { errorMiddleware } from '../middlewares/error.middleware.js';
 
 export const initServer = async () => {
     const app = express();
     const PORT = parseInt(process.env.PORT, 10) || 3006;
+
     const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3006')
         .split(',')
         .map(origin => origin.trim());
@@ -23,6 +25,14 @@ export const initServer = async () => {
     app.use(express.urlencoded({ extended: true }));
 
     app.use('/api/auth', authRoutes);
+    app.use('/api/reports', reportsRoutes);
+
+    app.use((req, res) => {
+        res.status(404).json({
+            success: false,
+            message: 'Ruta no encontrada'
+        });
+    });
 
     app.use(errorMiddleware);
 
