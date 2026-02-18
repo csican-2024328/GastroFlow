@@ -4,7 +4,8 @@ import {
     getRestaurants,
     getRestaurantById,
     updateRestaurant,
-    changeRestaurantStatus
+    changeRestaurantStatus,
+    deleteRestaurant
 } from './Restaurant.controller.js';
 
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
@@ -61,6 +62,15 @@ router.put(
     validateRestaurantStatus,
     validarCampos,
     changeRestaurantStatus
+);
+
+router.delete(
+    '/:id',
+    autenticar,
+    autorizarRole('PLATFORM_ADMIN'),
+    validateRestaurantId,
+    validarCampos,
+    deleteRestaurant
 );
 
 export default router;

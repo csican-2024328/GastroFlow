@@ -110,6 +110,38 @@ export const updateRestaurant = async (req, res) => {
     }
 };
 
+export const deleteRestaurant = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const restaurant = await Restaurant.findByIdAndUpdate(
+            id,
+            { isActive: false },
+            { new: true }
+        );
+
+        if (!restaurant) {
+            return res.status(404).json({
+                success: false,
+                message: 'Restaurante no encontrado'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Restaurante eliminado (inactivado) exitosamente',
+            data: restaurant
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error al eliminar restaurante',
+            error: error.message
+        });
+    }
+};
+
 export const changeRestaurantStatus = async (req, res) => {
     try {
         const { id } = req.params;
