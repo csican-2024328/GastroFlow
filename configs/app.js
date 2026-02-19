@@ -17,6 +17,9 @@ import authRoutes from '../src/auth/auth.routes.js';
 import restaurantRoutes from '../src/Restaurant/Restaurant.routes.js';
 import mesaRoutes from '../src/Mesas/mesa.routes.js';
 import platosRoutes from '../src/Platos/platos.routes.js';
+import reportsRoutes from '../src/Reports/reports.routes.js';
+import inventoryRoutes from '../src/Inventory/inventory.routes.js';
+import { errorMiddleware } from '../middlewares/error.middleware.js';
 
 const BASE_PATH = '/api/v1';
 
@@ -34,6 +37,8 @@ const routes = (app) => {
   app.use(`${BASE_PATH}/restaurants`, restaurantRoutes);
   app.use(`${BASE_PATH}/mesas`, mesaRoutes);
   app.use(`${BASE_PATH}/platos`, platosRoutes);
+  app.use(`${BASE_PATH}/reports`, reportsRoutes);
+  app.use(`${BASE_PATH}/inventory`, inventoryRoutes);
 
   app.get(`${BASE_PATH}/health`, (req, res) => {
     res.status(200).json({
@@ -62,6 +67,7 @@ export const initServer = async () => {
 
     middlewares(app);
     routes(app);
+    app.use(errorMiddleware);
 
     app.use(errorHandler);
 

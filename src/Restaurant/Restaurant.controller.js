@@ -15,7 +15,6 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       averagePrice,
       photos,
     } = req.body;
-
     if (!name || !email || !phone || !address || !city || !openingHours) {
       return res.status(400).json({
         success: false,
@@ -63,11 +62,25 @@ export const createRestaurant = asyncHandler(async (req, res) => {
 
 export const getRestaurants = asyncHandler(async (req, res) => {
   try {
-    const restaurants = await Restaurant.find({ isActive: true });
+    const { page = 1, limit = 10, isActive = true } = req.query;
+    const filter = { isActive };
+
+    const restaurants = await Restaurant.find(filter)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .sort({ createdAt: -1 });
+
+    const total = await Restaurant.countDocuments(filter);
 
     res.status(200).json({
       success: true,
       data: restaurants,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalRecords: total,
+        limit,
+      },
     });
   } catch (error) {
     console.error('Error fetching restaurants:', error);
@@ -228,6 +241,72 @@ export const deactivateRestaurant = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error al desactivar el restaurante',
+      error: error.message,
+    });
+  }
+});
+
+export const deleteRestaurant = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const restaurant = await Restaurant.findByIdAndUpdate(
+      id,
+      { isActive: false },
+      { new: true }
+    );
+
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Restaurante no encontrado',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Restaurante eliminado (inactivado) exitosamente',
+      data: restaurant,
+    });
+  } catch (error) {
+    console.error('Error deleting restaurant:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al eliminar restaurante',
+      error: error.message,
+    });
+  }
+});
+
+export const changeRestaurantStatus = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const isActive = req.url.includes('/activate');
+    const action = isActive ? 'activado' : 'desactivado';
+
+    const restaurant = await Restaurant.findByIdAndUpdate(
+      id,
+      { isActive },
+      { new: true }
+    );
+
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Restaurante no encontrado',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Restaurante ${action} exitosamente`,
+      data: restaurant,
+    });
+  } catch (error) {
+    console.error('Error changing restaurant status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al cambiar el estado del restaurante',
       error: error.message,
     });
   }

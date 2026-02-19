@@ -1,19 +1,19 @@
 import { Router } from 'express';
 import {
-    changePlatoStatus,
-    createPlato,
-    getPlatoById,
-    getPlatos,
-    getMenuByRestaurant,
-    updatePlato
-} from './platos-controller.js';
+    createInventoryItem,
+    getInventoryItems,
+    getInventoryItemById,
+    updateInventoryItem,
+    deleteInventoryItem
+} from './inventory.controller.js';
+
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 import { validarCampos } from '../../middlewares/validator.middleware.js';
 import {
-    validateCreatePlato,
-    validatePlatoId,
-    validateUpdatePlato
-} from '../../middlewares/platos.validator.js';
+    validateCreateInventory,
+    validateInventoryId,
+    validateUpdateInventory
+} from '../../middlewares/inventory.validator.js';
 
 const router = Router();
 
@@ -21,47 +21,43 @@ router.post(
     '/create',
     autenticar,
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
-    validateCreatePlato,
+    validateCreateInventory,
     validarCampos,
-    createPlato
+    createInventoryItem
 );
 
-router.get('/get', getPlatos);
-
-router.get('/menu/:restaurantID', getMenuByRestaurant);
+router.get(
+    '/get',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    getInventoryItems
+);
 
 router.get(
     '/:id',
-    validatePlatoId,
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateInventoryId,
     validarCampos,
-    getPlatoById
+    getInventoryItemById
 );
 
 router.put(
     '/:id',
     autenticar,
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
-    validateUpdatePlato,
+    validateUpdateInventory,
     validarCampos,
-    updatePlato
+    updateInventoryItem
 );
 
-router.put(
-    '/:id/activate',
+router.delete(
+    '/:id',
     autenticar,
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
-    validatePlatoId,
+    validateInventoryId,
     validarCampos,
-    changePlatoStatus
-);
-
-router.put(
-    '/:id/deactivate',
-    autenticar,
-    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
-    validatePlatoId,
-    validarCampos,
-    changePlatoStatus
+    deleteInventoryItem
 );
 
 export default router;

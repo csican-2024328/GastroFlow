@@ -1,6 +1,6 @@
 # GastroFlow API
 
-## Total de Endpoints (activos): 27
+## Total de Endpoints (activos): 35
 
 ## Credenciales por defecto (seed)
 
@@ -189,11 +189,82 @@ Authorization: Bearer {token_de_usuario}
 
 ---
 
-### ❤️ HEALTH
+### 📊 REPORTES (`/reports`) - 3 endpoints
+
+#### `GET http://localhost:3006/api/v1/reports/top-platos` - Requiere token de PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_platform_admin}
+```
+**Respuesta:** Top 5 platos más vendidos con cantidad de ventas e ingresos
+
+#### `GET http://localhost:3006/api/v1/reports/ingresos` - Requiere token de PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_platform_admin}
+Query params:
+- start: "2026-02-01" (fecha inicio)
+- end: "2026-02-28" (fecha fin)
+```
+**Respuesta:** Total de ingresos, mesas cerradas y promedio de cuenta en rango de fechas
+
+#### `GET http://localhost:3006/api/v1/reports/ocupacion` - Requiere token de PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_platform_admin}
+```
+**Respuesta:** Horarios de mayor ocupación de mesas
+
+---
+
+### 📦 INVENTARIO (`/inventory`) - 5 endpoints
+
+#### `POST http://localhost:3006/api/v1/inventory/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "nombre": "Aceite de Oliva",
+  "stock": 50,
+  "unidadMedida": "l"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Unidades permitidas:** kg, g, l, ml, unidad, paquete
+
+#### `GET http://localhost:3006/api/v1/inventory/get` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Respuesta:** Lista de todos los insumos activos
+
+#### `GET http://localhost:3006/api/v1/inventory/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Respuesta:** Detalles de un insumo específico
+
+#### `PUT http://localhost:3006/api/v1/inventory/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "nombre": "Aceite de Oliva Extra Virgen",
+  "stock": 75,
+  "unidadMedida": "l"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+
+#### `DELETE http://localhost:3006/api/v1/inventory/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Nota:** Soft delete (marca como inactivo)
+
+---
+
+### ❤️ HEALTH - 1 endpoint
 
 #### `GET http://localhost:3006/api/v1/health` - Publico
 
----
 
 ### 🍴 PLATOS/MENU (`/platos`) - 7 endpoints
 
