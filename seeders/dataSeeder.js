@@ -8,37 +8,15 @@ import {
   UserRole,
 } from '../src/User/User.model.js';
 import { hashPassword } from '../utils/password-utils.js';
-
-const ADMIN_ROLE_NAME = 'ADMIN_ROLE';
-const USER_ROLE_NAME = 'USER_ROLE';
+import { ADMIN_ROLE, ALLOWED_ROLES } from '../helper/role-constants.js';
 
 const createDefaultRoles = async (transaction) => {
-  const existingAdminRole = await Role.findOne({
-    where: { Name: ADMIN_ROLE_NAME },
-    transaction,
-  });
-
-  if (!existingAdminRole) {
-    await Role.create(
-      {
-        Name: ADMIN_ROLE_NAME,
-      },
-      { transaction }
-    );
-  }
-
-  const existingUserRole = await Role.findOne({
-    where: { Name: USER_ROLE_NAME },
-    transaction,
-  });
-
-  if (!existingUserRole) {
-    await Role.create(
-      {
-        Name: USER_ROLE_NAME,
-      },
-      { transaction }
-    );
+  for (const roleName of ALLOWED_ROLES) {
+    await Role.findOrCreate({
+      where: { Name: roleName },
+      defaults: { Name: roleName },
+      transaction,
+    });
   }
 };
 
@@ -69,12 +47,10 @@ const createDefaultAdmin = async () => {
     );
 
     // Obtener el rol ADMIN_ROLE
-    const adminRole = await Role.findOne(
-      {
-        where: { Name: ADMIN_ROLE_NAME },
-      },
-      { transaction }
-    );
+    const adminRole = await Role.findOne({
+      where: { Name: ADMIN_ROLE },
+      transaction,
+    });
 
     // Asignar rol al usuario
     if (adminRole) {
@@ -130,6 +106,7 @@ const createDefaultAdmin = async () => {
 
 export const seedInitialData = async () => {
   try {
+    await createDefaultRoles();
     await createDefaultAdmin();
   } catch (error) {
     console.error('Seed | Error seeding initial data:', error.message);

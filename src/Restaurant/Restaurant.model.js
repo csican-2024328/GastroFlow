@@ -10,6 +10,24 @@ const restaurantSchema = mongoose.Schema(
       trim: true,
       maxLength: [100, 'El nombre no puede exceder 100 caracteres'],
     },
+    category: {
+      type: String,
+      trim: true,
+      maxLength: [50, 'La categoría no puede exceder 50 caracteres'],
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxLength: [1000, 'La descripción no puede exceder 1000 caracteres'],
+    },
+    averagePrice: {
+      type: Number,
+      min: [0, 'El precio promedio debe ser mayor o igual a 0'],
+    },
+    photos: {
+      type: [String],
+      default: [],
+    },
     email: {
       type: String,
       required: [true, 'El email es obligatorio'],

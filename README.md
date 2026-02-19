@@ -1,6 +1,12 @@
 # GastroFlow API
 
-## Total de Endpoints: 28
+## Total de Endpoints (activos): 27
+
+## Credenciales por defecto (seed)
+
+- Username: admin
+- Email: admin@gastroflow.local
+- Password: Admin@1234!
 
 ## Configuración Importante
 ⚠️ **IMPORTANTE**: Crear archivo `.env` con las credenciales necesarias (no se sube al repositorio por seguridad)
@@ -12,15 +18,24 @@ Copia este contenido en un archivo `.env` en la raíz del proyecto:
 ```env
 NODE_ENV = development
 PORT = 3006
-
-URI_MONGO=mongodb://localhost:27017/GastroFlow
-
+ 
+# MongoDB (Restaurantes, Mesas, Platos) - Local sin autenticación
+MONGODB_URI=mongodb://localhost:27017/GastroFlow
+ 
+# Database PostgreSQL (Usuarios, Autenticación)
+DB_HOST=localhost
+DB_PORT=5435
+DB_NAME=GastroFlow
+DB_USERNAME=root
+DB_PASSWORD=admin
+DB_SQL_LOGGING=false
+ 
 JWT_SECRET=MyVerySecretKeyForJWTTokenAuthenticationWith256Bits!
 JWT_EXPIRES_IN=30m
 JWT_REFRESH_EXPIRES_IN=7d
 JWT_ISSUER=AuthService
 JWT_AUDIENCE=AuthService
-
+ 
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_ENABLE_SSL=true
@@ -28,14 +43,14 @@ SMTP_USERNAME=kinalsports@gmail.com
 SMTP_PASSWORD=yrsd prvf kwat toee
 EMAIL_FROM=kinalsports@gmail.com
 EMAIL_FROM_NAME=AuthDotnet App
-
+ 
 # Verification Tokens (en horas)
 VERIFICATION_EMAIL_EXPIRY_HOURS=24
 PASSWORD_RESET_EXPIRY_HOURS=1
-
+ 
 # Frontend URL (para enlaces en emails)
 FRONTEND_URL=http://localhost:5173
-
+ 
 # Cloudinary (upload de imágenes de perfil)
 CLOUDINARY_CLOUD_NAME=dut08rmaz
 CLOUDINARY_API_KEY=279612751725163
@@ -43,141 +58,92 @@ CLOUDINARY_API_SECRET=UxGMRqU1iB580Kxb2AlDR4n4hu0
 CLOUDINARY_BASE_URL=https://res.cloudinary.com/dut08rmaz/image/upload/
 CLOUDINARY_FOLDER=gastroflow/profiles
 CLOUDINARY_DEFAULT_AVATAR_FILENAME=default-avatar_ewzxwx.png
-
+ 
 # File Upload (alternativa local)
 UPLOAD_PATH=./uploads
-
+ 
 # CORS Configuration
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:3006
 ADMIN_ALLOWED_ORIGINS=http://localhost:5173
+
 ```
 
 ---
-
-## � Flujo de Activación de Cuenta
-
-1. **Al registrarse**: La cuenta se crea con `status: "INACTIVO"` y `emailVerified: false`
-2. **Se envía email**: Con un token de verificación (válido 24 horas)
-3. **Al verificar email**: La cuenta cambia a `status: "ACTIVO"` y `emailVerified: true`
-4. **Login permitido**: Solo después de verificar el email
-
-⚠️ **Importante**: No puedes hacer login si no has verificado tu email primero.
-
----
-## 👥 Roles de Usuario
-
-- **CLIENT**: Usuario cliente (puede hacer reservas, ver menú)
-- **RESTAURANT_ADMIN**: Administrador de restaurante (puede gestionar su restaurante, platos y mesas)
-- **PLATFORM_ADMIN**: Administrador de plataforma (control total, puede activar/desactivar restaurantes)
-
----
-
-## 🍽️ Categorías de Platos
-
-Las categorías válidas para los platos son:
-- **ENTRADA** - Aperitivos y entradas
-- **FUERTE** - Platos principales
-- **POSTRE** - Postres y dulces
-- **BEBIDA** - Bebidas (alcohólicas y no alcohólicas)
-
----
-
 ## 📍 Endpoints Funcionales
 
-### 🔐 AUTENTICACIÓN (`/api/auth`) - 10 endpoints
+**Base URL:** http://localhost:3006/api/v1
 
-#### `POST /api/auth/registro` - Público
+### 🔐 AUTENTICACION (`/auth`) - 8 endpoints
+
+#### `POST http://localhost:3006/api/v1/auth/register` - Publico
 ```json
 {
   "name": "Juan",
-  "surname": "Pérez",
+  "surname": "Perez",
+  "username": "juanperez",
   "email": "juan@example.com",
   "password": "Password123!",
-  "phone": "50212345678",
-  "role": "CLIENT"
+  "phone": "50212345678"
 }
 ```
-📧 **Nota**: Al registrarse, la cuenta queda con `status: "INACTIVO"`. Debes verificar el email para activarla.
 
-#### `POST /api/auth/login` - Público
+#### `POST http://localhost:3006/api/v1/auth/login` - Publico
 ```json
 {
-  "email": "juan@example.com",
-  "password": "Password123!"
+  "emailOrUsername": "admin",
+  "password": "Admin@1234!"
 }
 ```
-⚠️ **Nota**: Solo funciona si el email ha sido verificado. Si no, recibirás un error 403.
 
-#### `POST /api/auth/verificar-email` - Público
+#### `POST http://localhost:3006/api/v1/auth/verify-email` - Publico
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
-También puedes usar: `GET /api/auth/verificar-email?token=...`
 
-✅ **Nota**: Este endpoint cambia el `status: "ACTIVO"` y permite hacer login.
-
-#### `POST /api/auth/refresh` - Público
-```json
-{
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-#### `POST /api/auth/olvide-contraseña` - Público
+#### `POST http://localhost:3006/api/v1/auth/resend-verification` - Publico
 ```json
 {
   "email": "juan@example.com"
 }
 ```
 
-#### `PUT /api/auth/reset-contraseña/:token` - Público
+#### `POST http://localhost:3006/api/v1/auth/forgot-password` - Publico
 ```json
 {
-  "password": "NuevaPassword123!"
+  "email": "juan@example.com"
 }
 ```
 
-#### `GET /api/auth/me` - Requiere token de USUARIO
-```bash
-Authorization: Bearer {token_de_cualquier_usuario}
-```
-
-#### `PUT /api/auth/actualizar` - Requiere token de USUARIO
+#### `POST http://localhost:3006/api/v1/auth/reset-password` - Publico
 ```json
 {
-  "name": "Juan Carlos",
-  "surname": "Pérez López",
-  "phone": "50212345679"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "newPassword": "NuevaPassword123!"
 }
 ```
+
+#### `GET http://localhost:3006/api/v1/auth/profile` - Requiere token
 ```bash
 Authorization: Bearer {token_de_usuario}
 ```
 
-#### `PUT /api/auth/cambiar-contraseña` - Requiere token de USUARIO
+#### `POST http://localhost:3006/api/v1/auth/profile/by-id` - Requiere token
 ```json
 {
-  "currentPassword": "Password123!",
-  "newPassword": "NuevaPassword456!"
+  "userId": "usr_xxxxxxxxxxxx"
 }
 ```
 ```bash
 Authorization: Bearer {token_de_usuario}
 ```
-
-#### `POST /api/auth/logout` - Requiere token de USUARIO
-```bash
-Authorization: Bearer {token_de_usuario}
-```
-Sin body necesario.
 
 ---
 
-### 🏢 RESTAURANTES (`/api/restaurants`) - 6 endpoints
+### 🏢 RESTAURANTES (`/restaurants`) - 6 endpoints
 
-#### `POST /api/restaurants/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `POST http://localhost:3006/api/v1/restaurants/create` - Requiere token
 ```json
 {
   "name": "Mi Restaurante",
@@ -189,70 +155,70 @@ Sin body necesario.
 }
 ```
 ```bash
-Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+Authorization: Bearer {token_de_usuario}
 ```
 
-#### `GET /api/restaurants/get` - Público
-Sin autenticación requerida.
+#### `GET http://localhost:3006/api/v1/restaurants/get` - Publico
 
-#### `GET /api/restaurants/:id` - Público
-Sin autenticación requerida.
+#### `GET http://localhost:3006/api/v1/restaurants/:id` - Publico
 
-#### `PUT /api/restaurants/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `PUT http://localhost:3006/api/v1/restaurants/:id` - Requiere token
 ```json
 {
   "name": "Restaurante Actualizado",
   "email": "nuevo@restaurante.com",
   "phone": "50287654321",
   "address": "Avenida Central 456",
-  "city": "Antigua Guatemala"
+  "city": "Antigua Guatemala",
+  "openingHours": "Lun-Vie 10:00-20:00"
 }
 ```
 ```bash
-Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+Authorization: Bearer {token_de_usuario}
 ```
 
-#### `PUT /api/restaurants/:id/activate` - Requiere token de PLATFORM_ADMIN
+#### `PUT http://localhost:3006/api/v1/restaurants/:id/activate` - Requiere token
 ```bash
-Authorization: Bearer {token_de_platform_admin}
+Authorization: Bearer {token_de_usuario}
 ```
-Sin body necesario.
 
-#### `PUT /api/restaurants/:id/deactivate` - Requiere token de PLATFORM_ADMIN
+#### `PUT http://localhost:3006/api/v1/restaurants/:id/deactivate` - Requiere token
 ```bash
-Authorization: Bearer {token_de_platform_admin}
+Authorization: Bearer {token_de_usuario}
 ```
-Sin body necesario.
 
 ---
 
-### 🍴 PLATOS/MENÚ (`/api/platos`) - 7 endpoints
+### ❤️ HEALTH
 
-#### `POST /api/platos/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `GET http://localhost:3006/api/v1/health` - Publico
+
+---
+
+### 🍴 PLATOS/MENU (`/platos`) - 7 endpoints
+
+#### `POST http://localhost:3006/api/v1/platos/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
 Content-Type: multipart/form-data
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 
 Form data:
 - nombre: "Tacos al Pastor"
-- descripcion: "Deliciosos tacos con piña"
+- descripcion: "Deliciosos tacos con pina"
 - precio: 35.50
 - categoria: "FUERTE"
 - restaurantID: "507f1f77bcf86cd799439011"
-- ingredientes: ["tortilla", "cerdo", "piña", "cilantro"]
+- ingredientes: ["tortilla", "cerdo", "pina", "cilantro"]
 - image: [archivo.jpg]
 ```
 
-#### `GET /api/platos/get` - Público
-Sin autenticación requerida.
+#### `GET http://localhost:3006/api/v1/platos/get` - Publico
 
-#### `GET /api/platos/:id` - Público
-Sin autenticación requerida.
+#### `GET http://localhost:3006/api/v1/platos/:id` - Publico
 
-#### `GET /api/platos/menu/:restaurantID` - Público
-Sin autenticación requerida.
+#### `GET http://localhost:3006/api/v1/platos/menu/:restaurantID` - Publico
 
-#### `PUT /api/platos/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `PUT http://localhost:3006/api/v1/platos/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
 Content-Type: multipart/form-data
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
@@ -265,23 +231,21 @@ Form data:
 - image: [nuevo_archivo.jpg] (opcional)
 ```
 
-#### `PUT /api/platos/:id/activate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `PUT http://localhost:3006/api/v1/platos/:id/activate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
-Sin body necesario.
 
-#### `PUT /api/platos/:id/deactivate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `PUT http://localhost:3006/api/v1/platos/:id/deactivate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
-Sin body necesario.
 
 ---
 
-### 📊 MESAS (`/api/mesas`) - 5 endpoints
+### 📊 MESAS (`/mesas`) - 5 endpoints
 
-#### `POST /api/mesas/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `POST http://localhost:3006/api/v1/mesas/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```json
 {
   "number": 5,
@@ -295,13 +259,11 @@ Sin body necesario.
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 
-#### `GET /api/mesas/get` - Público
-Sin autenticación requerida.
+#### `GET http://localhost:3006/api/v1/mesas/get` - Publico
 
-#### `GET /api/mesas/:id` - Público
-Sin autenticación requerida.
+#### `GET http://localhost:3006/api/v1/mesas/:id` - Publico
 
-#### `PUT /api/mesas/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `PUT http://localhost:3006/api/v1/mesas/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```json
 {
   "number": 5,
@@ -314,10 +276,11 @@ Sin autenticación requerida.
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 
-#### `DELETE /api/mesas/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `DELETE http://localhost:3006/api/v1/mesas/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
-Sin body necesario.
+#### `GET /api/platos/:id` - Público
 
+Sin autenticación requerida.
 

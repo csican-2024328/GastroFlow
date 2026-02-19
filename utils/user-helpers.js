@@ -1,4 +1,6 @@
 export const buildUserResponse = (user) => {
+  const roleName = user.UserRoles?.[0]?.Role?.Name || user.Role || 'CLIENT';
+
   return {
     id: user.Id,
     name: user.Name,
@@ -9,7 +11,7 @@ export const buildUserResponse = (user) => {
     profileImage: user.UserProfile && user.UserProfile.ProfilePicture 
       ? user.UserProfile.ProfilePicture 
       : (user.ProfileImage || null),
-    role: user.Role,
+    role: roleName,
     status: user.Status,
     isEmailVerified: user.UserEmail ? user.UserEmail.EmailVerified : false,
     createdAt: user.CreatedAt,

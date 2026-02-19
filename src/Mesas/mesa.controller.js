@@ -4,6 +4,14 @@ import Mesa from './mesa.model.js';
 export const createMesa = async (req, res) => {
     try {
         const mesaData = req.body;
+
+        if (!mesaData.restaurantID) {
+            return res.status(400).json({
+                success: false,
+                message: 'El ID del restaurante es requerido',
+            });
+        }
+
         const mesa = new Mesa(mesaData);
         await mesa.save();
 
@@ -23,8 +31,12 @@ export const createMesa = async (req, res) => {
 
 export const getMesas = async (req, res) => {
     try {
-        const { page = 1, limit = 10, isActive = true } = req.query;
+        const { page = 1, limit = 10, isActive = true, restaurantID } = req.query;
         const filter = { isActive };
+
+        if (restaurantID) {
+            filter.restaurantID = restaurantID;
+        }
 
         const mesas = await Mesa.find(filter)
             .limit(limit * 1)

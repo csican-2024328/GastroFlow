@@ -113,7 +113,7 @@ export const loginUserHelper = async (emailOrUsername, password) => {
       throw new Error('Tu cuenta está desactivada. Contacta al administrador.');
     }
 
-    const role = user.Role || 'CLIENT';
+    const role = user.UserRoles?.[0]?.Role?.Name || 'CLIENT';
 
     const token = await generateJWT(user.Id.toString(), { role });
 

@@ -3,7 +3,18 @@ import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
 
 export const createRestaurant = asyncHandler(async (req, res) => {
   try {
-    const { name, email, phone, address, city, openingHours } = req.body;
+    const {
+      name,
+      email,
+      phone,
+      address,
+      city,
+      openingHours,
+      category,
+      description,
+      averagePrice,
+      photos,
+    } = req.body;
 
     if (!name || !email || !phone || !address || !city || !openingHours) {
       return res.status(400).json({
@@ -28,6 +39,10 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       address,
       city,
       openingHours,
+      category,
+      description,
+      averagePrice,
+      photos,
       isActive: true,
     });
 
@@ -94,18 +109,41 @@ export const getRestaurantById = asyncHandler(async (req, res) => {
 export const updateRestaurant = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, address, city, openingHours } = req.body;
+    const {
+      name,
+      email,
+      phone,
+      address,
+      city,
+      openingHours,
+      category,
+      description,
+      averagePrice,
+      photos,
+    } = req.body;
+
+    const updateData = {
+      name,
+      email,
+      phone,
+      address,
+      city,
+      openingHours,
+      category,
+      description,
+      averagePrice,
+      photos,
+    };
+
+    Object.keys(updateData).forEach((key) => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
 
     const restaurant = await Restaurant.findByIdAndUpdate(
       id,
-      {
-        name,
-        email,
-        phone,
-        address,
-        city,
-        openingHours,
-      },
+      updateData,
       { new: true, runValidators: true }
     );
 

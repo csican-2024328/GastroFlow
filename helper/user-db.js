@@ -3,6 +3,8 @@ import {
   UserProfile,
   UserEmail,
   UserPasswordReset,
+  Role,
+  UserRole,
 } from '../src/User/User.model.js';
 import { USER_ROLE } from './role-constants.js';
 import { hashPassword } from '../utils/password-utils.js';
@@ -21,6 +23,11 @@ export const findUserByEmailOrUsername = async (emailOrUsername) => {
         { model: UserProfile, as: 'UserProfile' },
         { model: UserEmail, as: 'UserEmail' },
         { model: UserPasswordReset, as: 'UserPasswordReset' },
+        {
+          model: UserRole,
+          as: 'UserRoles',
+          include: [{ model: Role, as: 'Role' }],
+        },
       ],
     });
 
@@ -38,6 +45,11 @@ export const findUserById = async (userId) => {
         { model: UserProfile, as: 'UserProfile' },
         { model: UserEmail, as: 'UserEmail' },
         { model: UserPasswordReset, as: 'UserPasswordReset' },
+        {
+          model: UserRole,
+          as: 'UserRoles',
+          include: [{ model: Role, as: 'Role' }],
+        },
       ],
     });
 
@@ -112,6 +124,21 @@ export const createNewUser = async (userData) => {
       { transaction }
     );
 
+    const defaultRole = await Role.findOne({
+      where: { Name: USER_ROLE },
+      transaction,
+    });
+
+    if (defaultRole) {
+      await UserRole.create(
+        {
+          UserId: user.Id,
+          RoleId: defaultRole.Id,
+        },
+        { transaction }
+      );
+    }
+
     await transaction.commit();
 
     const completeUser = await findUserById(user.Id);
@@ -185,6 +212,11 @@ export const findUserByEmail = async (email) => {
         { model: UserProfile, as: 'UserProfile' },
         { model: UserEmail, as: 'UserEmail' },
         { model: UserPasswordReset, as: 'UserPasswordReset' },
+        {
+          model: UserRole,
+          as: 'UserRoles',
+          include: [{ model: Role, as: 'Role' }],
+        },
       ],
     });
 
