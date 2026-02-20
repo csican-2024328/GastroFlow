@@ -1,6 +1,6 @@
 # GastroFlow API
 
-## Total de Endpoints (activos): 44
+## Total de Endpoints (activos): 53
 
 ## Credenciales por defecto (seed)
 
@@ -473,3 +473,95 @@ Authorization: Bearer {token_de_platform_admin}
 
 ---
 
+### 🎉 EVENTOS Y PROMOCIONES (`/events`) - 9 endpoints
+
+#### `POST http://localhost:3006/api/v1/events/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "nombre": "Descuento de Fin de Semana",
+  "descripcion": "20% de descuento en todas las bebidas durante el fin de semana",
+  "tipo": "DESCUENTO",
+  "restaurantID": "507f1f77bcf86cd799439011",
+  "descuentoTipo": "PORCENTAJE",
+  "descuentoValor": 20,
+  "fechaInicio": "2026-02-21T00:00:00Z",
+  "fechaFin": "2026-02-22T23:59:59Z",
+  "platosAplicables": ["507f1f77bcf86cd799439013", "507f1f77bcf86cd799439014"],
+  "condiciones": "Solo viernes y sábados a partir de las 6 PM",
+  "compraMinima": 50,
+  "cantidadMaximaUsos": 100
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Tipos válidos:** PROMOCION, DESCUENTO, COMBO, HAPPY_HOUR, EVENTO_ESPECIAL, OFERTA_TEMPORAL  
+**Respuesta:** Evento creado con ID único y estado automático
+
+#### `GET http://localhost:3006/api/v1/events/get` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+Query params (opcionales):
+- restaurantID: "507f1f77bcf86cd799439011"
+- tipo: "DESCUENTO" | "PROMOCION" | "COMBO" | "HAPPY_HOUR" | "EVENTO_ESPECIAL" | "OFERTA_TEMPORAL"
+- estado: "ACTIVA" | "INACTIVA" | "FINALIZADA"
+- vigentes: true (solo eventos vigentes)
+- page: 1 (número de página)
+- limit: 10 (items por página)
+```
+**Respuesta:** Lista de eventos con paginación e información del restaurante y platos
+
+#### `GET http://localhost:3006/api/v1/events/restaurant/:restaurantID/vigentes` - Público
+```bash
+Parámetros:
+- restaurantID: ID del restaurante
+```
+**Respuesta:** Eventos vigentes y activos del restaurante especificado
+
+#### `GET http://localhost:3006/api/v1/events/:id` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+**Respuesta:** Detalles completos de un evento específico
+
+#### `PUT http://localhost:3006/api/v1/events/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "nombre": "Descuento Mejorado de Fin de Semana",
+  "descripcion": "30% de descuento en todas las bebidas",
+  "descuentoValor": 30,
+  "fechaInicio": "2026-02-21T00:00:00Z",
+  "fechaFin": "2026-02-23T23:59:59Z"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Nota:** No se puede cambiar el restaurante o el usuario creador del evento
+
+#### `PUT http://localhost:3006/api/v1/events/:id/activate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Respuesta:** Evento activado
+
+#### `PUT http://localhost:3006/api/v1/events/:id/deactivate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Respuesta:** Evento desactivado
+
+#### `POST http://localhost:3006/api/v1/events/:id/usar` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+**Nota:** Registra el uso de una promoción, incrementa contador y valida disponibilidad  
+**Respuesta:** Confirmación con detalles del descuento aplicable
+
+#### `DELETE http://localhost:3006/api/v1/events/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Nota:** Soft delete - marca el evento como inactivo sin eliminar registro
+
+---

@@ -20,6 +20,7 @@ import platosRoutes from '../src/Platos/platos.routes.js';
 import reportsRoutes from '../src/Reports/reports.routes.js';
 import inventoryRoutes from '../src/Inventory/inventory.routes.js';
 import orderRoutes from '../src/Order/order.routes.js';
+import eventRoutes from '../src/Event/event.routes.js';
 import { errorMiddleware } from '../middlewares/error.middleware.js';
 
 const BASE_PATH = '/api/v1';
@@ -41,6 +42,7 @@ const routes = (app) => {
   app.use(`${BASE_PATH}/reports`, reportsRoutes);
   app.use(`${BASE_PATH}/inventory`, inventoryRoutes);
   app.use(`${BASE_PATH}/orders`, orderRoutes);
+  app.use(`${BASE_PATH}/events`, eventRoutes);
 
   app.get(`${BASE_PATH}/health`, (req, res) => {
     res.status(200).json({
