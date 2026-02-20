@@ -1,6 +1,6 @@
 # GastroFlow API
 
-## Total de Endpoints (activos): 53
+## Total de Endpoints (activos): 57
 
 ## Credenciales por defecto (seed)
 
@@ -189,7 +189,7 @@ Authorization: Bearer {token_de_usuario}
 
 ---
 
-### 📊 REPORTES (`/reports`) - 3 endpoints
+### 📊 REPORTES (`/reports`) - 7 endpoints
 
 #### `GET http://localhost:3006/api/v1/reports/top-platos` - Requiere token de PLATFORM_ADMIN
 ```bash
@@ -211,6 +211,40 @@ Query params:
 Authorization: Bearer {token_de_platform_admin}
 ```
 **Respuesta:** Horarios de mayor ocupación de mesas
+
+#### `GET http://localhost:3006/api/v1/reports/clientes-frecuentes` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN ⭐ NUEVO
+```bash
+Authorization: Bearer {token_de_usuario}
+Query params:
+- restaurantID: "507f1f77bcf86cd799439011" (OBLIGATORIO)
+- limit: 10 (número de clientes a mostrar)
+```
+**Respuesta:** Lista de clientes con más pedidos, dinero gastado, promedio de compra y último pedido
+
+#### `GET http://localhost:3006/api/v1/reports/cliente/{nombreCliente}` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN ⭐ NUEVO
+```bash
+Authorization: Bearer {token_de_usuario}
+Query params:
+- restaurantID: "507f1f77bcf86cd799439011" (OBLIGATORIO)
+```
+**Respuesta:** Estadísticas detalladas del cliente (total gastado, número de pedidos, mínimo, máximo, promedio, primer y último pedido)
+
+#### `GET http://localhost:3006/api/v1/reports/cliente/{nombreCliente}/plato-favorito` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN ⭐ NUEVO
+```bash
+Authorization: Bearer {token_de_usuario}
+Query params:
+- restaurantID: "507f1f77bcf86cd799439011" (OBLIGATORIO)
+```
+**Respuesta:** Top 5 platos favoritos del cliente (cantidad de veces que los pidió y dinero gastado en ellos)
+
+#### `GET http://localhost:3006/api/v1/reports/pedidos-recurrentes` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN ⭐ NUEVO
+```bash
+Authorization: Bearer {token_de_usuario}
+Query params:
+- restaurantID: "507f1f77bcf86cd799439011" (OBLIGATORIO)
+- minRepeticiones: 3 (mínimo número de pedidos para considerar cliente recurrente)
+```
+**Respuesta:** Clientes con patrones de compra recurrentes, mostrando sus platos favoritos
 
 ---
 
