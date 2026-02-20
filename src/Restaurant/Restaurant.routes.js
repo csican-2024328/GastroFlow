@@ -12,6 +12,7 @@ import {
 
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 import { validarCampos } from '../../middlewares/validator.middleware.js';
+import { uploadRestaurantPhotos, handleMulterError } from '../../middlewares/upload.middleware.js';
 import {
     validateCreateRestaurant,
     validateRestaurantId,
@@ -26,6 +27,8 @@ router.post(
     '/create',
     autenticar,
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    uploadRestaurantPhotos.array('fotos', 5),
+    handleMulterError,
     validateCreateRestaurant,
     validarCampos,
     createRestaurant
@@ -57,6 +60,8 @@ router.put(
     '/:id',
     autenticar,
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    uploadRestaurantPhotos.array('fotos', 5),
+    handleMulterError,
     validateUpdateRestaurant,
     validarCampos,
     updateRestaurant

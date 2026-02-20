@@ -13,8 +13,8 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       category,
       description,
       averagePrice,
-      photos,
     } = req.body;
+    
     if (!name || !email || !phone || !address || !city || !openingHours) {
       return res.status(400).json({
         success: false,
@@ -29,6 +29,12 @@ export const createRestaurant = asyncHandler(async (req, res) => {
         success: false,
         message: 'El email del restaurante ya está registrado',
       });
+    }
+
+    // Procesar archivos subidos (fotos)
+    let photos = [];
+    if (req.files && req.files.length > 0) {
+      photos = req.files.map(file => file.path); // Cloudinary devuelve la URL en 'path'
     }
 
     const restaurant = await Restaurant.create({
@@ -132,8 +138,24 @@ export const updateRestaurant = asyncHandler(async (req, res) => {
       category,
       description,
       averagePrice,
-      photos,
     } = req.body;
+
+    // Obtener el restaurante actual para mantener fotos existentes
+    const currentRestaurant = await Restaurant.findById(id);
+    if (!currentRestaurant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Restaurante no encontrado',
+      });
+    }
+
+    // Procesar archivos subidos (fotos nuevas)
+    let photos = currentRestaurant.photos || [];
+    
+    if (req.files && req.files.length > 0) {
+      const newPhotos = req.files.map(file => file.path); // URLs de Cloudinary
+      photos = newPhotos; // Reemplazar con las nuevas fotos
+    }
 
     const updateData = {
       name,

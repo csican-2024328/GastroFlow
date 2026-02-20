@@ -2,6 +2,15 @@
 
 ## Total de Endpoints (activos): 57
 
+### ✨ Última Actualización: Funcionalidad de Upload de Archivos (Fotos de Restaurantes y Platos)
+
+- ✅ Middleware Multer con Cloudinary integrado
+- ✅ Upload de múltiples fotos para restaurantes
+- ✅ Upload de foto individual para platos
+- ✅ Validación de tipos de archivo (JPEG, PNG, WebP, GIF)
+- ✅ Límite de tamaño: 5MB por archivo
+- ✅ Almacenamiento automático en carpetas organizadas (/restaurantes, /platos)
+
 ## Credenciales por defecto (seed)
 
 - Username: admin
@@ -51,13 +60,14 @@ PASSWORD_RESET_EXPIRY_HOURS=1
 # Frontend URL (para enlaces en emails)
 FRONTEND_URL=http://localhost:5173
  
-# Cloudinary (upload de imágenes de perfil)
-CLOUDINARY_CLOUD_NAME=dut08rmaz
-CLOUDINARY_API_KEY=279612751725163
-CLOUDINARY_API_SECRET=UxGMRqU1iB580Kxb2AlDR4n4hu0
-CLOUDINARY_BASE_URL=https://res.cloudinary.com/dut08rmaz/image/upload/
-CLOUDINARY_FOLDER=gastroflow/profiles
-CLOUDINARY_DEFAULT_AVATAR_FILENAME=default-avatar_ewzxwx.png
+# Cloudinary (upload de imágenes de restaurantes, platos y perfiles)
+# Requiere: crear cuenta en https://cloudinary.com/ y obtener credenciales
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+# Carpetas para organización:
+# - gastrflow/restaurantes (fotos de restaurantes)
+# - gastrflow/platos (fotos de platos)
  
 # File Upload (alternativa local)
 UPLOAD_PATH=./uploads
@@ -144,6 +154,8 @@ Authorization: Bearer {token_de_usuario}
 ### 🏢 RESTAURANTES (`/restaurants`) - 6 endpoints
 
 #### `POST http://localhost:3006/api/v1/restaurants/create` - Requiere token
+
+**Usando JSON (sin fotos):**
 ```json
 {
   "name": "Mi Restaurante",
@@ -151,9 +163,21 @@ Authorization: Bearer {token_de_usuario}
   "phone": "50212345678",
   "address": "Calle Principal 123",
   "city": "Ciudad de Guatemala",
-  "openingHours": "Lun-Vie 9:00-18:00"
+  "openingHours": "Lun-Vie 9:00-18:00",
+  "category": "Italiana",
+  "description": "Excelente cocina italiana",
+  "averagePrice": 25.50
 }
 ```
+
+**Usando multipart/form-data (con fotos):**
+- Content-Type: multipart/form-data
+- Campo: `fotos` (tipo: file, múltiples archivos)
+- Campos adicionales: name, email, phone, address, city, openingHours, etc.
+- Máximo: 5 archivos
+- Formatos: JPEG, PNG, WebP, GIF
+- Tamaño máximo: 5MB por archivo
+
 ```bash
 Authorization: Bearer {token_de_usuario}
 ```
@@ -163,6 +187,8 @@ Authorization: Bearer {token_de_usuario}
 #### `GET http://localhost:3006/api/v1/restaurants/:id` - Publico
 
 #### `PUT http://localhost:3006/api/v1/restaurants/:id` - Requiere token
+
+**Usando JSON (sin fotos):**
 ```json
 {
   "name": "Restaurante Actualizado",
@@ -173,6 +199,12 @@ Authorization: Bearer {token_de_usuario}
   "openingHours": "Lun-Vie 10:00-20:00"
 }
 ```
+
+**Usando multipart/form-data (con fotos):**
+- Content-Type: multipart/form-data
+- Campo: `fotos` (tipo: file, múltiples archivos)
+- Si se envían fotos nuevas, reemplazarán las fotos anteriores
+
 ```bash
 Authorization: Bearer {token_de_usuario}
 ```
@@ -303,6 +335,8 @@ Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ### 🍴 PLATOS/MENU (`/platos`) - 7 endpoints
 
 #### `POST http://localhost:3006/api/v1/platos/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+
+**Usando JSON (sin foto):**
 ```json
 {
   "nombre": "Tacos al Pastor",
@@ -314,10 +348,17 @@ Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
   "disponible": true
 }
 ```
+
+**Usando multipart/form-data (con foto):**
+- Content-Type: multipart/form-data
+- Campo: `foto` (tipo: file, UN solo archivo)
+- Campos adicionales: nombre, descripcion, precio, categoria, restaurantID, ingredientes, disponible
+- Formatos: JPEG, PNG, WebP, GIF
+- Tamaño máximo: 5MB
+
 ```bash
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
-**Nota:** Si necesitas subir una imagen, usa `multipart/form-data` en lugar de JSON
 
 #### `GET http://localhost:3006/api/v1/platos/get` - Publico
 
@@ -326,6 +367,8 @@ Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 #### `GET http://localhost:3006/api/v1/platos/menu/:restaurantID` - Publico
 
 #### `PUT http://localhost:3006/api/v1/platos/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+
+**Usando JSON (sin foto):**
 ```json
 {
   "nombre": "Tacos Premium",
@@ -334,6 +377,13 @@ Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
   "categoria": "FUERTE"
 }
 ```
+
+**Usando multipart/form-data (con foto):**
+- Content-Type: multipart/form-data
+- Campo: `foto` (tipo: file, UN solo archivo)
+- Si se envía una foto nueva, reemplazará la foto anterior
+- Formatos: JPEG, PNG, WebP, GIF
+- Tamaño máximo: 5MB
 
 #### `PUT http://localhost:3006/api/v1/platos/:id/activate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
@@ -597,5 +647,161 @@ Authorization: Bearer {token_de_usuario}
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 **Nota:** Soft delete - marca el evento como inactivo sin eliminar registro
+
+---
+
+### 🖼️ UPLOAD DE ARCHIVOS (Fotos)
+
+#### Configuración de Cloudinary
+
+Antes de usar la funcionalidad de upload, debes configurar las credenciales de Cloudinary:
+
+1. **Crea una cuenta en [Cloudinary](https://cloudinary.com/)**
+2. **Obtén tus credenciales:**
+   - Cloud Name
+   - API Key
+   - API Secret
+3. **Agrégalas al archivo `.env`:**
+   ```env
+   CLOUDINARY_CLOUD_NAME=tu_cloud_name
+   CLOUDINARY_API_KEY=tu_api_key
+   CLOUDINARY_API_SECRET=tu_api_secret
+   ```
+
+#### Middleware de Upload (Multer)
+
+El proyecto utiliza Multer con almacenamiento en Cloudinary para manejar uploads de archivos.
+
+**Archivo:** `middlewares/upload.middleware.js`
+
+**Funcionalidades:**
+- ✅ Auto-conversión a WebP para optimización
+- ✅ Validación de tipos MIME (JPEG, PNG, WebP, GIF)
+- ✅ Límite de tamaño: 5MB por archivo
+- ✅ Organización automática en carpetas por tipo:
+  - `gastrflow/restaurantes/` - Fotos de restaurantes
+  - `gastrflow/platos/` - Fotos de platos
+
+#### Ejemplo de Upload en cURL
+
+**Upload de fotos de restaurante:**
+```bash
+curl -X POST http://localhost:3006/api/v1/restaurants/create \
+  -H "Authorization: Bearer {token}" \
+  -F "fotos=@/ruta/foto1.jpg" \
+  -F "fotos=@/ruta/foto2.jpg" \
+  -F "name=Mi Restaurante" \
+  -F "email=admin@rest.com" \
+  -F "phone=50212345678" \
+  -F "address=Calle Principal 123" \
+  -F "city=Guatemala" \
+  -F "openingHours=9:00-18:00"
+```
+
+**Upload de foto de plato:**
+```bash
+curl -X POST http://localhost:3006/api/v1/platos/create \
+  -H "Authorization: Bearer {token}" \
+  -F "foto=@/ruta/foto_plato.jpg" \
+  -F "nombre=Tacos al Pastor" \
+  -F "descripcion=Deliciosos tacos" \
+  -F "precio=45.00" \
+  -F "categoria=FUERTE" \
+  -F "restaurantID=507f1f77bcf86cd799439011" \
+  -F "ingredientes=tortilla" \
+  -F "ingredientes=cerdo" \
+  -F "ingredientes=piña"
+```
+
+#### Ejemplo en JavaScript (Fetch API)
+
+**Upload de restaurante:**
+```javascript
+const formData = new FormData();
+formData.append('fotos', document.getElementById('foto1').files[0]);
+formData.append('fotos', document.getElementById('foto2').files[0]);
+formData.append('name', 'Mi Restaurante');
+formData.append('email', 'admin@rest.com');
+formData.append('phone', '50212345678');
+formData.append('address', 'Calle Principal 123');
+formData.append('city', 'Guatemala');
+formData.append('openingHours', '9:00-18:00');
+
+const response = await fetch(
+  'http://localhost:3006/api/v1/restaurants/create',
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  }
+);
+
+const result = await response.json();
+console.log(result.data.photos); // URLs de Cloudinary
+```
+
+**Upload de plato:**
+```javascript
+const formData = new FormData();
+formData.append('foto', document.getElementById('fotoPlato').files[0]);
+formData.append('nombre', 'Tacos al Pastor');
+formData.append('descripcion', 'Deliciosos tacos');
+formData.append('precio', '45.00');
+formData.append('categoria', 'FUERTE');
+formData.append('restaurantID', '507f1f77bcf86cd799439011');
+formData.append('ingredientes', 'tortilla');
+formData.append('ingredientes', 'cerdo');
+formData.append('ingredientes', 'piña');
+
+const response = await fetch(
+  'http://localhost:3006/api/v1/platos/create',
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  }
+);
+
+const result = await response.json();
+console.log(result.data.foto); // URL de Cloudinary
+```
+
+#### Estructura de Respuesta
+
+Las URLs de las fotos se devuelven en la respuesta:
+
+**Restaurante creado:**
+```json
+{
+  "success": true,
+  "message": "Restaurante creado exitosamente",
+  "data": {
+    "_id": "507f1f77bcf86cd799439011",
+    "name": "Mi Restaurante",
+    "email": "admin@rest.com",
+    "photos": [
+      "https://res.cloudinary.com/xxx/image/upload/v123456/gastrflow/restaurantes/restaurant_1707990000000_abc123.webp"
+    ]
+  }
+}
+```
+
+**Plato creado:**
+```json
+{
+  "success": true,
+  "message": "Plato creado exitosamente",
+  "data": {
+    "_id": "507f1f77bcf86cd799439012",
+    "nombre": "Tacos al Pastor",
+    "precio": 45.00,
+    "foto": "https://res.cloudinary.com/xxx/image/upload/v123456/gastrflow/platos/plato_1707990000000_def456.webp"
+  }
+}
+```
 
 ---

@@ -9,6 +9,7 @@ import {
 } from './platos-controller.js';
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 import { validarCampos } from '../../middlewares/validator.middleware.js';
+import { uploadPlatoPhoto, handleMulterError } from '../../middlewares/upload.middleware.js';
 import {
     validateCreatePlato,
     validatePlatoId,
@@ -21,6 +22,8 @@ router.post(
     '/create',
     autenticar,
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    uploadPlatoPhoto.single('foto'),
+    handleMulterError,
     validateCreatePlato,
     validarCampos,
     createPlato
@@ -41,6 +44,8 @@ router.put(
     '/:id',
     autenticar,
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    uploadPlatoPhoto.single('foto'),
+    handleMulterError,
     validateUpdatePlato,
     validarCampos,
     updatePlato
