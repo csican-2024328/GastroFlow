@@ -1,6 +1,6 @@
 # GastroFlow API
 
-## Total de Endpoints (activos): 35
+## Total de Endpoints (activos): 44
 
 ## Credenciales por defecto (seed)
 
@@ -269,19 +269,21 @@ Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ### 🍴 PLATOS/MENU (`/platos`) - 7 endpoints
 
 #### `POST http://localhost:3006/api/v1/platos/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
-```bash
-Content-Type: multipart/form-data
-Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
-
-Form data:
-- nombre: "Tacos al Pastor"
-- descripcion: "Deliciosos tacos con pina"
-- precio: 35.50
-- categoria: "FUERTE"
-- restaurantID: "507f1f77bcf86cd799439011"
-- ingredientes: ["tortilla", "cerdo", "pina", "cilantro"]
-- image: [archivo.jpg]
+```json
+{
+  "nombre": "Tacos al Pastor",
+  "descripcion": "Deliciosos tacos con piña",
+  "precio": 45.00,
+  "categoria": "FUERTE",
+  "restaurantID": "507f1f77bcf86cd799439011",
+  "ingredientes": ["tortilla", "cerdo", "piña", "cilantro"],
+  "disponible": true
+}
 ```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Nota:** Si necesitas subir una imagen, usa `multipart/form-data` en lugar de JSON
 
 #### `GET http://localhost:3006/api/v1/platos/get` - Publico
 
@@ -290,16 +292,13 @@ Form data:
 #### `GET http://localhost:3006/api/v1/platos/menu/:restaurantID` - Publico
 
 #### `PUT http://localhost:3006/api/v1/platos/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
-```bash
-Content-Type: multipart/form-data
-Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
-
-Form data:
-- nombre: "Tacos Premium"
-- descripcion: "Tacos mejorados"
-- precio: 45.00
-- categoria: "FUERTE"
-- image: [nuevo_archivo.jpg] (opcional)
+```json
+{
+  "nombre": "Tacos Premium",
+  "descripcion": "Tacos mejorados",
+  "precio": 55.00,
+  "categoria": "FUERTE"
+}
 ```
 
 #### `PUT http://localhost:3006/api/v1/platos/:id/activate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
@@ -319,9 +318,9 @@ Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 #### `POST http://localhost:3006/api/v1/mesas/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```json
 {
-  "number": 5,
-  "capacity": 4,
-  "location": "Terraza",
+  "numero": 5,
+  "capacidad": 4,
+  "ubicacion": "Terraza",
   "restaurantID": "507f1f77bcf86cd799439011",
   "isActive": true
 }
@@ -337,9 +336,9 @@ Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 #### `PUT http://localhost:3006/api/v1/mesas/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```json
 {
-  "number": 5,
-  "capacity": 6,
-  "location": "Terraza VIP",
+  "numero": 5,
+  "capacidad": 6,
+  "ubicacion": "Terraza VIP",
   "isActive": true
 }
 ```
@@ -351,7 +350,126 @@ Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```bash
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
-#### `GET /api/platos/:id` - Público
 
-Sin autenticación requerida.
+---
+
+### 🛎️ PEDIDOS (`/orders`) - 9 endpoints
+
+#### `POST http://localhost:3006/api/v1/orders/create` - Requiere token de CLIENT, RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "restaurantID": "507f1f77bcf86cd799439011",
+  "mesaID": "507f1f77bcf86cd799439012",
+  "clienteNombre": "Juan Pérez",
+  "clienteTelefono": "50212345678",
+  "items": [
+    {
+      "plato": "507f1f77bcf86cd799439013",
+      "cantidad": 2,
+      "notas": "Sin cebolla"
+    },
+    {
+      "plato": "507f1f77bcf86cd799439014",
+      "cantidad": 1
+    }
+  ],
+  "impuesto": 10.50,
+  "descuento": 5.00,
+  "notas": "Cliente prefiere comida no picante"
+}
+```
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+**Respuesta:** Pedido creado con número de orden único, subtotal y total calculados automáticamente
+
+#### `GET http://localhost:3006/api/v1/orders/get` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+Query params (opcionales):
+- restaurantID: "507f1f77bcf86cd799439011"
+- mesaID: "507f1f77bcf86cd799439012"
+- estado: "PENDIENTE" | "EN_PREPARACION" | "LISTO" | "SERVIDO" | "PAGADO" | "CANCELADO"
+- page: 1 (número de página)
+- limit: 10 (items por página)
+```
+**Respuesta:** Lista de pedidos con paginación e información de restaurante, mesa y platos
+
+#### `GET http://localhost:3006/api/v1/orders/:id` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+**Respuesta:** Detalles completos de un pedido específico
+
+#### `GET http://localhost:3006/api/v1/orders/numero/:numeroOrden` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+Ejemplo: GET /orders/numero/ORD-20260215-12345
+```
+**Respuesta:** Pedido buscado por su número de orden único
+
+#### `PUT http://localhost:3006/api/v1/orders/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "clienteNombre": "Juan Pérez Actualizado",
+  "clienteTelefono": "50287654321",
+  "items": [
+    {
+      "plato": "507f1f77bcf86cd799439013",
+      "cantidad": 3,
+      "notas": "Extra queso"
+    }
+  ],
+  "impuesto": 12.00,
+  "descuento": 10.00,
+  "notas": "Pedido actualizado"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Nota:** Solo se puede editar si el pedido está en estado PENDIENTE
+
+#### `PUT http://localhost:3006/api/v1/orders/:id/estado` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "estado": "EN_PREPARACION"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Estados válidos:** PENDIENTE, EN_PREPARACION, LISTO, SERVIDO, PAGADO, CANCELADO  
+**Nota:** No se puede cambiar el estado de pedidos CANCELADO o PAGADO
+
+#### `PUT http://localhost:3006/api/v1/orders/:id/pagar` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "metodoPago": "TARJETA"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Métodos de pago válidos:** EFECTIVO, TARJETA, TRANSFERENCIA  
+**Nota:** Cambia el estado a PAGADO y registra la hora del pago
+
+#### `DELETE http://localhost:3006/api/v1/orders/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "motivo": "Cliente canceló la orden"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Nota:** Cambia el estado a CANCELADO (no elimina el registro)
+
+#### `DELETE http://localhost:3006/api/v1/orders/:id/permanent` - Requiere token de PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_platform_admin}
+```
+**Nota:** Elimina permanentemente el pedido de la base de datos (solo para administradores de plataforma)
+
+---
 

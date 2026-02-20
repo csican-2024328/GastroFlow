@@ -21,6 +21,7 @@ import {
 
 const router = Router();
 
+// Rutas POST
 router.post(
     '/create',
     autenticar,
@@ -30,24 +31,10 @@ router.post(
     createRestaurant
 );
 
+// Rutas GET - orden importante: rutas específicas ANTES que /:id
 router.get('/get', getRestaurants);
 
-router.get(
-    '/:id',
-    validateRestaurantId,
-    validarCampos,
-    getRestaurantById
-);
-
-router.put(
-    '/:id',
-    autenticar,
-    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
-    validateUpdateRestaurant,
-    validarCampos,
-    updateRestaurant
-);
-
+// Rutas PUT - rutas con paths específicos ANTES que /:id
 router.put(
     '/:id/activate',
     autenticar,
@@ -66,6 +53,16 @@ router.put(
     deactivateRestaurant
 );
 
+router.put(
+    '/:id',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateUpdateRestaurant,
+    validarCampos,
+    updateRestaurant
+);
+
+// Rutas DELETE
 router.delete(
     '/:id',
     autenticar,
@@ -73,6 +70,14 @@ router.delete(
     validateRestaurantId,
     validarCampos,
     deleteRestaurant
+);
+
+// Rutas GET con parámetros al final
+router.get(
+    '/:id',
+    validateRestaurantId,
+    validarCampos,
+    getRestaurantById
 );
 
 export default router;

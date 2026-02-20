@@ -19,6 +19,7 @@ import mesaRoutes from '../src/Mesas/mesa.routes.js';
 import platosRoutes from '../src/Platos/platos.routes.js';
 import reportsRoutes from '../src/Reports/reports.routes.js';
 import inventoryRoutes from '../src/Inventory/inventory.routes.js';
+import orderRoutes from '../src/Order/order.routes.js';
 import { errorMiddleware } from '../middlewares/error.middleware.js';
 
 const BASE_PATH = '/api/v1';
@@ -39,6 +40,7 @@ const routes = (app) => {
   app.use(`${BASE_PATH}/platos`, platosRoutes);
   app.use(`${BASE_PATH}/reports`, reportsRoutes);
   app.use(`${BASE_PATH}/inventory`, inventoryRoutes);
+  app.use(`${BASE_PATH}/orders`, orderRoutes);
 
   app.get(`${BASE_PATH}/health`, (req, res) => {
     res.status(200).json({

@@ -1,14 +1,14 @@
 import { check, param } from 'express-validator';
 
 export const validateCreatePlato = [
-    check('name')
+    check('nombre')
         .not()
         .isEmpty()
         .withMessage('El nombre es obligatorio')
         .isLength({ min: 3, max: 100 })
         .withMessage('El nombre debe tener entre 3 y 100 caracteres'),
 
-    check('price')
+    check('precio')
         .isFloat({ min: 0.01 })
         .withMessage('El precio debe ser mayor a 0')
 ];
@@ -24,12 +24,12 @@ export const validateUpdatePlato = [
         .isMongoId()
         .withMessage('ID de plato inválido'),
 
-    check('name')
+    check('nombre')
         .optional()
         .isLength({ min: 3, max: 100 })
         .withMessage('El nombre debe tener entre 3 y 100 caracteres'),
 
-    check('price')
+    check('precio')
         .optional()
         .isFloat({ min: 0.01 })
         .withMessage('El precio debe ser mayor a 0')

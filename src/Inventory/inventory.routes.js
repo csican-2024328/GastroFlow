@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import {
-    createInventoryItem,
-    getInventoryItems,
-    getInventoryItemById,
-    updateInventoryItem,
-    deleteInventoryItem
+    crearInsumo,
+    obtenerInsumos,
+    obtenerInsumoPorId,
+    actualizarInsumo,
+    eliminarInsumo
 } from './inventory.controller.js';
 
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
@@ -23,14 +23,14 @@ router.post(
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
     validateCreateInventory,
     validarCampos,
-    createInventoryItem
+    crearInsumo
 );
 
 router.get(
     '/get',
     autenticar,
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
-    getInventoryItems
+    obtenerInsumos
 );
 
 router.get(
@@ -39,7 +39,7 @@ router.get(
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
     validateInventoryId,
     validarCampos,
-    getInventoryItemById
+    obtenerInsumoPorId
 );
 
 router.put(
@@ -48,7 +48,7 @@ router.put(
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
     validateUpdateInventory,
     validarCampos,
-    updateInventoryItem
+    actualizarInsumo
 );
 
 router.delete(
@@ -57,7 +57,7 @@ router.delete(
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
     validateInventoryId,
     validarCampos,
-    deleteInventoryItem
+    eliminarInsumo
 );
 
 export default router;
