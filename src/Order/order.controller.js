@@ -7,6 +7,7 @@
 import Order from './order.model.js';
 import Plato from '../Platos/platos-model.js';
 import Mesa from '../Mesas/mesa.model.js';
+import Coupon from '../Coupon/coupon.model.js';
 
 /**
  * Genera un número de orden único basado en timestamp y random
@@ -71,6 +72,7 @@ export const createOrder = async (req, res) => {
             items,
             impuesto = 0,
             descuento = 0,
+            couponCode,
             notas
         } = req.body;
 
@@ -122,6 +124,53 @@ export const createOrder = async (req, res) => {
             orderExists = await Order.findOne({ numeroOrden });
         }
 
+        // Validar y aplicar cupón si se envía couponCode
+        let coupon = null;
+        let descuentoPorCoupon = 0;
+
+        if (couponCode) {
+            coupon = await Coupon.findOne({
+                codigo: couponCode.toUpperCase(),
+                isActive: true
+            });
+
+            if (!coupon) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Cupón no encontrado o inactivo'
+                });
+            }
+
+            // Verificar si aplica a este restaurante
+            if (coupon.restaurantID && coupon.restaurantID.toString() !== restaurantID) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Este cupón no aplica a este restaurante'
+                });
+            }
+
+            // Verificar validez del cupón
+            const validacion = coupon.esValido();
+            if (!validacion.valido) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Cupón no válido: ${validacion.razon}`
+                });
+            }
+
+            // Calcular subtotal para validar monto mínimo
+            const subtotalCalculado = orderItems.reduce((acc, item) => acc + item.subtotal, 0);
+            if (subtotalCalculado < coupon.montoMinimo) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Monto mínimo requerido: ${coupon.montoMinimo}`
+                });
+            }
+
+            // Calcular descuento
+            descuentoPorCoupon = coupon.calcularDescuento(subtotalCalculado);
+        }
+
         // Crear el pedido
         const newOrder = new Order({
             numeroOrden,
@@ -131,13 +180,22 @@ export const createOrder = async (req, res) => {
             clienteTelefono,
             items: orderItems,
             impuesto: impuesto || 0,
-            descuento: descuento || 0,
+            descuento: (descuento || 0) + descuentoPorCoupon,
+            couponCode: coupon ? coupon.codigo : null,
+            couponID: coupon ? coupon._id : null,
+            descuentoPorCoupon,
             notas,
             estado: 'PENDIENTE'
         });
 
         // El pre-save hook calculará automáticamente subtotal y total
         await newOrder.save();
+
+        // Registrar uso del cupón si se aplicó
+        if (coupon) {
+            const usuarioID = req.usuario?.sub || req.usuario?.id || null;
+            await coupon.registrarUso(usuarioID || 'ANONIMO');
+        }
 
         // Poblar referencias para la respuesta
         await newOrder.populate([

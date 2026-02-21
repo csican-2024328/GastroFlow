@@ -97,6 +97,22 @@ const orderSchema = mongoose.Schema(
             default: 0,
             min: [0, 'El descuento debe ser mayor o igual a 0']
         },
+        couponCode: {
+            type: String,
+            trim: true,
+            uppercase: true,
+            default: null,
+        },
+        couponID: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Coupon',
+            default: null,
+        },
+        descuentoPorCoupon: {
+            type: Number,
+            default: 0,
+            min: [0, 'El descuento del cupón debe ser mayor o igual a 0']
+        },
         total: {
             type: Number,
             default: 0,

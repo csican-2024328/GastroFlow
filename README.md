@@ -1,8 +1,8 @@
 # GastroFlow API
 
-## Total de Endpoints (activos): 57
+## Total de Endpoints (activos): 67
 
-### ✨ Última Actualización: Funcionalidad de Upload de Archivos (Fotos de Restaurantes y Platos)
+### ✨ Última Actualización: Upload de Archivos y Cupones
 
 - ✅ Middleware Multer con Cloudinary integrado
 - ✅ Upload de múltiples fotos para restaurantes
@@ -10,6 +10,7 @@
 - ✅ Validación de tipos de archivo (JPEG, PNG, WebP, GIF)
 - ✅ Límite de tamaño: 5MB por archivo
 - ✅ Almacenamiento automático en carpetas organizadas (/restaurantes, /platos)
+- ✅ Modelo y validación de cupones con descuento al crear pedidos
 
 ## Credenciales por defecto (seed)
 
@@ -459,6 +460,7 @@ Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
   ],
   "impuesto": 10.50,
   "descuento": 5.00,
+  "couponCode": "PROMO10",
   "notas": "Cliente prefiere comida no picante"
 }
 ```
@@ -554,6 +556,72 @@ Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 Authorization: Bearer {token_de_platform_admin}
 ```
 **Nota:** Elimina permanentemente el pedido de la base de datos (solo para administradores de plataforma)
+
+---
+
+### 🎟️ CUPONES (`/coupons`) - 10 endpoints
+
+#### `POST http://localhost:3006/api/v1/coupons/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "codigo": "PROMO10",
+  "tipo": "PORCENTAJE",
+  "porcentajeDescuento": 10,
+  "fechaExpiracion": "2026-03-01T23:59:59Z",
+  "montoMinimo": 50,
+  "restaurantID": "507f1f77bcf86cd799439011"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+
+#### `POST http://localhost:3006/api/v1/coupons/validate` - Público
+```json
+{
+  "codigo": "PROMO10",
+  "montoTotal": 120,
+  "restaurantID": "507f1f77bcf86cd799439011"
+}
+```
+
+#### `GET http://localhost:3006/api/v1/coupons/get` - Público
+Query params (opcionales):
+- restaurantID: "507f1f77bcf86cd799439011"
+- page: 1
+- limit: 10
+
+#### `GET http://localhost:3006/api/v1/coupons/code/:codigo` - Público
+Ejemplo: GET /coupons/code/PROMO10
+
+#### `GET http://localhost:3006/api/v1/coupons/restaurant/:restaurantID/vigentes` - Público
+
+#### `GET http://localhost:3006/api/v1/coupons/:id` - Público
+
+#### `PUT http://localhost:3006/api/v1/coupons/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "descripcion": "Promo actualizada",
+  "fechaExpiracion": "2026-03-15T23:59:59Z"
+}
+```
+
+#### `PUT http://localhost:3006/api/v1/coupons/:id/activate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+
+#### `PUT http://localhost:3006/api/v1/coupons/:id/deactivate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+
+#### `DELETE http://localhost:3006/api/v1/coupons/:id` - Requiere token de PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_platform_admin}
+```
+
+**Nota:** Los cupones se validan automaticamente en la creacion de pedidos cuando se envia `couponCode`
 
 ---
 
