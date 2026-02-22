@@ -23,6 +23,7 @@ import orderRoutes from '../src/Order/order.routes.js';
 import eventRoutes from '../src/Event/event.routes.js';
 import couponRoutes from '../src/Coupon/coupon.routes.js';
 import { errorMiddleware } from '../middlewares/error.middleware.js';
+import { initializeEmailService, verificarConexionSMTP } from '../helper/email-service.js';
 
 const BASE_PATH = '/api/v1';
 
@@ -62,6 +63,16 @@ export const initServer = async () => {
   app.set('trust proxy', 1);
 
   try {
+    // Inicializar servicio de Email
+    console.log('\n📧 Inicializando servicio de email...');
+    initializeEmailService();
+    const smtpConnectionOk = await verificarConexionSMTP();
+    if (!smtpConnectionOk) {
+      console.log('⚠️  ADVERTENCIA: El servicio de email no está disponible.');
+      console.log('   Todos los usuarios registrados verán el email como no verificado.');
+      console.log('   Asegúrate de configurar las variables de entorno SMTP correctamente.\n');
+    }
+
     // Conectar PostgreSQL (usuarios, auth)
     await dbConnection();
 
@@ -78,13 +89,13 @@ export const initServer = async () => {
     app.use(errorHandler);
 
     const server = app.listen(PORT, () => {
-      console.log(`GastroFlow API running on port ${PORT}`);
+      console.log(`\n✅ GastroFlow API running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 
     return server;
   } catch (error) {
-    console.error(`Error starting server:`, error.message);
+    console.error(`\n❌ Error starting server:`, error.message);
     console.error('Stack trace:', error.stack);
     process.exit(1);
   }

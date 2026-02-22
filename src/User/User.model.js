@@ -57,8 +57,14 @@ export const User = sequelize.define(
       validate: {
         notEmpty: { msg: 'El nombre es obligatorio.' },
         len: {
-          args: [1, 25],
-          msg: 'El nombre no puede tener más de 25 caracteres.',
+          args: [2, 25],
+          msg: 'El nombre debe tener entre 2 y 25 caracteres.',
+        },
+        isAlpha: { msg: 'El nombre solo puede contener letras y espacios.' },
+        customValidator(value) {
+          if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) {
+            throw new Error('El nombre contiene caracteres no válidos.');
+          }
         },
       },
     },
@@ -69,8 +75,14 @@ export const User = sequelize.define(
       validate: {
         notEmpty: { msg: 'El apellido es obligatorio.' },
         len: {
-          args: [1, 25],
-          msg: 'El apellido no puede tener más de 25 caracteres.',
+          args: [2, 25],
+          msg: 'El apellido debe tener entre 2 y 25 caracteres.',
+        },
+        isAlpha: { msg: 'El apellido solo puede contener letras y espacios.' },
+        customValidator(value) {
+          if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) {
+            throw new Error('El apellido contiene caracteres no válidos.');
+          }
         },
       },
     },
@@ -82,8 +94,14 @@ export const User = sequelize.define(
       validate: {
         notEmpty: { msg: 'El nombre de usuario es obligatorio.' },
         len: {
-          args: [1, 50],
-          msg: 'El nombre de usuario no puede tener más de 50 caracteres.',
+          args: [3, 50],
+          msg: 'El nombre de usuario debe tener entre 3 y 50 caracteres.',
+        },
+        isAlphanumeric: { msg: 'El nombre de usuario solo puede contener letras, números y guiones bajos.' },
+        customValidator(value) {
+          if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+            throw new Error('El nombre de usuario solo puede contener letras, números, guiones y guiones bajos.');
+          }
         },
       },
     },
@@ -96,8 +114,14 @@ export const User = sequelize.define(
         notEmpty: { msg: 'El correo electrónico es obligatorio.' },
         isEmail: { msg: 'El correo electrónico no tiene un formato válido.' },
         len: {
-          args: [1, 150],
-          msg: 'El correo electrónico no puede tener más de 150 caracteres.',
+          args: [5, 150],
+          msg: 'El correo electrónico debe tener entre 5 y 150 caracteres.',
+        },
+        customValidator(value) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(value)) {
+            throw new Error('El formato del correo electrónico no es válido.');
+          }
         },
       },
     },
@@ -110,6 +134,26 @@ export const User = sequelize.define(
         len: {
           args: [8, 255],
           msg: 'La contraseña debe tener entre 8 y 255 caracteres.',
+        },
+        isStrongPassword(value) {
+          if (!value) {
+            throw new Error('La contraseña es obligatoria.');
+          }
+          if (value.length < 8) {
+            throw new Error('La contraseña debe tener mínimo 8 caracteres.');
+          }
+          if (!/[A-Z]/.test(value)) {
+            throw new Error('La contraseña debe contener al menos una mayúscula.');
+          }
+          if (!/[a-z]/.test(value)) {
+            throw new Error('La contraseña debe contener al menos una minúscula.');
+          }
+          if (!/[0-9]/.test(value)) {
+            throw new Error('La contraseña debe contener al menos un número.');
+          }
+          if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
+            throw new Error('La contraseña debe contener al menos un carácter especial (!@#$%^&*...).') ;
+          }
         },
       },
     },
@@ -174,6 +218,14 @@ export const UserProfile = sequelize.define(
           msg: 'El número de teléfono debe tener exactamente 8 dígitos.',
         },
         isNumeric: { msg: 'El teléfono solo debe contener números.' },
+        customValidator(value) {
+          if (!/^\d{8}$/.test(value)) {
+            throw new Error('El número de teléfono debe tener exactamente 8 dígitos numéricos.');
+          }
+          if (!/^[2-9]/.test(value)) {
+            throw new Error('El número de teléfono debe comenzar con dígito entre 2 y 9.');
+          }
+        },
       },
     },
   },

@@ -70,11 +70,12 @@ export const registerUserHelper = async (userData) => {
       tokenExpiry
     );
 
+    // Enviar email de verificación en background, sin bloquear el registro
     Promise.resolve()
       .then(() => enviarEmailVerificacion(email, name, verificationToken))
-      .catch((err) =>
-        console.error('Async email send (verification) failed:', err)
-      );
+      .catch((err) => {
+        console.error('❌ Error enviando email de verificación en background:', err.message);
+      });
 
     return {
       success: true,
@@ -143,89 +144,110 @@ export const loginUserHelper = async (emailOrUsername, password) => {
 
 export const verifyEmailHelper = async (token) => {
   try {
-    if (!token || typeof token !== 'string' || token.length < 40) {
-      throw new Error('Token inválido para verificación de email');
+    // Validación estricta del token
+    if (!token || typeof token !== 'string' || token.trim().length < 40) {
+      throw new Error('Token inválido para verificación de email: formato incorrecto');
     }
 
-    const user = await findUserByEmailVerificationToken(token);
+    const user = await findUserByEmailVerificationToken(token.trim());
     if (!user) {
       throw new Error('Usuario no encontrado o token inválido');
     }
 
+    // Verificar si el email ya está verificado
+    if (user.UserEmail && user.UserEmail.EmailVerified) {
+      throw new Error('El email ya ha sido verificado previamente');
+    }
+
+    // Verificar si el token ha expirado
+    if (user.UserEmail?.EmailVerificationTokenExpiry) {
+      const now = new Date();
+      const expiry = new Date(user.UserEmail.EmailVerificationTokenExpiry);
+      if (now > expiry) {
+        throw new Error('El token de verificación ha expirado');
+      }
+    }
+
+    // Marcar email como verificado
     await markEmailAsVerified(user.Id);
+
+    console.log(`Email verificado exitosamente para usuario: ${user.Email}`);
 
     return {
       success: true,
-      message: 'Email verificado exitosamente',
-      data: { email: user.Email, verified: true },
+      message: 'Email verificado exitosamente. Ya puedes iniciar sesión.',
+      data: { 
+        email: user.Email, 
+        verified: true,
+        userId: user.Id,
+      },
     };
   } catch (error) {
-    console.error('Error verificando email:', error);
-
-    let statusCode = 400;
-    if (error.message.includes('no encontrado')) {
-      statusCode = 404;
-    } else if (
-      error.message.includes('inválido') ||
-      error.message.includes('expirado')
-    ) {
-      statusCode = 401;
-    }
-
+    console.error('Error verificando email:', error.message);
     throw error;
   }
 };
 
 export const resendVerificationEmailHelper = async (email) => {
   try {
-    const user = await findUserByEmail(email.toLowerCase());
+    const cleanEmail = email.toLowerCase().trim();
+
+    const user = await findUserByEmail(cleanEmail);
 
     if (!user) {
+      // No revelar que el email no existe (seguridad)
       return {
-        success: false,
-        message: 'Usuario no encontrado',
-        data: { email, sent: false },
+        success: true,
+        message: 'Si el email existe en nuestro sistema, recibirás el email de verificación',
+        data: { email: cleanEmail, sent: true },
       };
     }
 
+    // Verificar si el email ya está verificado
     if (user.UserEmail && user.UserEmail.EmailVerified) {
       return {
         success: false,
-        message: 'El email ya ha sido verificado',
+        message: 'El email ya ha sido verificado. Puedes iniciar sesión directamente.',
         data: { email: user.Email, verified: true },
       };
     }
 
+    // Generar nuevo token de verificación
     const verificationToken = await generateEmailVerificationToken();
-    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
 
     await updateEmailVerificationToken(user.Id, verificationToken, tokenExpiry);
+
     try {
       await enviarEmailVerificacion(user.Email, user.Name, verificationToken);
+      console.log(`✅ Email de re-verificación enviado a ${user.Email}`);
       return {
         success: true,
         message: 'Email de verificación enviado exitosamente',
         data: { email: user.Email, sent: true },
       };
     } catch (emailError) {
-      console.error('Error sending verification email:', emailError);
-      throw new Error('Error enviando email de verificación');
+      console.error('❌ Error enviando email de verificación:', emailError.message);
+      // No revelar detalhes del error SMTP al cliente
+      throw new Error('Error enviando email de verificación. Por favor intenta más tarde.');
     }
   } catch (error) {
-    console.error('Error en resendVerificationEmail:', error);
+    console.error('Error en resendVerificationEmail:', error.message);
     throw error;
   }
 };
 
 export const forgotPasswordHelper = async (email) => {
   try {
-    const user = await findUserByEmail(email.toLowerCase());
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await findUserByEmail(cleanEmail);
 
     if (!user) {
+      // No revelar si el email existe o no por seguridad
       return {
-        success: false,
-        message: 'Si el email existe en nuestro sistema, recibirás instrucciones',
-        data: { email, sent: false },
+        success: true,
+        message: 'Si el email existe en nuestro sistema, recibirás instrucciones por correo',
+        data: { email: cleanEmail, sent: false },
       };
     }
 
@@ -234,34 +256,32 @@ export const forgotPasswordHelper = async (email) => {
 
     await updatePasswordResetToken(user.Id, resetToken, tokenExpiry);
 
-    try {
-      Promise.resolve()
-        .then(() => enviarEmailResetPassword(user.Email, user.Name, resetToken))
-        .catch((emailError) => {
-          console.error('Error sending password reset email:', emailError);
-        });
-    } catch (emailError) {
-      console.error('Error scheduling password reset email:', emailError);
-    }
+    // Enviar email de reset en background
+    Promise.resolve()
+      .then(() => enviarEmailResetPassword(user.Email, user.Name, resetToken))
+      .catch((emailError) => {
+        console.error('❌ Error enviando email de reset de contraseña:', emailError.message);
+      });
 
     return {
       success: true,
-      message: 'Si el email existe en nuestro sistema, recibirás instrucciones',
+      message: 'Si el email existe en nuestro sistema, recibirás instrucciones por correo',
       data: { email: user.Email, sent: true },
     };
   } catch (error) {
-    console.error('Error en forgotPassword:', error);
+    console.error('Error en forgotPassword:', error.message);
     throw error;
   }
 };
 
 export const resetPasswordHelper = async (token, newPassword) => {
   try {
-    if (!token || typeof token !== 'string' || token.length < 40) {
-      throw new Error('Token inválido para reset de contraseña');
+    // Validaciones estrictas del token
+    if (!token || typeof token !== 'string' || token.trim().length < 40) {
+      throw new Error('Token inválido para reset de contraseña: formato incorrecto');
     }
 
-    const user = await findUserByPasswordResetToken(token);
+    const user = await findUserByPasswordResetToken(token.trim());
     if (!user) {
       throw new Error('Usuario no encontrado o token inválido');
     }
@@ -271,39 +291,36 @@ export const resetPasswordHelper = async (token, newPassword) => {
       throw new Error('Token de reset inválido o ya utilizado');
     }
 
+    // Verificar si el token ha expirado
+    if (userPasswordReset.PasswordResetTokenExpiry) {
+      const now = new Date();
+      const expiry = new Date(userPasswordReset.PasswordResetTokenExpiry);
+      if (now > expiry) {
+        throw new Error('El token de reset ha expirado');
+      }
+    }
+
     const { hashPassword } = await import('../utils/password-utils.js');
     const hashedPassword = await hashPassword(newPassword);
 
     await updateUserPassword(user.Id, hashedPassword);
 
-    try {
-      Promise.resolve()
-        .then(() => enviarEmailContraseñaCambiada(user.Email, user.Name))
-        .catch((emailError) => {
-          console.error('Error sending password changed email:', emailError);
-        });
-    } catch (emailError) {
-      console.error('Error scheduling password changed email:', emailError);
-    }
+    console.log(`✅ Contraseña reseteada exitosamente para usuario: ${user.Email}`);
+
+    // Enviar email de confirmación en background
+    Promise.resolve()
+      .then(() => enviarEmailContraseñaCambiada(user.Email, user.Name))
+      .catch((emailError) => {
+        console.error('❌ Error enviando email de cambio de contraseña:', emailError.message);
+      });
 
     return {
       success: true,
-      message: 'Contraseña actualizada exitosamente',
+      message: 'Contraseña actualizada exitosamente. Puedes iniciar sesión con tu nueva contraseña.',
       data: { email: user.Email, passwordReset: true },
     };
   } catch (error) {
-    console.error('Error en resetPassword:', error);
-
-    let statusCode = 400;
-    if (error.message.includes('no encontrado')) {
-      statusCode = 404;
-    } else if (
-      error.message.includes('inválido') ||
-      error.message.includes('expirado')
-    ) {
-      statusCode = 401;
-    }
-
+    console.error('Error en resetPassword:', error.message);
     throw error;
   }
 };

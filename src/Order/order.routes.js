@@ -18,6 +18,7 @@ import {
 } from './order.controller.js';
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 import { validarCampos } from '../../middlewares/validator.middleware.js';
+import { validateStockAvailability } from '../../middlewares/stock.middleware.js';
 import {
     validateCreateOrder,
     validateUpdateOrder,
@@ -30,17 +31,13 @@ import {
 
 const router = Router();
 
-/**
- * @route POST /orders/create
- * @desc Crear un nuevo pedido
- * @access Requiere autenticación (CLIENT, RESTAURANT_ADMIN, PLATFORM_ADMIN)
- */
 router.post(
     '/create',
     autenticar,
     autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
     validateCreateOrder,
     validarCampos,
+    validateStockAvailability,
     createOrder
 );
 
