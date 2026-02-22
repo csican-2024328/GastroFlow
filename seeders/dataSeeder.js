@@ -67,7 +67,7 @@ const createDefaultAdmin = async () => {
       {
         UserId: adminUser.Id,
         ProfilePicture: '',
-        Phone: '00000000',
+        Phone: '67676767',
       },
       { transaction }
     );
