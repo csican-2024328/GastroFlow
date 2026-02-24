@@ -1,18 +1,9 @@
-/**
- * @fileoverview Controlador de Pedidos (Orders)
- * Maneja toda la lógica de negocio para crear, obtener, actualizar, cambiar estado y eliminar pedidos
- * Incluye validaciones, manejo de errores, cálculos automáticos y respuestas HTTP estandarizadas
- */
-
 import Order from './order.model.js';
 import Plato from '../Platos/platos-model.js';
 import Mesa from '../Mesas/mesa.model.js';
 import Coupon from '../Coupon/coupon.model.js';
 
-/**
- * Genera un número de orden único basado en timestamp y random
- * @returns {string} Número de orden único (formato: ORD-YYYYMMDD-XXXXX)
- */
+
 const generateOrderNumber = () => {
     const date = new Date();
     const year = date.getFullYear();
@@ -22,46 +13,7 @@ const generateOrderNumber = () => {
     return `ORD-${year}${month}${day}-${random}`;
 };
 
-/**
- * Crea un nuevo pedido
- * Endpoint: POST /orders/create
- * Acceso: Requiere autenticación
- * 
- * @async
- * @param {Object} req - Objeto de solicitud Express
- * @param {string} req.body.restaurantID - ID del restaurante
- * @param {string} req.body.mesaID - ID de la mesa
- * @param {string} req.body.clienteNombre - Nombre del cliente
- * @param {string} [req.body.clienteTelefono] - Teléfono del cliente
- * @param {Array} req.body.items - Lista de items del pedido
- * @param {string} req.body.items[].plato - ID del plato
- * @param {number} req.body.items[].cantidad - Cantidad del plato
- * @param {string} [req.body.items[].notas] - Notas específicas del item
- * @param {number} [req.body.impuesto=0] - Impuesto aplicado
- * @param {number} [req.body.descuento=0] - Descuento aplicado
- * @param {string} [req.body.notas] - Notas generales del pedido
- * @param {Object} res - Objeto de respuesta Express
- * 
- * @returns {Object} JSON con:
- *  - success (boolean): Indica si la operación fue exitosa
- *  - message (string): Mensaje descriptivo
- *  - data (Object): Datos del pedido creado
- * 
- * @example
- * POST /orders/create
- * Body: {
- *   "restaurantID": "507f1f77bcf86cd799439011",
- *   "mesaID": "507f1f77bcf86cd799439012",
- *   "clienteNombre": "Juan Pérez",
- *   "clienteTelefono": "50212345678",
- *   "items": [
- *     { "plato": "507f1f77bcf86cd799439013", "cantidad": 2, "notas": "Sin cebolla" }
- *   ],
- *   "impuesto": 10.50,
- *   "descuento": 5.00
- * }
- * Response: { success: true, data: {...} }
- */
+
 export const createOrder = async (req, res) => {
     try {
         const {
@@ -185,7 +137,7 @@ export const createOrder = async (req, res) => {
             couponID: coupon ? coupon._id : null,
             descuentoPorCoupon,
             notas,
-            estado: 'PENDIENTE'
+            estado: 'EN_PREPARACION'
         });
 
         // El pre-save hook calculará automáticamente subtotal y total
@@ -219,26 +171,7 @@ export const createOrder = async (req, res) => {
     }
 };
 
-/**
- * Obtiene todos los pedidos con filtros opcionales y paginación
- * Endpoint: GET /orders/get
- * Acceso: Requiere autenticación
- * 
- * @async
- * @param {Object} req - Objeto de solicitud Express
- * @param {string} [req.query.restaurantID] - Filtrar por restaurante
- * @param {string} [req.query.mesaID] - Filtrar por mesa
- * @param {string} [req.query.estado] - Filtrar por estado
- * @param {number} [req.query.page=1] - Número de página
- * @param {number} [req.query.limit=10] - Cantidad de pedidos por página
- * @param {Object} res - Objeto de respuesta Express
- * 
- * @returns {Object} JSON con lista de pedidos y datos de paginación
- * 
- * @example
- * GET /orders/get?estado=PENDIENTE&page=1&limit=10
- * Response: { success: true, data: [...], pagination: {...} }
- */
+
 export const getOrders = async (req, res) => {
     try {
         const {
@@ -291,22 +224,7 @@ export const getOrders = async (req, res) => {
     }
 };
 
-/**
- * Obtiene un pedido específico por su ID
- * Endpoint: GET /orders/:id
- * Acceso: Requiere autenticación
- * 
- * @async
- * @param {Object} req - Objeto de solicitud Express
- * @param {string} req.params.id - ID del pedido
- * @param {Object} res - Objeto de respuesta Express
- * 
- * @returns {Object} JSON con los datos del pedido
- * 
- * @example
- * GET /orders/507f1f77bcf86cd799439011
- * Response: { success: true, data: {...} }
- */
+
 export const getOrderById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -338,22 +256,7 @@ export const getOrderById = async (req, res) => {
     }
 };
 
-/**
- * Obtiene un pedido por su número de orden
- * Endpoint: GET /orders/numero/:numeroOrden
- * Acceso: Requiere autenticación
- * 
- * @async
- * @param {Object} req - Objeto de solicitud Express
- * @param {string} req.params.numeroOrden - Número de orden
- * @param {Object} res - Objeto de respuesta Express
- * 
- * @returns {Object} JSON con los datos del pedido
- * 
- * @example
- * GET /orders/numero/ORD-20240215-12345
- * Response: { success: true, data: {...} }
- */
+
 export const getOrderByNumber = async (req, res) => {
     try {
         const { numeroOrden } = req.params;
@@ -385,24 +288,22 @@ export const getOrderByNumber = async (req, res) => {
     }
 };
 
-/**
- * Actualiza el estado de un pedido
- * Endpoint: PUT /orders/:id/estado
- * Acceso: Requiere autenticación
- * 
- * @async
- * @param {Object} req - Objeto de solicitud Express
- * @param {string} req.params.id - ID del pedido
- * @param {string} req.body.estado - Nuevo estado (PENDIENTE, EN_PREPARACION, LISTO, SERVIDO, PAGADO, CANCELADO)
- * @param {Object} res - Objeto de respuesta Express
- * 
- * @returns {Object} JSON con el pedido actualizado
- * 
- * @example
- * PUT /orders/507f1f77bcf86cd799439011/estado
- * Body: { "estado": "EN_PREPARACION" }
- * Response: { success: true, data: {...} }
- */
+
+const VALID_TRANSITIONS = {
+    'EN_PREPARACION': ['LISTO', 'CANCELADO'],
+    'LISTO': ['ENTREGADO', 'CANCELADO'],
+    'ENTREGADO': [],
+    'CANCELADO': []
+};
+
+const FINAL_STATES = ['ENTREGADO', 'CANCELADO'];
+
+
+const isValidStateTransition = (estadoActual, estadoNuevo) => {
+    const transicionesValidas = VALID_TRANSITIONS[estadoActual];
+    return transicionesValidas && transicionesValidas.includes(estadoNuevo);
+};
+
 export const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
@@ -417,21 +318,31 @@ export const updateOrderStatus = async (req, res) => {
             });
         }
 
-        // Validar que no se pueda cambiar el estado de un pedido cancelado o pagado
-        if (order.estado === 'CANCELADO' || order.estado === 'PAGADO') {
+        
+        if (FINAL_STATES.includes(order.estado)) {
             return res.status(400).json({
                 success: false,
-                message: `No se puede cambiar el estado de un pedido ${order.estado.toLowerCase()}`
+                message: `No se puede cambiar el estado de un pedido ${order.estado}`
+            });
+        }
+
+        
+        if (!isValidStateTransition(order.estado, estado)) {
+            return res.status(400).json({
+                success: false,
+                message: `Transición inválida: no se puede cambiar de ${order.estado} a ${estado}`,
+                estadoActual: order.estado,
+                transicionesValidas: VALID_TRANSITIONS[order.estado]
             });
         }
 
         order.estado = estado;
 
         // Registrar timestamp según el estado
-        if (estado === 'LISTO') {
+        if (estado === 'ENTREGADO') {
             order.horaEntrega = new Date();
-        } else if (estado === 'PAGADO') {
-            order.horaPago = new Date();
+        } else if (estado === 'CANCELADO') {
+            order.horaCancelacion = new Date();
         }
 
         await order.save();
@@ -456,24 +367,7 @@ export const updateOrderStatus = async (req, res) => {
     }
 };
 
-/**
- * Actualiza los datos de un pedido (solo si está en estado PENDIENTE)
- * Endpoint: PUT /orders/:id
- * Acceso: Requiere autenticación
- * 
- * @async
- * @param {Object} req - Objeto de solicitud Express
- * @param {string} req.params.id - ID del pedido
- * @param {Object} req.body - Datos a actualizar (items, notas, clienteNombre, etc.)
- * @param {Object} res - Objeto de respuesta Express
- * 
- * @returns {Object} JSON con el pedido actualizado
- * 
- * @example
- * PUT /orders/507f1f77bcf86cd799439011
- * Body: { "notas": "Sin picante", "items": [...] }
- * Response: { success: true, data: {...} }
- */
+
 export const updateOrder = async (req, res) => {
     try {
         const { id } = req.params;
@@ -495,15 +389,15 @@ export const updateOrder = async (req, res) => {
             });
         }
 
-        // Solo permitir edición si el pedido está en estado PENDIENTE
-        if (order.estado !== 'PENDIENTE') {
+        
+        if (order.estado !== 'EN_PREPARACION') {
             return res.status(400).json({
                 success: false,
-                message: 'Solo se pueden editar pedidos en estado PENDIENTE'
+                message: 'Solo se pueden editar pedidos en estado EN_PREPARACION'
             });
         }
 
-        // Si se van a actualizar los items, validar y procesar
+       
         if (items && items.length > 0) {
             const orderItems = [];
             for (const item of items) {
@@ -542,7 +436,7 @@ export const updateOrder = async (req, res) => {
         if (descuento !== undefined) order.descuento = descuento;
         if (notas !== undefined) order.notas = notas;
 
-        // El pre-save hook recalculará subtotal y total
+       
         await order.save();
 
         await order.populate([
@@ -566,24 +460,7 @@ export const updateOrder = async (req, res) => {
     }
 };
 
-/**
- * Registra el pago de un pedido
- * Endpoint: PUT /orders/:id/pagar
- * Acceso: Requiere autenticación
- * 
- * @async
- * @param {Object} req - Objeto de solicitud Express
- * @param {string} req.params.id - ID del pedido
- * @param {string} req.body.metodoPago - Método de pago (EFECTIVO, TARJETA, TRANSFERENCIA)
- * @param {Object} res - Objeto de respuesta Express
- * 
- * @returns {Object} JSON con el pedido actualizado
- * 
- * @example
- * PUT /orders/507f1f77bcf86cd799439011/pagar
- * Body: { "metodoPago": "TARJETA" }
- * Response: { success: true, data: {...} }
- */
+
 export const payOrder = async (req, res) => {
     try {
         const { id } = req.params;
@@ -605,16 +482,15 @@ export const payOrder = async (req, res) => {
             });
         }
 
-        if (order.estado === 'PAGADO') {
+        // Solo se puede pagar pedidos en estado ENTREGADO
+        if (order.estado !== 'ENTREGADO') {
             return res.status(400).json({
                 success: false,
-                message: 'Este pedido ya ha sido pagado'
+                message: `Pedido debe estar en estado ENTREGADO para ser pagado. Estado actual: ${order.estado}`
             });
         }
 
-        order.estado = 'PAGADO';
         order.metodoPago = metodoPago;
-        order.horaPago = new Date();
 
         await order.save();
 
@@ -670,14 +546,17 @@ export const cancelOrder = async (req, res) => {
             });
         }
 
-        if (order.estado === 'PAGADO') {
+        // Validar que se pueda cancelar desde el estado actual
+        if (!isValidStateTransition(order.estado, 'CANCELADO')) {
             return res.status(400).json({
                 success: false,
-                message: 'No se puede cancelar un pedido que ya ha sido pagado'
+                message: `No se puede cancelar un pedido en estado ${order.estado}`
             });
         }
 
         order.estado = 'CANCELADO';
+        order.horaCancelacion = new Date();
+        
         if (motivo) {
             order.notas = order.notas 
                 ? `${order.notas} | Cancelado: ${motivo}` 

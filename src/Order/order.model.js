@@ -122,10 +122,10 @@ const orderSchema = mongoose.Schema(
             type: String,
             required: [true, 'El estado es requerido'],
             enum: {
-                values: ['PENDIENTE', 'EN_PREPARACION', 'LISTO', 'SERVIDO', 'PAGADO', 'CANCELADO'],
+                values: ['EN_PREPARACION', 'LISTO', 'ENTREGADO', 'CANCELADO'],
                 message: 'Estado no válido'
             },
-            default: 'PENDIENTE',
+            default: 'EN_PREPARACION',
             index: true
         },
         metodoPago: {
@@ -144,7 +144,7 @@ const orderSchema = mongoose.Schema(
         horaEntrega: {
             type: Date
         },
-        horaPago: {
+        horaCancelacion: {
             type: Date
         },
         isActive: {
