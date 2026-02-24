@@ -69,6 +69,7 @@ const eventSchema = mongoose.Schema(
                 message: 'La fecha de fin debe ser posterior a la fecha de inicio'
             }
         },
+        //cambiar a menus especiales por evento
         platosAplicables: {
             type: [mongoose.Schema.Types.ObjectId],
             ref: 'Plato',
@@ -89,11 +90,13 @@ const eventSchema = mongoose.Schema(
             type: String,
             default: null
         },
+        //revision
         compraMinima: {
             type: Number,
             min: [0, 'La compra mínima debe ser mayor o igual a 0'],
             default: 0
         },
+        //maximos
         cantidadMaximaUsos: {
             type: Number,
             min: [1, 'La cantidad de usos debe ser al menos 1'],
@@ -118,7 +121,7 @@ const eventSchema = mongoose.Schema(
             default: true,
             index: true
         },
-        criadoPor: {
+        creadoPor: {
             type: String,
             required: [true, 'El ID del usuario que creó el evento es requerido']
         }
@@ -174,3 +177,9 @@ eventSchema.methods.incrementarUsos = async function() {
 };
 
 export default mongoose.model('Event', eventSchema);
+
+
+//revisar los argumentos etiquetados con "revision"
+// agrgar musica
+// agregar decoracion (o tematica)
+//cambiar platos por menus

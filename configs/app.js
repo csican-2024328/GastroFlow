@@ -17,6 +17,7 @@ import authRoutes from '../src/auth/auth.routes.js';
 import restaurantRoutes from '../src/Restaurant/Restaurant.routes.js';
 import mesaRoutes from '../src/Mesas/mesa.routes.js';
 import platosRoutes from '../src/Platos/platos.routes.js';
+import menuRoutes from '../src/Menu/menu.routes.js';
 import reportsRoutes from '../src/Reports/reports.routes.js';
 import inventoryRoutes from '../src/Inventory/inventory.routes.js';
 import orderRoutes from '../src/Order/order.routes.js';
@@ -42,6 +43,7 @@ const routes = (app) => {
   app.use(`${BASE_PATH}/restaurants`, restaurantRoutes);
   app.use(`${BASE_PATH}/mesas`, mesaRoutes);
   app.use(`${BASE_PATH}/platos`, platosRoutes);
+  app.use(`${BASE_PATH}/menus`, menuRoutes);
   app.use(`${BASE_PATH}/reports`, reportsRoutes);
   app.use(`${BASE_PATH}/inventory`, inventoryRoutes);
   app.use(`${BASE_PATH}/orders`, orderRoutes);
