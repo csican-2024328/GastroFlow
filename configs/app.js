@@ -24,6 +24,7 @@ import orderRoutes from '../src/Order/order.routes.js';
 import eventRoutes from '../src/Event/event.routes.js';
 import couponRoutes from '../src/Coupon/coupon.routes.js';
 import reservationRoutes from '../src/Reservation/reservation.routes.js';
+import invoiceRoutes from '../src/Invoice/invoice.routes.js';
 import { errorMiddleware } from '../middlewares/error.middleware.js';
 import { initializeEmailService, verificarConexionSMTP } from '../helper/email-service.js';
 
@@ -50,6 +51,7 @@ const routes = (app) => {
   app.use(`${BASE_PATH}/events`, eventRoutes);
   app.use(`${BASE_PATH}/coupons`, couponRoutes);
   app.use(`${BASE_PATH}/reservations`, reservationRoutes);
+  app.use(`${BASE_PATH}/invoices`, invoiceRoutes);
 
   app.get(`${BASE_PATH}/health`, (req, res) => {
     res.status(200).json({
