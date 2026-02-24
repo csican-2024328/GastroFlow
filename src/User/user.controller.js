@@ -34,6 +34,33 @@ export const getProfile = [
     }
   }),
 ];
+// Controlador para eliminación lógica (soft delete) del usuario autenticado
+import { softDeleteUser } from '../../helper/user-db.js';
+export const deleteProfile = [
+  validateJWT,
+  asyncHandler(async (req, res) => {
+    try {
+      const userId = req.userId;
+      const deletedUser = await softDeleteUser(userId);
+      if (!deletedUser) {
+        return res.status(404).json({
+          success: false,
+          message: 'Usuario no encontrado o ya eliminado',
+        });
+      }
+      return res.status(200).json({
+        success: true,
+        message: 'Usuario eliminado lógicamente',
+      });
+    } catch (error) {
+      console.error('Error eliminando usuario:', error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Error al eliminar usuario',
+      });
+    }
+  }),
+];
 
 // Controlador para actualizar el perfil del usuario actual autenticado
 export const updateProfile = [

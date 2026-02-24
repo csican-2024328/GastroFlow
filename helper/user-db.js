@@ -37,6 +37,19 @@ export const findUserByEmailOrUsername = async (emailOrUsername) => {
     throw new Error('Error al buscar usuario');
   }
 };
+// Soft delete: marcar usuario como inactivo
+export const softDeleteUser = async (userId) => {
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) return null;
+    // Marcar como inactivo
+    await User.update({ Status: false }, { where: { Id: userId } });
+    return true;
+  } catch (error) {
+    console.error('Error en soft delete:', error);
+    throw new Error('Error al eliminar usuario');
+  }
+};
 
 export const findUserById = async (userId) => {
   try {
