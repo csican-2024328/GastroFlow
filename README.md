@@ -1,6 +1,22 @@
 # GastroFlow API
 
-## Total de Endpoints: 28
+## Total de Endpoints (activos): 67
+
+### ✨ Última Actualización: Upload de Archivos y Cupones
+
+- ✅ Middleware Multer con Cloudinary integrado
+- ✅ Upload de múltiples fotos para restaurantes
+- ✅ Upload de foto individual para platos
+- ✅ Validación de tipos de archivo (JPEG, PNG, WebP, GIF)
+- ✅ Límite de tamaño: 5MB por archivo
+- ✅ Almacenamiento automático en carpetas organizadas (/restaurantes, /platos)
+- ✅ Modelo y validación de cupones con descuento al crear pedidos
+
+## Credenciales por defecto (seed)
+
+- Username: admin
+- Email: admin@gastroflow.local
+- Password: Admin@1234!
 
 ## Configuración Importante
 ⚠️ **IMPORTANTE**: Crear archivo `.env` con las credenciales necesarias (no se sube al repositorio por seguridad)
@@ -12,15 +28,24 @@ Copia este contenido en un archivo `.env` en la raíz del proyecto:
 ```env
 NODE_ENV = development
 PORT = 3006
-
-URI_MONGO=mongodb://localhost:27017/GastroFlow
-
+ 
+# MongoDB (Restaurantes, Mesas, Platos) - Local sin autenticación
+MONGODB_URI=mongodb://localhost:27017/GastroFlow
+ 
+# Database PostgreSQL (Usuarios, Autenticación)
+DB_HOST=localhost
+DB_PORT=5435
+DB_NAME=GastroFlow
+DB_USERNAME=root
+DB_PASSWORD=admin
+DB_SQL_LOGGING=false
+ 
 JWT_SECRET=MyVerySecretKeyForJWTTokenAuthenticationWith256Bits!
 JWT_EXPIRES_IN=30m
 JWT_REFRESH_EXPIRES_IN=7d
 JWT_ISSUER=AuthService
 JWT_AUDIENCE=AuthService
-
+ 
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_ENABLE_SSL=true
@@ -28,156 +53,110 @@ SMTP_USERNAME=kinalsports@gmail.com
 SMTP_PASSWORD=yrsd prvf kwat toee
 EMAIL_FROM=kinalsports@gmail.com
 EMAIL_FROM_NAME=AuthDotnet App
-
+ 
 # Verification Tokens (en horas)
 VERIFICATION_EMAIL_EXPIRY_HOURS=24
 PASSWORD_RESET_EXPIRY_HOURS=1
-
+ 
 # Frontend URL (para enlaces en emails)
 FRONTEND_URL=http://localhost:5173
-
-# Cloudinary (upload de imágenes de perfil)
-CLOUDINARY_CLOUD_NAME=dut08rmaz
-CLOUDINARY_API_KEY=279612751725163
-CLOUDINARY_API_SECRET=UxGMRqU1iB580Kxb2AlDR4n4hu0
-CLOUDINARY_BASE_URL=https://res.cloudinary.com/dut08rmaz/image/upload/
-CLOUDINARY_FOLDER=gastroflow/profiles
-CLOUDINARY_DEFAULT_AVATAR_FILENAME=default-avatar_ewzxwx.png
-
+ 
+# Cloudinary (upload de imágenes de restaurantes, platos y perfiles)
+# Requiere: crear cuenta en https://cloudinary.com/ y obtener credenciales
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+# Carpetas para organización:
+# - gastrflow/restaurantes (fotos de restaurantes)
+# - gastrflow/platos (fotos de platos)
+ 
 # File Upload (alternativa local)
 UPLOAD_PATH=./uploads
-
+ 
 # CORS Configuration
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:3006
 ADMIN_ALLOWED_ORIGINS=http://localhost:5173
+
 ```
 
 ---
-
-## � Flujo de Activación de Cuenta
-
-1. **Al registrarse**: La cuenta se crea con `status: "INACTIVO"` y `emailVerified: false`
-2. **Se envía email**: Con un token de verificación (válido 24 horas)
-3. **Al verificar email**: La cuenta cambia a `status: "ACTIVO"` y `emailVerified: true`
-4. **Login permitido**: Solo después de verificar el email
-
-⚠️ **Importante**: No puedes hacer login si no has verificado tu email primero.
-
----
-## 👥 Roles de Usuario
-
-- **CLIENT**: Usuario cliente (puede hacer reservas, ver menú)
-- **RESTAURANT_ADMIN**: Administrador de restaurante (puede gestionar su restaurante, platos y mesas)
-- **PLATFORM_ADMIN**: Administrador de plataforma (control total, puede activar/desactivar restaurantes)
-
----
-
-## 🍽️ Categorías de Platos
-
-Las categorías válidas para los platos son:
-- **ENTRADA** - Aperitivos y entradas
-- **FUERTE** - Platos principales
-- **POSTRE** - Postres y dulces
-- **BEBIDA** - Bebidas (alcohólicas y no alcohólicas)
-
----
-
 ## 📍 Endpoints Funcionales
 
-### 🔐 AUTENTICACIÓN (`/api/auth`) - 10 endpoints
+**Base URL:** http://localhost:3006/api/v1
 
-#### `POST /api/auth/registro` - Público
+### 🔐 AUTENTICACION (`/auth`) - 8 endpoints
+
+#### `POST http://localhost:3006/api/v1/auth/register` - Publico
 ```json
 {
   "name": "Juan",
-  "surname": "Pérez",
+  "surname": "Perez",
+  "username": "juanperez",
   "email": "juan@example.com",
   "password": "Password123!",
-  "phone": "50212345678",
-  "role": "CLIENT"
+  "phone": "50212345678"
 }
 ```
-📧 **Nota**: Al registrarse, la cuenta queda con `status: "INACTIVO"`. Debes verificar el email para activarla.
 
-#### `POST /api/auth/login` - Público
+#### `POST http://localhost:3006/api/v1/auth/login` - Publico
 ```json
 {
-  "email": "juan@example.com",
-  "password": "Password123!"
+  "emailOrUsername": "admin",
+  "password": "Admin@1234!"
 }
 ```
-⚠️ **Nota**: Solo funciona si el email ha sido verificado. Si no, recibirás un error 403.
 
-#### `POST /api/auth/verificar-email` - Público
+#### `POST http://localhost:3006/api/v1/auth/verify-email` - Publico
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
-También puedes usar: `GET /api/auth/verificar-email?token=...`
 
-✅ **Nota**: Este endpoint cambia el `status: "ACTIVO"` y permite hacer login.
-
-#### `POST /api/auth/refresh` - Público
-```json
-{
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-#### `POST /api/auth/olvide-contraseña` - Público
+#### `POST http://localhost:3006/api/v1/auth/resend-verification` - Publico
 ```json
 {
   "email": "juan@example.com"
 }
 ```
 
-#### `PUT /api/auth/reset-contraseña/:token` - Público
+#### `POST http://localhost:3006/api/v1/auth/forgot-password` - Publico
 ```json
 {
-  "password": "NuevaPassword123!"
+  "email": "juan@example.com"
 }
 ```
 
-#### `GET /api/auth/me` - Requiere token de USUARIO
-```bash
-Authorization: Bearer {token_de_cualquier_usuario}
-```
-
-#### `PUT /api/auth/actualizar` - Requiere token de USUARIO
+#### `POST http://localhost:3006/api/v1/auth/reset-password` - Publico
 ```json
 {
-  "name": "Juan Carlos",
-  "surname": "Pérez López",
-  "phone": "50212345679"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "newPassword": "NuevaPassword123!"
 }
 ```
+
+#### `GET http://localhost:3006/api/v1/auth/profile` - Requiere token
 ```bash
 Authorization: Bearer {token_de_usuario}
 ```
 
-#### `PUT /api/auth/cambiar-contraseña` - Requiere token de USUARIO
+#### `POST http://localhost:3006/api/v1/auth/profile/by-id` - Requiere token
 ```json
 {
-  "currentPassword": "Password123!",
-  "newPassword": "NuevaPassword456!"
+  "userId": "usr_xxxxxxxxxxxx"
 }
 ```
 ```bash
 Authorization: Bearer {token_de_usuario}
 ```
-
-#### `POST /api/auth/logout` - Requiere token de USUARIO
-```bash
-Authorization: Bearer {token_de_usuario}
-```
-Sin body necesario.
 
 ---
 
-### 🏢 RESTAURANTES (`/api/restaurants`) - 6 endpoints
+### 🏢 RESTAURANTES (`/restaurants`) - 6 endpoints
 
-#### `POST /api/restaurants/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `POST http://localhost:3006/api/v1/restaurants/create` - Requiere token
+
+**Usando JSON (sin fotos):**
 ```json
 {
   "name": "Mi Restaurante",
@@ -185,108 +164,248 @@ Sin body necesario.
   "phone": "50212345678",
   "address": "Calle Principal 123",
   "city": "Ciudad de Guatemala",
-  "openingHours": "Lun-Vie 9:00-18:00"
+  "openingHours": "Lun-Vie 9:00-18:00",
+  "category": "Italiana",
+  "description": "Excelente cocina italiana",
+  "averagePrice": 25.50
 }
 ```
+
+**Usando multipart/form-data (con fotos):**
+- Content-Type: multipart/form-data
+- Campo: `fotos` (tipo: file, múltiples archivos)
+- Campos adicionales: name, email, phone, address, city, openingHours, etc.
+- Máximo: 5 archivos
+- Formatos: JPEG, PNG, WebP, GIF
+- Tamaño máximo: 5MB por archivo
+
 ```bash
-Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+Authorization: Bearer {token_de_usuario}
 ```
 
-#### `GET /api/restaurants/get` - Público
-Sin autenticación requerida.
+#### `GET http://localhost:3006/api/v1/restaurants/get` - Publico
 
-#### `GET /api/restaurants/:id` - Público
-Sin autenticación requerida.
+#### `GET http://localhost:3006/api/v1/restaurants/:id` - Publico
 
-#### `PUT /api/restaurants/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `PUT http://localhost:3006/api/v1/restaurants/:id` - Requiere token
+
+**Usando JSON (sin fotos):**
 ```json
 {
   "name": "Restaurante Actualizado",
   "email": "nuevo@restaurante.com",
   "phone": "50287654321",
   "address": "Avenida Central 456",
-  "city": "Antigua Guatemala"
+  "city": "Antigua Guatemala",
+  "openingHours": "Lun-Vie 10:00-20:00"
+}
+```
+
+**Usando multipart/form-data (con fotos):**
+- Content-Type: multipart/form-data
+- Campo: `fotos` (tipo: file, múltiples archivos)
+- Si se envían fotos nuevas, reemplazarán las fotos anteriores
+
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+
+#### `PUT http://localhost:3006/api/v1/restaurants/:id/activate` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+
+#### `PUT http://localhost:3006/api/v1/restaurants/:id/deactivate` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+
+---
+
+### 📊 REPORTES (`/reports`) - 7 endpoints
+
+#### `GET http://localhost:3006/api/v1/reports/top-platos` - Requiere token de PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_platform_admin}
+```
+**Respuesta:** Top 5 platos más vendidos con cantidad de ventas e ingresos
+
+#### `GET http://localhost:3006/api/v1/reports/ingresos` - Requiere token de PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_platform_admin}
+Query params:
+- start: "2026-02-01" (fecha inicio)
+- end: "2026-02-28" (fecha fin)
+```
+**Respuesta:** Total de ingresos, mesas cerradas y promedio de cuenta en rango de fechas
+
+#### `GET http://localhost:3006/api/v1/reports/ocupacion` - Requiere token de PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_platform_admin}
+```
+**Respuesta:** Horarios de mayor ocupación de mesas
+
+#### `GET http://localhost:3006/api/v1/reports/clientes-frecuentes` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN ⭐ NUEVO
+```bash
+Authorization: Bearer {token_de_usuario}
+Query params:
+- restaurantID: "507f1f77bcf86cd799439011" (OBLIGATORIO)
+- limit: 10 (número de clientes a mostrar)
+```
+**Respuesta:** Lista de clientes con más pedidos, dinero gastado, promedio de compra y último pedido
+
+#### `GET http://localhost:3006/api/v1/reports/cliente/{nombreCliente}` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN ⭐ NUEVO
+```bash
+Authorization: Bearer {token_de_usuario}
+Query params:
+- restaurantID: "507f1f77bcf86cd799439011" (OBLIGATORIO)
+```
+**Respuesta:** Estadísticas detalladas del cliente (total gastado, número de pedidos, mínimo, máximo, promedio, primer y último pedido)
+
+#### `GET http://localhost:3006/api/v1/reports/cliente/{nombreCliente}/plato-favorito` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN ⭐ NUEVO
+```bash
+Authorization: Bearer {token_de_usuario}
+Query params:
+- restaurantID: "507f1f77bcf86cd799439011" (OBLIGATORIO)
+```
+**Respuesta:** Top 5 platos favoritos del cliente (cantidad de veces que los pidió y dinero gastado en ellos)
+
+#### `GET http://localhost:3006/api/v1/reports/pedidos-recurrentes` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN ⭐ NUEVO
+```bash
+Authorization: Bearer {token_de_usuario}
+Query params:
+- restaurantID: "507f1f77bcf86cd799439011" (OBLIGATORIO)
+- minRepeticiones: 3 (mínimo número de pedidos para considerar cliente recurrente)
+```
+**Respuesta:** Clientes con patrones de compra recurrentes, mostrando sus platos favoritos
+
+---
+
+### 📦 INVENTARIO (`/inventory`) - 5 endpoints
+
+#### `POST http://localhost:3006/api/v1/inventory/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "nombre": "Aceite de Oliva",
+  "stock": 50,
+  "unidadMedida": "l"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Unidades permitidas:** kg, g, l, ml, unidad, paquete
+
+#### `GET http://localhost:3006/api/v1/inventory/get` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Respuesta:** Lista de todos los insumos activos
+
+#### `GET http://localhost:3006/api/v1/inventory/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Respuesta:** Detalles de un insumo específico
+
+#### `PUT http://localhost:3006/api/v1/inventory/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "nombre": "Aceite de Oliva Extra Virgen",
+  "stock": 75,
+  "unidadMedida": "l"
 }
 ```
 ```bash
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 
-#### `PUT /api/restaurants/:id/activate` - Requiere token de PLATFORM_ADMIN
+#### `DELETE http://localhost:3006/api/v1/inventory/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
-Authorization: Bearer {token_de_platform_admin}
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
-Sin body necesario.
-
-#### `PUT /api/restaurants/:id/deactivate` - Requiere token de PLATFORM_ADMIN
-```bash
-Authorization: Bearer {token_de_platform_admin}
-```
-Sin body necesario.
+**Nota:** Soft delete (marca como inactivo)
 
 ---
 
-### 🍴 PLATOS/MENÚ (`/api/platos`) - 7 endpoints
+### ❤️ HEALTH - 1 endpoint
 
-#### `POST /api/platos/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
-```bash
-Content-Type: multipart/form-data
-Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+#### `GET http://localhost:3006/api/v1/health` - Publico
 
-Form data:
-- nombre: "Tacos al Pastor"
-- descripcion: "Deliciosos tacos con piña"
-- precio: 35.50
-- categoria: "FUERTE"
-- restaurantID: "507f1f77bcf86cd799439011"
-- ingredientes: ["tortilla", "cerdo", "piña", "cilantro"]
-- image: [archivo.jpg]
-```
 
-#### `GET /api/platos/get` - Público
-Sin autenticación requerida.
+### 🍴 PLATOS/MENU (`/platos`) - 7 endpoints
 
-#### `GET /api/platos/:id` - Público
-Sin autenticación requerida.
+#### `POST http://localhost:3006/api/v1/platos/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 
-#### `GET /api/platos/menu/:restaurantID` - Público
-Sin autenticación requerida.
-
-#### `PUT /api/platos/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
-```bash
-Content-Type: multipart/form-data
-Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
-
-Form data:
-- nombre: "Tacos Premium"
-- descripcion: "Tacos mejorados"
-- precio: 45.00
-- categoria: "FUERTE"
-- image: [nuevo_archivo.jpg] (opcional)
-```
-
-#### `PUT /api/platos/:id/activate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
-```bash
-Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
-```
-Sin body necesario.
-
-#### `PUT /api/platos/:id/deactivate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
-```bash
-Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
-```
-Sin body necesario.
-
----
-
-### 📊 MESAS (`/api/mesas`) - 5 endpoints
-
-#### `POST /api/mesas/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+**Usando JSON (sin foto):**
 ```json
 {
-  "number": 5,
-  "capacity": 4,
-  "location": "Terraza",
+  "nombre": "Tacos al Pastor",
+  "descripcion": "Deliciosos tacos con piña",
+  "precio": 45.00,
+  "categoria": "FUERTE",
+  "restaurantID": "507f1f77bcf86cd799439011",
+  "ingredientes": ["tortilla", "cerdo", "piña", "cilantro"],
+  "disponible": true
+}
+```
+
+**Usando multipart/form-data (con foto):**
+- Content-Type: multipart/form-data
+- Campo: `foto` (tipo: file, UN solo archivo)
+- Campos adicionales: nombre, descripcion, precio, categoria, restaurantID, ingredientes, disponible
+- Formatos: JPEG, PNG, WebP, GIF
+- Tamaño máximo: 5MB
+
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+
+#### `GET http://localhost:3006/api/v1/platos/get` - Publico
+
+#### `GET http://localhost:3006/api/v1/platos/:id` - Publico
+
+#### `GET http://localhost:3006/api/v1/platos/menu/:restaurantID` - Publico
+
+#### `PUT http://localhost:3006/api/v1/platos/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+
+**Usando JSON (sin foto):**
+```json
+{
+  "nombre": "Tacos Premium",
+  "descripcion": "Tacos mejorados",
+  "precio": 55.00,
+  "categoria": "FUERTE"
+}
+```
+
+**Usando multipart/form-data (con foto):**
+- Content-Type: multipart/form-data
+- Campo: `foto` (tipo: file, UN solo archivo)
+- Si se envía una foto nueva, reemplazará la foto anterior
+- Formatos: JPEG, PNG, WebP, GIF
+- Tamaño máximo: 5MB
+
+#### `PUT http://localhost:3006/api/v1/platos/:id/activate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+
+#### `PUT http://localhost:3006/api/v1/platos/:id/deactivate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+
+---
+
+### 📊 MESAS (`/mesas`) - 5 endpoints
+
+#### `POST http://localhost:3006/api/v1/mesas/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "numero": 5,
+  "capacidad": 4,
+  "ubicacion": "Terraza",
   "restaurantID": "507f1f77bcf86cd799439011",
   "isActive": true
 }
@@ -295,18 +414,16 @@ Sin body necesario.
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 
-#### `GET /api/mesas/get` - Público
-Sin autenticación requerida.
+#### `GET http://localhost:3006/api/v1/mesas/get` - Publico
 
-#### `GET /api/mesas/:id` - Público
-Sin autenticación requerida.
+#### `GET http://localhost:3006/api/v1/mesas/:id` - Publico
 
-#### `PUT /api/mesas/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `PUT http://localhost:3006/api/v1/mesas/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```json
 {
-  "number": 5,
-  "capacity": 6,
-  "location": "Terraza VIP",
+  "numero": 5,
+  "capacidad": 6,
+  "ubicacion": "Terraza VIP",
   "isActive": true
 }
 ```
@@ -314,10 +431,445 @@ Sin autenticación requerida.
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
 
-#### `DELETE /api/mesas/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+#### `DELETE http://localhost:3006/api/v1/mesas/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
 ```bash
 Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
 ```
-Sin body necesario.
 
+---
 
+### 🛎️ PEDIDOS (`/orders`) - 9 endpoints
+
+#### `POST http://localhost:3006/api/v1/orders/create` - Requiere token de CLIENT, RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "restaurantID": "507f1f77bcf86cd799439011",
+  "mesaID": "507f1f77bcf86cd799439012",
+  "clienteNombre": "Juan Pérez",
+  "clienteTelefono": "50212345678",
+  "items": [
+    {
+      "plato": "507f1f77bcf86cd799439013",
+      "cantidad": 2,
+      "notas": "Sin cebolla"
+    },
+    {
+      "plato": "507f1f77bcf86cd799439014",
+      "cantidad": 1
+    }
+  ],
+  "impuesto": 10.50,
+  "descuento": 5.00,
+  "couponCode": "PROMO10",
+  "notas": "Cliente prefiere comida no picante"
+}
+```
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+**Respuesta:** Pedido creado con número de orden único, subtotal y total calculados automáticamente
+
+#### `GET http://localhost:3006/api/v1/orders/get` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+Query params (opcionales):
+- restaurantID: "507f1f77bcf86cd799439011"
+- mesaID: "507f1f77bcf86cd799439012"
+- estado: "PENDIENTE" | "EN_PREPARACION" | "LISTO" | "SERVIDO" | "PAGADO" | "CANCELADO"
+- page: 1 (número de página)
+- limit: 10 (items por página)
+```
+**Respuesta:** Lista de pedidos con paginación e información de restaurante, mesa y platos
+
+#### `GET http://localhost:3006/api/v1/orders/:id` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+**Respuesta:** Detalles completos de un pedido específico
+
+#### `GET http://localhost:3006/api/v1/orders/numero/:numeroOrden` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+Ejemplo: GET /orders/numero/ORD-20260215-12345
+```
+**Respuesta:** Pedido buscado por su número de orden único
+
+#### `PUT http://localhost:3006/api/v1/orders/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "clienteNombre": "Juan Pérez Actualizado",
+  "clienteTelefono": "50287654321",
+  "items": [
+    {
+      "plato": "507f1f77bcf86cd799439013",
+      "cantidad": 3,
+      "notas": "Extra queso"
+    }
+  ],
+  "impuesto": 12.00,
+  "descuento": 10.00,
+  "notas": "Pedido actualizado"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Nota:** Solo se puede editar si el pedido está en estado PENDIENTE
+
+#### `PUT http://localhost:3006/api/v1/orders/:id/estado` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "estado": "EN_PREPARACION"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Estados válidos:** PENDIENTE, EN_PREPARACION, LISTO, SERVIDO, PAGADO, CANCELADO  
+**Nota:** No se puede cambiar el estado de pedidos CANCELADO o PAGADO
+
+#### `PUT http://localhost:3006/api/v1/orders/:id/pagar` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "metodoPago": "TARJETA"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Métodos de pago válidos:** EFECTIVO, TARJETA, TRANSFERENCIA  
+**Nota:** Cambia el estado a PAGADO y registra la hora del pago
+
+#### `DELETE http://localhost:3006/api/v1/orders/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "motivo": "Cliente canceló la orden"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Nota:** Cambia el estado a CANCELADO (no elimina el registro)
+
+#### `DELETE http://localhost:3006/api/v1/orders/:id/permanent` - Requiere token de PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_platform_admin}
+```
+**Nota:** Elimina permanentemente el pedido de la base de datos (solo para administradores de plataforma)
+
+---
+
+### 🎟️ CUPONES (`/coupons`) - 10 endpoints
+
+#### `POST http://localhost:3006/api/v1/coupons/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "codigo": "PROMO10",
+  "tipo": "PORCENTAJE",
+  "porcentajeDescuento": 10,
+  "fechaExpiracion": "2026-03-01T23:59:59Z",
+  "montoMinimo": 50,
+  "restaurantID": "507f1f77bcf86cd799439011"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+
+#### `POST http://localhost:3006/api/v1/coupons/validate` - Público
+```json
+{
+  "codigo": "PROMO10",
+  "montoTotal": 120,
+  "restaurantID": "507f1f77bcf86cd799439011"
+}
+```
+
+#### `GET http://localhost:3006/api/v1/coupons/get` - Público
+Query params (opcionales):
+- restaurantID: "507f1f77bcf86cd799439011"
+- page: 1
+- limit: 10
+
+#### `GET http://localhost:3006/api/v1/coupons/code/:codigo` - Público
+Ejemplo: GET /coupons/code/PROMO10
+
+#### `GET http://localhost:3006/api/v1/coupons/restaurant/:restaurantID/vigentes` - Público
+
+#### `GET http://localhost:3006/api/v1/coupons/:id` - Público
+
+#### `PUT http://localhost:3006/api/v1/coupons/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "descripcion": "Promo actualizada",
+  "fechaExpiracion": "2026-03-15T23:59:59Z"
+}
+```
+
+#### `PUT http://localhost:3006/api/v1/coupons/:id/activate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+
+#### `PUT http://localhost:3006/api/v1/coupons/:id/deactivate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+
+#### `DELETE http://localhost:3006/api/v1/coupons/:id` - Requiere token de PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_platform_admin}
+```
+
+**Nota:** Los cupones se validan automaticamente en la creacion de pedidos cuando se envia `couponCode`
+
+---
+
+### 🎉 EVENTOS Y PROMOCIONES (`/events`) - 9 endpoints
+
+#### `POST http://localhost:3006/api/v1/events/create` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "nombre": "Descuento de Fin de Semana",
+  "descripcion": "20% de descuento en todas las bebidas durante el fin de semana",
+  "tipo": "DESCUENTO",
+  "restaurantID": "507f1f77bcf86cd799439011",
+  "descuentoTipo": "PORCENTAJE",
+  "descuentoValor": 20,
+  "fechaInicio": "2026-02-21T00:00:00Z",
+  "fechaFin": "2026-02-22T23:59:59Z",
+  "platosAplicables": ["507f1f77bcf86cd799439013", "507f1f77bcf86cd799439014"],
+  "condiciones": "Solo viernes y sábados a partir de las 6 PM",
+  "compraMinima": 50,
+  "cantidadMaximaUsos": 100
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Tipos válidos:** PROMOCION, DESCUENTO, COMBO, HAPPY_HOUR, EVENTO_ESPECIAL, OFERTA_TEMPORAL  
+**Respuesta:** Evento creado con ID único y estado automático
+
+#### `GET http://localhost:3006/api/v1/events/get` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+Query params (opcionales):
+- restaurantID: "507f1f77bcf86cd799439011"
+- tipo: "DESCUENTO" | "PROMOCION" | "COMBO" | "HAPPY_HOUR" | "EVENTO_ESPECIAL" | "OFERTA_TEMPORAL"
+- estado: "ACTIVA" | "INACTIVA" | "FINALIZADA"
+- vigentes: true (solo eventos vigentes)
+- page: 1 (número de página)
+- limit: 10 (items por página)
+```
+**Respuesta:** Lista de eventos con paginación e información del restaurante y platos
+
+#### `GET http://localhost:3006/api/v1/events/restaurant/:restaurantID/vigentes` - Público
+```bash
+Parámetros:
+- restaurantID: ID del restaurante
+```
+**Respuesta:** Eventos vigentes y activos del restaurante especificado
+
+#### `GET http://localhost:3006/api/v1/events/:id` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+**Respuesta:** Detalles completos de un evento específico
+
+#### `PUT http://localhost:3006/api/v1/events/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```json
+{
+  "nombre": "Descuento Mejorado de Fin de Semana",
+  "descripcion": "30% de descuento en todas las bebidas",
+  "descuentoValor": 30,
+  "fechaInicio": "2026-02-21T00:00:00Z",
+  "fechaFin": "2026-02-23T23:59:59Z"
+}
+```
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Nota:** No se puede cambiar el restaurante o el usuario creador del evento
+
+#### `PUT http://localhost:3006/api/v1/events/:id/activate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Respuesta:** Evento activado
+
+#### `PUT http://localhost:3006/api/v1/events/:id/deactivate` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Respuesta:** Evento desactivado
+
+#### `POST http://localhost:3006/api/v1/events/:id/usar` - Requiere token
+```bash
+Authorization: Bearer {token_de_usuario}
+```
+**Nota:** Registra el uso de una promoción, incrementa contador y valida disponibilidad  
+**Respuesta:** Confirmación con detalles del descuento aplicable
+
+#### `DELETE http://localhost:3006/api/v1/events/:id` - Requiere token de RESTAURANT_ADMIN o PLATFORM_ADMIN
+```bash
+Authorization: Bearer {token_de_restaurant_admin_o_platform_admin}
+```
+**Nota:** Soft delete - marca el evento como inactivo sin eliminar registro
+
+---
+
+### 🖼️ UPLOAD DE ARCHIVOS (Fotos)
+
+#### Configuración de Cloudinary
+
+Antes de usar la funcionalidad de upload, debes configurar las credenciales de Cloudinary:
+
+1. **Crea una cuenta en [Cloudinary](https://cloudinary.com/)**
+2. **Obtén tus credenciales:**
+   - Cloud Name
+   - API Key
+   - API Secret
+3. **Agrégalas al archivo `.env`:**
+   ```env
+   CLOUDINARY_CLOUD_NAME=tu_cloud_name
+   CLOUDINARY_API_KEY=tu_api_key
+   CLOUDINARY_API_SECRET=tu_api_secret
+   ```
+
+#### Middleware de Upload (Multer)
+
+El proyecto utiliza Multer con almacenamiento en Cloudinary para manejar uploads de archivos.
+
+**Archivo:** `middlewares/upload.middleware.js`
+
+**Funcionalidades:**
+- ✅ Auto-conversión a WebP para optimización
+- ✅ Validación de tipos MIME (JPEG, PNG, WebP, GIF)
+- ✅ Límite de tamaño: 5MB por archivo
+- ✅ Organización automática en carpetas por tipo:
+  - `gastrflow/restaurantes/` - Fotos de restaurantes
+  - `gastrflow/platos/` - Fotos de platos
+
+#### Ejemplo de Upload en cURL
+
+**Upload de fotos de restaurante:**
+```bash
+curl -X POST http://localhost:3006/api/v1/restaurants/create \
+  -H "Authorization: Bearer {token}" \
+  -F "fotos=@/ruta/foto1.jpg" \
+  -F "fotos=@/ruta/foto2.jpg" \
+  -F "name=Mi Restaurante" \
+  -F "email=admin@rest.com" \
+  -F "phone=50212345678" \
+  -F "address=Calle Principal 123" \
+  -F "city=Guatemala" \
+  -F "openingHours=9:00-18:00"
+```
+
+**Upload de foto de plato:**
+```bash
+curl -X POST http://localhost:3006/api/v1/platos/create \
+  -H "Authorization: Bearer {token}" \
+  -F "foto=@/ruta/foto_plato.jpg" \
+  -F "nombre=Tacos al Pastor" \
+  -F "descripcion=Deliciosos tacos" \
+  -F "precio=45.00" \
+  -F "categoria=FUERTE" \
+  -F "restaurantID=507f1f77bcf86cd799439011" \
+  -F "ingredientes=tortilla" \
+  -F "ingredientes=cerdo" \
+  -F "ingredientes=piña"
+```
+
+#### Ejemplo en JavaScript (Fetch API)
+
+**Upload de restaurante:**
+```javascript
+const formData = new FormData();
+formData.append('fotos', document.getElementById('foto1').files[0]);
+formData.append('fotos', document.getElementById('foto2').files[0]);
+formData.append('name', 'Mi Restaurante');
+formData.append('email', 'admin@rest.com');
+formData.append('phone', '50212345678');
+formData.append('address', 'Calle Principal 123');
+formData.append('city', 'Guatemala');
+formData.append('openingHours', '9:00-18:00');
+
+const response = await fetch(
+  'http://localhost:3006/api/v1/restaurants/create',
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  }
+);
+
+const result = await response.json();
+console.log(result.data.photos); // URLs de Cloudinary
+```
+
+**Upload de plato:**
+```javascript
+const formData = new FormData();
+formData.append('foto', document.getElementById('fotoPlato').files[0]);
+formData.append('nombre', 'Tacos al Pastor');
+formData.append('descripcion', 'Deliciosos tacos');
+formData.append('precio', '45.00');
+formData.append('categoria', 'FUERTE');
+formData.append('restaurantID', '507f1f77bcf86cd799439011');
+formData.append('ingredientes', 'tortilla');
+formData.append('ingredientes', 'cerdo');
+formData.append('ingredientes', 'piña');
+
+const response = await fetch(
+  'http://localhost:3006/api/v1/platos/create',
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  }
+);
+
+const result = await response.json();
+console.log(result.data.foto); // URL de Cloudinary
+```
+
+#### Estructura de Respuesta
+
+Las URLs de las fotos se devuelven en la respuesta:
+
+**Restaurante creado:**
+```json
+{
+  "success": true,
+  "message": "Restaurante creado exitosamente",
+  "data": {
+    "_id": "507f1f77bcf86cd799439011",
+    "name": "Mi Restaurante",
+    "email": "admin@rest.com",
+    "photos": [
+      "https://res.cloudinary.com/xxx/image/upload/v123456/gastrflow/restaurantes/restaurant_1707990000000_abc123.webp"
+    ]
+  }
+}
+```
+
+**Plato creado:**
+```json
+{
+  "success": true,
+  "message": "Plato creado exitosamente",
+  "data": {
+    "_id": "507f1f77bcf86cd799439012",
+    "nombre": "Tacos al Pastor",
+    "precio": 45.00,
+    "foto": "https://res.cloudinary.com/xxx/image/upload/v123456/gastrflow/platos/plato_1707990000000_def456.webp"
+  }
+}
+```
+
+---

@@ -4,8 +4,7 @@
  * Incluye validaciones, manejo de errores y respuestas HTTP estandarizadas
  */
 
-import { parse } from 'dotenv';
-import Plato from '../platos-model.js';
+import Plato from './platos-model.js';
 
 /**
  * Obtiene el menú (platos activos) de un restaurante específico
@@ -45,27 +44,26 @@ export const getMenuByRestaurant = async (req, res) => {
         }
 
         // Configura opciones de paginación y ordenamiento
-        const options = {
-            page: parseInt(page),                    // Convierte a número entero
-            limit: parseInt(limit),                  // Convierte a número entero
-            sort: { createdAt: -1 }                  // Ordena por más reciente primero
-        }
+        const parsedPage = parseInt(page);
+        const parsedLimit = parseInt(limit);
 
-        // Busca platos activos (isActive: true) del restaurante específico con paginación
-        const platos = await Plato.paginate(
-            { restaurantID, isActive: true },
-            options
-        );
+        const filter = { restaurantID, isActive: true, disponible: true };
 
-        // Responde con los platos encontrados y detalles de paginación
+        const platos = await Plato.find(filter)
+            .limit(parsedLimit)
+            .skip((parsedPage - 1) * parsedLimit)
+            .sort({ createdAt: -1 });
+
+        const total = await Plato.countDocuments(filter);
+
         res.status(200).json({
             success: true,
             message: 'Menú obtenido exitosamente',
-            data: platos.docs,                        // Array de documentos (platos)
+            data: platos,
             pagination: {
-                total: platos.total,                  // Total de platos en BD
-                pages: platos.pages,                  // Total de páginas disponibles
-                currentPage: platos.page              // Página actual solicitada
+                total,
+                pages: Math.ceil(total / parsedLimit),
+                currentPage: parsedPage
             }
         })
 
@@ -284,16 +282,9 @@ export const updatePlato = async (req, res) => {
         // Copia los datos a actualizar desde el cuerpo de la solicitud
         const updateData = { ...req.body };
 
-        // Si se cargó una nueva imagen
+        // Si se cargó una nueva imagen, se asigna la nueva ruta
         if (req.file) {
-            // Elimina la imagen antigua de Cloudinary si existe
-            if (currentPlato.foto_public_id) {
-                await cloudinary.uploader.destroy(currentPlato.foto_public_id);
-            }
-
-            // Asigna la nueva imagen
             updateData.foto = req.file.path;
-            updateData.foto_public_id = req.file.filename;
         }
 
         // Actualiza el plato con los nuevos datos, retorna el documento actualizado

@@ -10,6 +10,11 @@ const platosSchema = mongoose.Schema(
             trim: true,
             maxLength: [100, 'El nombre no puede exceder 100 caracteres']
         },
+        descripcion: {
+            type: String,
+            trim: true,
+            maxLength: [500, 'La descripción no puede exceder 500 caracteres']
+        },
         precio: {
             type: Number,
             required: [true, 'El precio es requerido'],
@@ -43,6 +48,10 @@ const platosSchema = mongoose.Schema(
             required: [true, 'El ID del restaurante es requerido']
         },
         isActive: {
+            type: Boolean,
+            default: true
+        },
+        disponible: {
             type: Boolean,
             default: true
         }

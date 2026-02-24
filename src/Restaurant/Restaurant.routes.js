@@ -1,48 +1,88 @@
 import { Router } from 'express';
-import { createRestaurant } from './Restaurant.controller.js';
-import { getRestaurants } from './Restaurant.controller.js';
-import { getRestaurantById } from './Restaurant.controller.js';
-import { updateRestaurant } from './Restaurant.controller.js';
-import { changeRestaurantStatus } from './Restaurant.controller.js';
+import {
+    createRestaurant,
+    getRestaurants,
+    getRestaurantById,
+    updateRestaurant,
+    activateRestaurant,
+    deactivateRestaurant,
+    deleteRestaurant,
+    changeRestaurantStatus
+} from './Restaurant.controller.js';
+
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
+import { validarCampos } from '../../middlewares/validator.middleware.js';
+import { uploadRestaurantPhotos, handleMulterError } from '../../middlewares/upload.middleware.js';
+import {
+    validateCreateRestaurant,
+    validateRestaurantId,
+    validateUpdateRestaurant,
+    validateRestaurantStatus
+} from '../../middlewares/restaurant.validator.js';
 
 const router = Router();
 
+// Rutas POST
 router.post(
     '/create',
     autenticar,
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    uploadRestaurantPhotos.array('fotos', 5),
+    handleMulterError,
+    validateCreateRestaurant,
+    validarCampos,
     createRestaurant
 );
 
-router.get(
-    '/get', 
-    getRestaurants
+// Rutas GET - orden importante: rutas específicas ANTES que /:id
+router.get('/get', getRestaurants);
+
+// Rutas PUT - rutas con paths específicos ANTES que /:id
+router.put(
+    '/:id/activate',
+    autenticar,
+    autorizarRole('PLATFORM_ADMIN'),
+    validateRestaurantStatus,
+    validarCampos,
+    activateRestaurant
 );
 
-router.get(
-    '/:id', 
-    getRestaurantById
+router.put(
+    '/:id/deactivate',
+    autenticar,
+    autorizarRole('PLATFORM_ADMIN'),
+    validateRestaurantStatus,
+    validarCampos,
+    deactivateRestaurant
 );
 
 router.put(
     '/:id',
     autenticar,
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    uploadRestaurantPhotos.array('fotos', 5),
+    handleMulterError,
+    validateUpdateRestaurant,
+    validarCampos,
     updateRestaurant
 );
 
-router.put(
-    '/:id/activate',
+// Rutas DELETE
+router.delete(
+    '/:id',
     autenticar,
     autorizarRole('PLATFORM_ADMIN'),
-    changeRestaurantStatus
+    validateRestaurantId,
+    validarCampos,
+    deleteRestaurant
 );
-router.put(
-    '/:id/deactivate',
-    autenticar,
-    autorizarRole('PLATFORM_ADMIN'),
-    changeRestaurantStatus
+
+// Rutas GET con parámetros al final
+router.get(
+    '/:id',
+    validateRestaurantId,
+    validarCampos,
+    getRestaurantById
 );
 
 export default router;
