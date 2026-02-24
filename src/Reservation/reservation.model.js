@@ -36,6 +36,16 @@ const reservationSchema = mongoose.Schema(
             required: [true, 'La fecha de reserva es requerida'],
             index: true,
         },
+        horaInicio: {
+            type: String,
+            required: [true, 'La hora de inicio es requerida'],
+            match: [/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'El formato de hora debe ser HH:mm'],
+        },
+        horaFin: {
+            type: String,
+            required: [true, 'La hora de fin es requerida'],
+            match: [/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'El formato de hora debe ser HH:mm'],
+        },
         cantidadPersonas: {
             type: Number,
             required: [true, 'La cantidad de personas es requerida'],

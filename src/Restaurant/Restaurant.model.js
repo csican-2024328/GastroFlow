@@ -56,6 +56,11 @@ const restaurantSchema = mongoose.Schema(
       required: [true, 'El horario de apertura es obligatorio'],
       trim: true,
     },
+    aforoMaximo: {
+      type: Number,
+      required: [true, 'El aforo máximo del restaurante es obligatorio'],
+      min: [1, 'El aforo máximo debe ser al menos 1'],
+    },
     isActive: {
       type: Boolean,
       default: true,
