@@ -2,6 +2,7 @@ import Reservation from './reservation.model.js';
 import Restaurant from '../Restaurant/Restaurant.model.js';
 import Mesa from '../Mesas/mesa.model.js';
 import { findUserById } from '../../helper/user-db.js';
+import { notifyNewReservation, notifyReservationStatusChange } from '../../configs/socket.js';
 
 const isClientRole = (req) => req.usuario?.role === 'CLIENT';
 const isRestaurantAdminRole = (req) => req.usuario?.role === 'RESTAURANT_ADMIN';
@@ -221,6 +222,18 @@ export const createReservation = async (req, res) => {
             { path: 'restaurantID', select: 'name city address phone aforoMaximo' },
             { path: 'mesaID', select: 'numero capacidad ubicacion' },
         ]);
+
+        // Notificar al admin del restaurante sobre nueva reserva
+        notifyNewReservation(restaurantID, {
+            _id: reservation._id,
+            clienteNombre: reservation.clienteNombre,
+            fechaReserva: reservation.fechaReserva,
+            horaInicio: reservation.horaInicio,
+            horaFin: reservation.horaFin,
+            cantidadPersonas: reservation.cantidadPersonas,
+            mesa: reservation.mesaID,
+            estado: reservation.estado
+        });
 
         res.status(201).json({
             success: true,
@@ -460,6 +473,19 @@ export const updateReservation = async (req, res) => {
                 runValidators: true,
             })
         );
+
+        // Notificar al cliente si el estado cambió
+        if (updateData.estado && updateData.estado !== reservation.estado) {
+            notifyReservationStatusChange(reservation.clienteId, {
+                _id: updatedReservation._id,
+                estado: updatedReservation.estado,
+                fechaReserva: updatedReservation.fechaReserva,
+                horaInicio: updatedReservation.horaInicio,
+                horaFin: updatedReservation.horaFin,
+                restaurante: updatedReservation.restaurantID,
+                mesa: updatedReservation.mesaID
+            });
+        }
 
         res.status(200).json({
             success: true,

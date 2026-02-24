@@ -2,6 +2,7 @@ import Order from './order.model.js';
 import Plato from '../Platos/platos-model.js';
 import Mesa from '../Mesas/mesa.model.js';
 import Coupon from '../Coupon/coupon.model.js';
+import { notifyNewOrder, notifyOrderStatusChange } from '../../configs/socket.js';
 
 
 const generateOrderNumber = () => {
@@ -190,6 +191,18 @@ export const createOrder = async (req, res) => {
             { path: 'mesaID', select: 'numero ubicacion' },
             { path: 'items.plato', select: 'nombre precio categoria' }
         ]);
+
+        // Notificar al admin del restaurante sobre nuevo pedido
+        notifyNewOrder(restaurantID, {
+            _id: newOrder._id,
+            numeroOrden: newOrder.numeroOrden,
+            tipoPedido: newOrder.tipoPedido,
+            clienteNombre: newOrder.clienteNombre,
+            items: newOrder.items,
+            total: newOrder.total,
+            estado: newOrder.estado,
+            mesa: newOrder.mesaID
+        });
 
         res.status(201).json({
             success: true,
@@ -390,6 +403,16 @@ export const updateOrderStatus = async (req, res) => {
             { path: 'restaurantID', select: 'nombre' },
             { path: 'mesaID', select: 'numero ubicacion' }
         ]);
+
+        // Notificar al cliente sobre cambio de estado
+        const clientID = req.usuario?.sub || 'GUEST';
+        notifyOrderStatusChange(clientID, {
+            _id: order._id,
+            numeroOrden: order.numeroOrden,
+            estado: order.estado,
+            tipoPedido: order.tipoPedido,
+            total: order.total
+        });
 
         res.status(200).json({
             success: true,
