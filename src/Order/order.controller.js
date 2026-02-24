@@ -17,10 +17,14 @@ const generateOrderNumber = () => {
 export const createOrder = async (req, res) => {
     try {
         const {
+            tipoPedido,
             restaurantID,
             mesaID,
             clienteNombre,
             clienteTelefono,
+            clienteDireccion,
+            clienteReferencia,
+            horaProgramada,
             items,
             impuesto = 0,
             descuento = 0,
@@ -28,13 +32,48 @@ export const createOrder = async (req, res) => {
             notas
         } = req.body;
 
-        // Validar que la mesa existe y está activa
-        const mesa = await Mesa.findById(mesaID);
-        if (!mesa || !mesa.isActive) {
-            return res.status(404).json({
+        // Validar tipoPedido
+        if (!tipoPedido || !['EN_MESA', 'A_DOMICILIO', 'PARA_LLEVAR'].includes(tipoPedido)) {
+            return res.status(400).json({
                 success: false,
-                message: 'Mesa no encontrada o inactiva'
+                message: 'Tipo de pedido inválido. Debe ser: EN_MESA, A_DOMICILIO o PARA_LLEVAR'
             });
+        }
+
+        // Validaciones específicas por tipo de pedido
+        if (tipoPedido === 'EN_MESA') {
+            if (!mesaID) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'mesaID es requerido para pedidos EN_MESA'
+                });
+            }
+
+            const mesa = await Mesa.findById(mesaID);
+            if (!mesa || !mesa.isActive) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Mesa no encontrada o inactiva'
+                });
+            }
+        }
+
+        if (tipoPedido === 'A_DOMICILIO') {
+            if (!clienteDireccion) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'clienteDireccion es requerida para pedidos A_DOMICILIO'
+                });
+            }
+        }
+
+        if (tipoPedido === 'PARA_LLEVAR') {
+            if (!horaProgramada) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'horaProgramada es requerida para pedidos PARA_LLEVAR'
+                });
+            }
         }
 
         // Validar y obtener información de cada plato
@@ -70,7 +109,6 @@ export const createOrder = async (req, res) => {
         let numeroOrden = generateOrderNumber();
         let orderExists = await Order.findOne({ numeroOrden });
         
-        // En caso de colisión (muy improbable), generar uno nuevo
         while (orderExists) {
             numeroOrden = generateOrderNumber();
             orderExists = await Order.findOne({ numeroOrden });
@@ -93,7 +131,6 @@ export const createOrder = async (req, res) => {
                 });
             }
 
-            // Verificar si aplica a este restaurante
             if (coupon.restaurantID && coupon.restaurantID.toString() !== restaurantID) {
                 return res.status(400).json({
                     success: false,
@@ -101,7 +138,6 @@ export const createOrder = async (req, res) => {
                 });
             }
 
-            // Verificar validez del cupón
             const validacion = coupon.esValido();
             if (!validacion.valido) {
                 return res.status(400).json({
@@ -110,7 +146,6 @@ export const createOrder = async (req, res) => {
                 });
             }
 
-            // Calcular subtotal para validar monto mínimo
             const subtotalCalculado = orderItems.reduce((acc, item) => acc + item.subtotal, 0);
             if (subtotalCalculado < coupon.montoMinimo) {
                 return res.status(400).json({
@@ -119,17 +154,20 @@ export const createOrder = async (req, res) => {
                 });
             }
 
-            // Calcular descuento
             descuentoPorCoupon = coupon.calcularDescuento(subtotalCalculado);
         }
 
         // Crear el pedido
         const newOrder = new Order({
             numeroOrden,
+            tipoPedido,
             restaurantID,
-            mesaID,
+            mesaID: tipoPedido === 'EN_MESA' ? mesaID : null,
             clienteNombre,
             clienteTelefono,
+            clienteDireccion: tipoPedido === 'A_DOMICILIO' ? clienteDireccion : null,
+            clienteReferencia: tipoPedido === 'A_DOMICILIO' ? clienteReferencia : null,
+            horaProgramada: tipoPedido === 'PARA_LLEVAR' ? horaProgramada : null,
             items: orderItems,
             impuesto: impuesto || 0,
             descuento: (descuento || 0) + descuentoPorCoupon,
@@ -140,16 +178,13 @@ export const createOrder = async (req, res) => {
             estado: 'EN_PREPARACION'
         });
 
-        // El pre-save hook calculará automáticamente subtotal y total
         await newOrder.save();
 
-        // Registrar uso del cupón si se aplicó
         if (coupon) {
             const usuarioID = req.usuario?.sub || req.usuario?.id || null;
             await coupon.registrarUso(usuarioID || 'ANONIMO');
         }
 
-        // Poblar referencias para la respuesta
         await newOrder.populate([
             { path: 'restaurantID', select: 'nombre' },
             { path: 'mesaID', select: 'numero ubicacion' },
@@ -338,9 +373,13 @@ export const updateOrderStatus = async (req, res) => {
 
         order.estado = estado;
 
-        // Registrar timestamp según el estado
+        // Registrar timestamp según el estado y tipo de pedido
         if (estado === 'ENTREGADO') {
-            order.horaEntrega = new Date();
+            if (order.tipoPedido === 'A_DOMICILIO') {
+                order.horaEntregaDomicilio = new Date();
+            } else {
+                order.horaEntrega = new Date();
+            }
         } else if (estado === 'CANCELADO') {
             order.horaCancelacion = new Date();
         }
@@ -374,6 +413,9 @@ export const updateOrder = async (req, res) => {
         const {
             clienteNombre,
             clienteTelefono,
+            clienteDireccion,
+            clienteReferencia,
+            horaProgramada,
             items,
             impuesto,
             descuento,
@@ -389,7 +431,6 @@ export const updateOrder = async (req, res) => {
             });
         }
 
-        
         if (order.estado !== 'EN_PREPARACION') {
             return res.status(400).json({
                 success: false,
@@ -397,7 +438,6 @@ export const updateOrder = async (req, res) => {
             });
         }
 
-       
         if (items && items.length > 0) {
             const orderItems = [];
             for (const item of items) {
@@ -429,14 +469,23 @@ export const updateOrder = async (req, res) => {
             order.items = orderItems;
         }
 
-        // Actualizar otros campos si se proporcionan
+        // Actualizar campos según tipo de pedido
         if (clienteNombre) order.clienteNombre = clienteNombre;
         if (clienteTelefono) order.clienteTelefono = clienteTelefono;
+        
+        if (order.tipoPedido === 'A_DOMICILIO') {
+            if (clienteDireccion) order.clienteDireccion = clienteDireccion;
+            if (clienteReferencia !== undefined) order.clienteReferencia = clienteReferencia;
+        }
+
+        if (order.tipoPedido === 'PARA_LLEVAR') {
+            if (horaProgramada) order.horaProgramada = horaProgramada;
+        }
+
         if (impuesto !== undefined) order.impuesto = impuesto;
         if (descuento !== undefined) order.descuento = descuento;
         if (notas !== undefined) order.notas = notas;
 
-       
         await order.save();
 
         await order.populate([
