@@ -2,9 +2,6 @@
 
 import mongoose from "mongoose";
 
-/**
- * Schema para Eventos y Promociones Gastronómicas
- */
 const eventSchema = mongoose.Schema(
     {
         nombre: {
@@ -69,15 +66,14 @@ const eventSchema = mongoose.Schema(
                 message: 'La fecha de fin debe ser posterior a la fecha de inicio'
             }
         },
-        //cambiar a menus especiales por evento
-        platosAplicables: {
+        menusAplicables: {
             type: [mongoose.Schema.Types.ObjectId],
-            ref: 'Plato',
+            ref: 'Menu',
             validate: {
                 validator: function(v) {
                     return v.length > 0;
                 },
-                message: 'Debe seleccionar al menos un plato para la promoción'
+                message: 'Debe seleccionar al menos un menú para la promoción'
             }
         },
         condiciones: {
@@ -90,11 +86,17 @@ const eventSchema = mongoose.Schema(
             type: String,
             default: null
         },
-        //revision
-        compraMinima: {
-            type: Number,
-            min: [0, 'La compra mínima debe ser mayor o igual a 0'],
-            default: 0
+        musica: {
+            type: String,
+            trim: true,
+            maxLength: [100, 'El tipo de música no puede exceder 100 caracteres'],
+            default: null
+        },
+        tematica: {
+            type: String,
+            trim: true,
+            maxLength: [100, 'La temática o decoración no puede exceder 100 caracteres'],
+            default: null
         },
         //maximos
         cantidadMaximaUsos: {
@@ -177,9 +179,3 @@ eventSchema.methods.incrementarUsos = async function() {
 };
 
 export default mongoose.model('Event', eventSchema);
-
-
-//revisar los argumentos etiquetados con "revision"
-// agrgar musica
-// agregar decoracion (o tematica)
-//cambiar platos por menus
