@@ -1,4 +1,72 @@
 import mongoose from 'mongoose';
+import PDFDocument from 'pdfkit';
+// Exportar un reporte individual a PDF
+export const exportarReportePDF = async (req, res, next) => {
+    try {
+        const { reporteId } = req.params;
+        // Buscar el reporte por ID (ejemplo: Mesa)
+        const mesa = await mongoose.model('Mesa').findById(reporteId);
+        if (!mesa) {
+            return res.status(404).json({ success: false, message: 'Reporte no encontrado' });
+        }
+
+        // Crear PDF
+        const doc = new PDFDocument();
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=reporte_${reporteId}.pdf`);
+        doc.pipe(res);
+
+        doc.fontSize(18).text('Reporte de Mesa', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(12).text(`ID: ${mesa._id}`);
+        doc.text(`Estado: ${mesa.estado}`);
+        doc.text(`Total: ${mesa.total}`);
+        doc.text(`Fecha: ${mesa.createdAt}`);
+        doc.moveDown();
+        doc.text('Platos:');
+        if (Array.isArray(mesa.platos)) {
+            mesa.platos.forEach((plato, idx) => {
+                doc.text(`${idx + 1}. ${plato.nombre} - Cantidad: ${plato.cantidad} - Precio: ${plato.precio}`);
+            });
+        }
+        doc.end();
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Exportar todos los reportes a PDF
+export const exportarTodosReportesPDF = async (req, res, next) => {
+    try {
+        // Buscar todos los reportes (ejemplo: todas las mesas cerradas)
+        const mesas = await mongoose.model('Mesa').find({ estado: 'CERRADA' });
+
+        // Crear PDF
+        const doc = new PDFDocument();
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=reportes_todos.pdf');
+        doc.pipe(res);
+
+        doc.fontSize(18).text('Reporte de Todas las Mesas Cerradas', { align: 'center' });
+        doc.moveDown();
+        mesas.forEach((mesa, idx) => {
+            doc.fontSize(14).text(`Mesa #${idx + 1} - ID: ${mesa._id}`);
+            doc.fontSize(12).text(`Estado: ${mesa.estado}`);
+            doc.text(`Total: ${mesa.total}`);
+            doc.text(`Fecha: ${mesa.createdAt}`);
+            doc.text('Platos:');
+            if (Array.isArray(mesa.platos)) {
+                mesa.platos.forEach((plato, i) => {
+                    doc.text(`   ${i + 1}. ${plato.nombre} - Cantidad: ${plato.cantidad} - Precio: ${plato.precio}`);
+                });
+            }
+            doc.moveDown();
+        });
+        doc.end();
+    } catch (error) {
+        next(error);
+    }
+};
 
 export const topPlatos = async (req, res, next) => {
     try {

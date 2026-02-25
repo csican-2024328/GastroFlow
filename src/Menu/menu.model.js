@@ -36,13 +36,11 @@ const menuSchema = mongoose.Schema(
 		},
 		precio: {
 			type: Number,
-			required: [true, 'El precio es requerido'],
 			min: [0, 'El precio debe ser mayor o igual a 0'],
 		},
 		tipo: {
 			// Clasificador: entrada, plato fuerte, postre, bebida
 			type: String,
-			required: [true, 'El tipo de menú es requerido'],
 			enum: {
 				values: ['ENTRADA', 'FUERTE', 'POSTRE', 'BEBIDA'],
 				message: 'Tipo de menú no válido',
@@ -69,6 +67,12 @@ const menuSchema = mongoose.Schema(
 			type: Boolean,
 			default: true,
 		},
+		// Platos asociados al menú
+		platos: [{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Plato',
+			required: true
+		}],
 		// Programación / menús dinámicos: horario por día de la semana
 		schedule: {
 			type: [scheduleItemSchema],

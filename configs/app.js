@@ -47,16 +47,22 @@ const routes = (app) => {
   app.use(`${BASE_PATH}/restaurants`, restaurantRoutes);
   app.use(`${BASE_PATH}/mesas`, mesaRoutes);
   app.use(`${BASE_PATH}/platos`, platosRoutes);
-  app.use(`${BASE_PATH}/menus`, menuRoutes);
+  app.use(`${BASE_PATH}/menu`, menuRoutes);
   app.use(`${BASE_PATH}/reports`, reportsRoutes);
   app.use(`${BASE_PATH}/inventory`, inventoryRoutes);
   app.use(`${BASE_PATH}/orders`, orderRoutes);
   app.use(`${BASE_PATH}/events`, eventRoutes);
   app.use(`${BASE_PATH}/coupons`, couponRoutes);
-  app.use(`${BASE_PATH}/reservations`, reservationRoutes);
+  app.use(`${BASE_PATH}/reservation`, reservationRoutes);
   app.use(`${BASE_PATH}/notifications`, notificationsRoutes);
   app.use(`${BASE_PATH}/invoices`, invoiceRoutes);
   app.use(`${BASE_PATH}/user/auth`, userAuthRoutes);
+  import('../src/Review/review.routes.js').then(module => {
+    app.use(`${BASE_PATH}/reviews`, module.default);
+  });
+  import('../src/Staff/staff.routes.js').then(module => {
+    app.use(`${BASE_PATH}/staff`, module.default);
+  });
 
 
   app.get(`${BASE_PATH}/health`, (req, res) => {

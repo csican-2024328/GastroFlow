@@ -1,4 +1,6 @@
+
 import Menu from './menu.model.js';
+import { calcularPrecioYTipoDePlatos } from './menu-helpers.js';
 
 // Helper: verifica si una fecha (Date) cae dentro del rango availableFrom/To
 const isWithinDateRange = (menu, date) => {
@@ -27,6 +29,19 @@ export const createMenu = async (req, res) => {
 	try {
 		const menuData = { ...req.body };
 		if (req.file) menuData.foto = req.file.path;
+
+		// Obtener los IDs de platos del body (puede venir como string o array)
+		let platosIDs = menuData.platos;
+		if (typeof platosIDs === 'string') {
+			platosIDs = [platosIDs];
+		}
+		if (!Array.isArray(platosIDs)) platosIDs = [];
+
+		// Calcular precio y tipo
+		const { precio, tipo } = await calcularPrecioYTipoDePlatos(platosIDs);
+		menuData.precio = precio;
+		menuData.tipo = tipo;
+		menuData.platos = platosIDs;
 
 		const menu = new Menu(menuData);
 		await menu.save();

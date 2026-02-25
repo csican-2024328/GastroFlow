@@ -4,8 +4,8 @@ const ALLOWED_TYPES = ['ENTRADA', 'FUERTE', 'POSTRE', 'BEBIDA'];
 
 export const validateCreateMenu = [
   body('nombre').trim().notEmpty().withMessage('El nombre es obligatorio').isLength({ max: 100 }).withMessage('Máximo 100 caracteres'),
-  body('precio').notEmpty().withMessage('El precio es obligatorio').isFloat({ min: 0 }).withMessage('El precio debe ser >= 0'),
-  body('tipo').notEmpty().withMessage('El tipo es obligatorio').isIn(ALLOWED_TYPES).withMessage('Tipo inválido'),
+  body('precio').optional().isFloat({ min: 0 }).withMessage('El precio debe ser >= 0'),
+  body('tipo').optional().isIn(ALLOWED_TYPES).withMessage('Tipo inválido'),
   body('restaurantID').notEmpty().withMessage('El ID del restaurante es obligatorio').isMongoId().withMessage('ID de restaurante inválido'),
   body('ingredientes').optional().isArray().withMessage('Los ingredientes deben ser un arreglo'),
   body('ingredientes.*').optional().isString().withMessage('Cada ingrediente debe ser texto'),

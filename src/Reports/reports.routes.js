@@ -1,4 +1,7 @@
 import express from 'express';
+import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
+
+const router = express.Router();
 import {
     topPlatos,
     ingresosPorFecha,
@@ -6,24 +9,25 @@ import {
     clientesFrecuentes,
     estadisticasCliente,
     platoFavoritoCliente,
-    pedidosRecurrentes
+    pedidosRecurrentes,
+    exportarReportePDF,
+    exportarTodosReportesPDF
 } from './reports.controller.js';
-
-import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
-
-const router = express.Router();
-
+// Exportar reporte individual a PDF (solo para roles autorizados)
 router.get(
-    '/top-platos', 
-    autenticar, 
-    autorizarRole('PLATFORM_ADMIN'), 
-    topPlatos);
+    '/exportar/:reporteId/pdf',
+    autenticar,
+    autorizarRole('PLATFORM_ADMIN', 'RESTAURANT_ADMIN'),
+    exportarReportePDF
+);
 
+// Exportar todos los reportes a PDF (solo para roles autorizados)
 router.get(
-    '/ingresos', 
-    autenticar, 
-    autorizarRole('PLATFORM_ADMIN'), 
-    ingresosPorFecha);
+    '/exportar/pdf',
+    autenticar,
+    autorizarRole('PLATFORM_ADMIN', 'RESTAURANT_ADMIN'),
+    exportarTodosReportesPDF
+);
 
 router.get(
     '/ocupacion', 
