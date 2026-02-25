@@ -2,6 +2,7 @@ import Reservation from './reservation.model.js';
 import Restaurant from '../Restaurant/Restaurant.model.js';
 import Mesa from '../Mesas/mesa.model.js';
 import { findUserById } from '../../helper/user-db.js';
+import { notifyNewReservation, notifyReservationStatusChange } from '../../configs/socket.js';
 
 const isClientRole = (req) => req.usuario?.role === 'CLIENT';
 const isRestaurantAdminRole = (req) => req.usuario?.role === 'RESTAURANT_ADMIN';
@@ -67,10 +68,16 @@ const validateRestaurantAndMesa = async (restaurantID, mesaID) => {
     }
 };
 
-const hasReservationConflict = async ({ mesaID, fechaReserva, excludeId }) => {
+const hasReservationConflict = async ({ mesaID, fechaReserva, horaInicio, horaFin, excludeId }) => {
+    const reservationDate = new Date(fechaReserva);
+    const dateStart = new Date(reservationDate);
+    dateStart.setHours(0, 0, 0, 0);
+    const dateEnd = new Date(reservationDate);
+    dateEnd.setHours(23, 59, 59, 999);
+
     const filter = {
         mesaID,
-        fechaReserva: new Date(fechaReserva),
+        fechaReserva: { $gte: dateStart, $lte: dateEnd },
         isActive: true,
         estado: { $in: ['PENDIENTE', 'CONFIRMADA'] },
     };
@@ -79,13 +86,70 @@ const hasReservationConflict = async ({ mesaID, fechaReserva, excludeId }) => {
         filter._id = { $ne: excludeId };
     }
 
-    const conflict = await Reservation.findOne(filter);
-    return !!conflict;
+    const conflictingReservations = await Reservation.find(filter);
+    
+    // Función para convertir hora HH:mm a minutos
+    const timeToMinutes = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+
+    // Función para detectar superposición de horarios
+    const hasTimeOverlap = (start1, end1, start2, end2) => {
+        const s1 = timeToMinutes(start1);
+        const e1 = timeToMinutes(end1);
+        const s2 = timeToMinutes(start2);
+        const e2 = timeToMinutes(end2);
+        return s1 < e2 && e1 > s2;
+    };
+
+    for (const reservation of conflictingReservations) {
+        if (hasTimeOverlap(horaInicio, horaFin, reservation.horaInicio, reservation.horaFin)) {
+            return true;
+        }
+    }
+    
+    return false;
+};
+
+const checkRestaurantCapacity = async (restaurantID, cantidadPersonas, fechaReserva, excludeId = null) => {
+    const restaurant = await Restaurant.findById(restaurantID);
+    if (!restaurant) return false;
+
+    const reservationDate = new Date(fechaReserva);
+    const dateStart = new Date(reservationDate);
+    dateStart.setHours(0, 0, 0, 0);
+    const dateEnd = new Date(reservationDate);
+    dateEnd.setHours(23, 59, 59, 999);
+
+    const filter = {
+        restaurantID,
+        fechaReserva: { $gte: dateStart, $lte: dateEnd },
+        isActive: true,
+        estado: { $in: ['PENDIENTE', 'CONFIRMADA'] },
+    };
+
+    if (excludeId) {
+        filter._id = { $ne: excludeId };
+    }
+
+    const reservations = await Reservation.find(filter);
+    const totalPersonas = reservations.reduce((sum, res) => sum + res.cantidadPersonas, 0);
+    const availableCapacity = restaurant.aforoMaximo - totalPersonas;
+
+    return { available: availableCapacity >= cantidadPersonas, availableCapacity, aforoMaximo: restaurant.aforoMaximo };
 };
 
 export const createReservation = async (req, res) => {
     try {
-        const { restaurantID, mesaID, fechaReserva, cantidadPersonas, notas } = req.body;
+        const { restaurantID, mesaID, fechaReserva, horaInicio, horaFin, cantidadPersonas, notas } = req.body;
+
+        if (!horaInicio || !horaFin) {
+            return res.status(400).json({
+                success: false,
+                message: 'Las horas de inicio y fin son requeridas (formato HH:mm)',
+            });
+        }
 
         const requesterId = req.usuario?.sub;
         if (!requesterId) {
@@ -107,11 +171,35 @@ export const createReservation = async (req, res) => {
 
         await validateRestaurantAndMesa(restaurantID, mesaID);
 
-        const conflict = await hasReservationConflict({ mesaID, fechaReserva });
+        // Validar que cantidadPersonas no exceda la capacidad de la mesa
+        const mesa = await Mesa.findById(mesaID);
+        if (cantidadPersonas > mesa.capacidad) {
+            return res.status(400).json({
+                success: false,
+                message: `La cantidad de personas (${cantidadPersonas}) excede la capacidad de la mesa (${mesa.capacidad})`,
+            });
+        }
+
+        // Validar conflicto de reserva en tiempo real con rangos horarios
+        const conflict = await hasReservationConflict({ 
+            mesaID, 
+            fechaReserva, 
+            horaInicio, 
+            horaFin 
+        });
         if (conflict) {
             return res.status(409).json({
                 success: false,
-                message: 'La mesa ya tiene una reservación en esa fecha y hora',
+                message: 'La mesa ya tiene una reservación en ese rango de horas',
+            });
+        }
+
+        // Validar que no se exceda el aforo máximo del restaurante
+        const capacityCheck = await checkRestaurantCapacity(restaurantID, cantidadPersonas, fechaReserva);
+        if (!capacityCheck.available) {
+            return res.status(409).json({
+                success: false,
+                message: `Capacidad insuficiente. Aforo disponible: ${capacityCheck.availableCapacity}/${capacityCheck.aforoMaximo}`,
             });
         }
 
@@ -122,6 +210,8 @@ export const createReservation = async (req, res) => {
             clienteNombre: `${clientUser.Name || ''} ${clientUser.Surname || ''}`.trim() || clientUser.Username,
             clienteTelefono: clientUser.Phone || clientUser.UserProfile?.Phone || '',
             fechaReserva: new Date(fechaReserva),
+            horaInicio,
+            horaFin,
             cantidadPersonas,
             notas,
             estado: 'PENDIENTE',
@@ -129,9 +219,21 @@ export const createReservation = async (req, res) => {
 
         await reservation.save();
         await reservation.populate([
-            { path: 'restaurantID', select: 'name city address phone' },
+            { path: 'restaurantID', select: 'name city address phone aforoMaximo' },
             { path: 'mesaID', select: 'numero capacidad ubicacion' },
         ]);
+
+        // Notificar al admin del restaurante sobre nueva reserva
+        notifyNewReservation(restaurantID, {
+            _id: reservation._id,
+            clienteNombre: reservation.clienteNombre,
+            fechaReserva: reservation.fechaReserva,
+            horaInicio: reservation.horaInicio,
+            horaFin: reservation.horaFin,
+            cantidadPersonas: reservation.cantidadPersonas,
+            mesa: reservation.mesaID,
+            estado: reservation.estado
+        });
 
         res.status(201).json({
             success: true,
@@ -313,22 +415,54 @@ export const updateReservation = async (req, res) => {
         const restaurantID = updateData.restaurantID || reservation.restaurantID.toString();
         const mesaID = updateData.mesaID || reservation.mesaID.toString();
         const fechaReserva = updateData.fechaReserva || reservation.fechaReserva;
+        const horaInicio = updateData.horaInicio || reservation.horaInicio;
+        const horaFin = updateData.horaFin || reservation.horaFin;
+        const cantidadPersonas = updateData.cantidadPersonas || reservation.cantidadPersonas;
 
         if (updateData.restaurantID || updateData.mesaID) {
             await validateRestaurantAndMesa(restaurantID, mesaID);
         }
 
-        if (updateData.mesaID || updateData.fechaReserva) {
+        // Validar capacidad de mesa si se cambia la cantidad de personas
+        if (updateData.cantidadPersonas) {
+            const mesa = await Mesa.findById(mesaID);
+            if (updateData.cantidadPersonas > mesa.capacidad) {
+                return res.status(400).json({
+                    success: false,
+                    message: `La cantidad de personas (${updateData.cantidadPersonas}) excede la capacidad de la mesa (${mesa.capacidad})`,
+                });
+            }
+        }
+
+        if (updateData.mesaID || updateData.fechaReserva || updateData.horaInicio || updateData.horaFin) {
             const conflict = await hasReservationConflict({
                 mesaID,
                 fechaReserva,
+                horaInicio,
+                horaFin,
                 excludeId: reservation._id,
             });
 
             if (conflict) {
                 return res.status(409).json({
                     success: false,
-                    message: 'La mesa ya tiene una reservación en esa fecha y hora',
+                    message: 'La mesa ya tiene una reservación en ese rango de horas',
+                });
+            }
+        }
+
+        // Validar aforo máximo del restaurante si se cambia cantidad o fecha
+        if (updateData.cantidadPersonas || updateData.fechaReserva) {
+            const capacityCheck = await checkRestaurantCapacity(
+                restaurantID, 
+                cantidadPersonas, 
+                fechaReserva,
+                reservation._id
+            );
+            if (!capacityCheck.available) {
+                return res.status(409).json({
+                    success: false,
+                    message: `Capacidad insuficiente. Aforo disponible: ${capacityCheck.availableCapacity}/${capacityCheck.aforoMaximo}`,
                 });
             }
         }
@@ -339,6 +473,19 @@ export const updateReservation = async (req, res) => {
                 runValidators: true,
             })
         );
+
+        // Notificar al cliente si el estado cambió
+        if (updateData.estado && updateData.estado !== reservation.estado) {
+            notifyReservationStatusChange(reservation.clienteId, {
+                _id: updatedReservation._id,
+                estado: updatedReservation.estado,
+                fechaReserva: updatedReservation.fechaReserva,
+                horaInicio: updatedReservation.horaInicio,
+                horaFin: updatedReservation.horaFin,
+                restaurante: updatedReservation.restaurantID,
+                mesa: updatedReservation.mesaID
+            });
+        }
 
         res.status(200).json({
             success: true,

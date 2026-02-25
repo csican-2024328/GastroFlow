@@ -49,6 +49,15 @@ const orderSchema = mongoose.Schema(
             unique: true,
             trim: true
         },
+        tipoPedido: {
+            type: String,
+            required: [true, 'El tipo de pedido es requerido'],
+            enum: {
+                values: ['EN_MESA', 'A_DOMICILIO', 'PARA_LLEVAR'],
+                message: 'Tipo de pedido no válido'
+            },
+            index: true
+        },
         restaurantID: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Restaurant',
@@ -58,8 +67,11 @@ const orderSchema = mongoose.Schema(
         mesaID: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Mesa',
-            required: [true, 'El ID de la mesa es requerido'],
-            index: true
+            required: function() {
+                return this.tipoPedido === 'EN_MESA';
+            },
+            index: true,
+            default: null
         },
         clienteNombre: {
             type: String,
@@ -71,6 +83,25 @@ const orderSchema = mongoose.Schema(
             type: String,
             trim: true,
             maxLength: [20, 'El teléfono no puede exceder 20 caracteres']
+        },
+        clienteDireccion: {
+            type: String,
+            trim: true,
+            maxLength: [200, 'La dirección no puede exceder 200 caracteres'],
+            required: function() {
+                return this.tipoPedido === 'A_DOMICILIO';
+            }
+        },
+        clienteReferencia: {
+            type: String,
+            trim: true,
+            maxLength: [200, 'La referencia no puede exceder 200 caracteres']
+        },
+        horaProgramada: {
+            type: Date,
+            required: function() {
+                return this.tipoPedido === 'PARA_LLEVAR';
+            }
         },
         items: {
             type: [orderItemSchema],
@@ -122,10 +153,10 @@ const orderSchema = mongoose.Schema(
             type: String,
             required: [true, 'El estado es requerido'],
             enum: {
-                values: ['PENDIENTE', 'EN_PREPARACION', 'LISTO', 'SERVIDO', 'PAGADO', 'CANCELADO'],
+                values: ['EN_PREPARACION', 'LISTO', 'ENTREGADO', 'CANCELADO'],
                 message: 'Estado no válido'
             },
-            default: 'PENDIENTE',
+            default: 'EN_PREPARACION',
             index: true
         },
         metodoPago: {
@@ -144,7 +175,10 @@ const orderSchema = mongoose.Schema(
         horaEntrega: {
             type: Date
         },
-        horaPago: {
+        horaEntregaDomicilio: {
+            type: Date
+        },
+        horaCancelacion: {
             type: Date
         },
         isActive: {
@@ -161,9 +195,12 @@ const orderSchema = mongoose.Schema(
 
 // Índices compuestos para mejorar el rendimiento de las consultas
 orderSchema.index({ restaurantID: 1, estado: 1 });
+orderSchema.index({ restaurantID: 1, tipoPedido: 1, estado: 1 });
 orderSchema.index({ restaurantID: 1, createdAt: -1 });
 orderSchema.index({ mesaID: 1, estado: 1 });
 orderSchema.index({ numeroOrden: 1 });
+orderSchema.index({ tipoPedido: 1 });
+orderSchema.index({ estado: 1, tipoPedido: 1 });
 
 // Método para calcular el total antes de guardar
 orderSchema.pre('save', function() {

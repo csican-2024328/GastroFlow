@@ -47,7 +47,7 @@ JWT_ISSUER=AuthService
 JWT_AUDIENCE=AuthService
  
 SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
+SMTP_PORT=465
 SMTP_ENABLE_SSL=true
 SMTP_USERNAME=kinalsports@gmail.com
 SMTP_PASSWORD=yrsd prvf kwat toee
