@@ -228,6 +228,16 @@ const buildTopPlatosReport = async (query = {}) => {
                 }
             }
         },
+        {
+            $project: {
+                _id: 0,
+                platoId: { $toString: '$_id' },
+                nombre: 1,
+                totalVendidos: 1,
+                totalPedidos: 1,
+                ingresos: 1
+            }
+        },
         { $sort: { totalVendidos: -1 } },
         { $limit: limit }
     ]);
@@ -508,6 +518,15 @@ const buildPlatoFavoritoClienteReport = async ({ nombreCliente, query = {} }) =>
                 cantidadTotal: { $sum: '$items.cantidad' }
             }
         },
+        {
+            $project: {
+                _id: 1,
+                platoId: { $toString: '$platoId' },
+                veces: 1,
+                totalGastadoEnEste: 1,
+                cantidadTotal: 1
+            }
+        },
         { $sort: { veces: -1 } },
         { $limit: 5 }
     ]);
@@ -632,7 +651,7 @@ const buildDemandaRestaurantesReport = async (query = {}) => {
             {
                 $project: {
                     _id: 0,
-                    restaurantID: '$_id',
+                    restaurantID: { $toString: '$_id' },
                     restaurante: '$restaurant.name',
                     categoria: '$restaurant.category',
                     ciudad: '$restaurant.city',
