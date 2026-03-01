@@ -4,8 +4,8 @@
  * Incluye validaciones, manejo de errores y respuestas HTTP estandarizadas
  */
 
-import { parse } from 'dotenv';
-import Plato from '../platos-model.js';
+import Plato from './platos-model.js';
+import { verificarStockIngredientes, actualizarDisponibilidadPlatos } from '../../helper/inventory-helpers.js';
 
 /**
  * Obtiene el menú (platos activos) de un restaurante específico
@@ -44,28 +44,31 @@ export const getMenuByRestaurant = async (req, res) => {
             })
         }
 
+        // Actualizar disponibilidad de platos del restaurante antes de consultar
+        await actualizarDisponibilidadPlatos(restaurantID);
+
         // Configura opciones de paginación y ordenamiento
-        const options = {
-            page: parseInt(page),                    // Convierte a número entero
-            limit: parseInt(limit),                  // Convierte a número entero
-            sort: { createdAt: -1 }                  // Ordena por más reciente primero
-        }
+        const parsedPage = parseInt(page);
+        const parsedLimit = parseInt(limit);
 
-        // Busca platos activos (isActive: true) del restaurante específico con paginación
-        const platos = await Plato.paginate(
-            { restaurantID, isActive: true },
-            options
-        );
+        const filter = { restaurantID, isActive: true, disponible: true };
 
-        // Responde con los platos encontrados y detalles de paginación
+        const platos = await Plato.find(filter)
+            .populate('ingredientes')
+            .limit(parsedLimit)
+            .skip((parsedPage - 1) * parsedLimit)
+            .sort({ createdAt: -1 });
+
+        const total = await Plato.countDocuments(filter);
+
         res.status(200).json({
             success: true,
             message: 'Menú obtenido exitosamente',
-            data: platos.docs,                        // Array de documentos (platos)
+            data: platos,
             pagination: {
-                total: platos.total,                  // Total de platos en BD
-                pages: platos.pages,                  // Total de páginas disponibles
-                currentPage: platos.page              // Página actual solicitada
+                total,
+                pages: Math.ceil(total / parsedLimit),
+                currentPage: parsedPage
             }
         })
 
@@ -110,6 +113,12 @@ export const createPlato = async (req, res) => {
             platoData.foto = req.file.path;
         }
 
+        // Verificar disponibilidad inicial basada en ingredientes
+        if (platoData.ingredientes && platoData.ingredientes.length > 0) {
+            const tieneStock = await verificarStockIngredientes(platoData.ingredientes);
+            platoData.disponible = tieneStock;
+        }
+
         // Crea una nueva instancia del modelo Plato con los datos
         const plato = new Plato(platoData);
         // Guarda el documento en la base de datos (MongoDB)
@@ -139,6 +148,9 @@ export const getPlatos = async (req, res) => {
         // Extrae los parámetros de query con valores por defecto
         const { page = 1, limit = 10, isActive = true, restaurantID, categoria } = req.query;
 
+        // Actualizar disponibilidad de platos antes de consultar
+        await actualizarDisponibilidadPlatos(restaurantID);
+
         // Inicia el objeto filtro con el estado activo
         const filter = { isActive };
 
@@ -163,6 +175,7 @@ export const getPlatos = async (req, res) => {
         // aplica límite, omite (skip) registros según la página, y ordena
         const platos = await Plato.find(filter)
             .populate('restaurantID')                // Incluye datos del restaurante
+            .populate('ingredientes')                // Incluye datos de ingredientes
             .limit(limit * 1)                        // Limita resultados por página
             .skip((page - 1) * limit)                // Salta los registros de páginas anteriores
             .sort(options.sort);                     // Ordena de más reciente a más antiguo
@@ -218,7 +231,9 @@ export const getPlatoById = async (req, res) => {
         const { id } = req.params;
 
         // Busca el plato por ID e incluye datos del restaurante relacionado
-        const plato = await Plato.findById(id).populate('restaurantID');
+        const plato = await Plato.findById(id)
+            .populate('restaurantID')
+            .populate('ingredientes');
 
         // Valida si el plato existe
         if (!plato) {
@@ -226,6 +241,15 @@ export const getPlatoById = async (req, res) => {
                 success: false,
                 message: 'Plato no encontrado',
             });
+        }
+
+        // Verificar disponibilidad actual del plato
+        if (plato.ingredientes && plato.ingredientes.length > 0) {
+            const tieneStock = await verificarStockIngredientes(plato.ingredientes);
+            if (plato.disponible !== tieneStock) {
+                plato.disponible = tieneStock;
+                await plato.save();
+            }
         }
 
         // Responde con el plato encontrado
@@ -284,16 +308,15 @@ export const updatePlato = async (req, res) => {
         // Copia los datos a actualizar desde el cuerpo de la solicitud
         const updateData = { ...req.body };
 
-        // Si se cargó una nueva imagen
+        // Si se cargó una nueva imagen, se asigna la nueva ruta
         if (req.file) {
-            // Elimina la imagen antigua de Cloudinary si existe
-            if (currentPlato.foto_public_id) {
-                await cloudinary.uploader.destroy(currentPlato.foto_public_id);
-            }
-
-            // Asigna la nueva imagen
             updateData.foto = req.file.path;
-            updateData.foto_public_id = req.file.filename;
+        }
+
+        // Si se actualizaron los ingredientes, verificar disponibilidad
+        if (updateData.ingredientes && updateData.ingredientes.length > 0) {
+            const tieneStock = await verificarStockIngredientes(updateData.ingredientes);
+            updateData.disponible = tieneStock;
         }
 
         // Actualiza el plato con los nuevos datos, retorna el documento actualizado

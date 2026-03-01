@@ -1,47 +1,78 @@
 'use strict';
 
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const restaurantSchema = mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: [true, 'El nombre del restaurante es requerido'],
-            trim: true,
-            maxLength: [100, 'El nombre no puede exceder 100 caracteres']
-        },
-        address: {
-            type: String,
-            required: [true, 'La dirección es requerida'],
-            trim: true,
-            maxLength: [200, 'La dirección no puede exceder 200 caracteres']
-        },
-        category: {
-            type: String,
-            required: [true, 'La categoría gastronómica es requerida'],
-            enum: {
-                values: ['COMIDA_RAPIDA', 'TRADICIONAL', 'ITALIANA', 'MEXICANA', 'ASIATICA', 'OTRA'],
-                message: 'Categoría gastronómica no válida'
-            }
-        },
-        schedule: {
-            type: String,
-            required: [true, 'El horario es requerido'],
-            trim: true
-        },
-        isActive: {
-            type: Boolean,
-            default: true
-        }
+  {
+    name: {
+      type: String,
+      required: [true, 'El nombre del restaurante es obligatorio'],
+      trim: true,
+      maxLength: [100, 'El nombre no puede exceder 100 caracteres'],
     },
-    {
-        timestamps: true,
-        versionKey: false
-    }
+    category: {
+      type: String,
+      trim: true,
+      maxLength: [50, 'La categoría no puede exceder 50 caracteres'],
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxLength: [1000, 'La descripción no puede exceder 1000 caracteres'],
+    },
+    averagePrice: {
+      type: Number,
+      min: [0, 'El precio promedio debe ser mayor o igual a 0'],
+    },
+    photos: {
+      type: [String],
+      default: [],
+    },
+    email: {
+      type: String,
+      required: [true, 'El email es obligatorio'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, 'El email debe ser válido'],
+    },
+    phone: {
+      type: String,
+      required: [true, 'El teléfono es obligatorio'],
+      trim: true,
+    },
+    address: {
+      type: String,
+      required: [true, 'La dirección es obligatoria'],
+      trim: true,
+    },
+    city: {
+      type: String,
+      required: [true, 'La ciudad es obligatoria'],
+      trim: true,
+    },
+    openingHours: {
+      type: String,
+      required: [true, 'El horario de apertura es obligatorio'],
+      trim: true,
+    },
+    aforoMaximo: {
+      type: Number,
+      required: [true, 'El aforo máximo del restaurante es obligatorio'],
+      min: [1, 'El aforo máximo debe ser al menos 1'],
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
 );
 
 restaurantSchema.index({ isActive: 1 });
-restaurantSchema.index({ category: 1 });
-restaurantSchema.index({ isActive: 1, category: 1 });
+restaurantSchema.index({ city: 1 });
 
 export default mongoose.model('Restaurant', restaurantSchema);
