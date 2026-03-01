@@ -30,6 +30,20 @@ router.get(
 );
 
 router.get(
+    '/top-platos',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    topPlatos
+);
+
+router.get(
+    '/ingresos',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    ingresosPorFecha
+);
+
+router.get(
     '/ocupacion', 
     autenticar, 
     autorizarRole('PLATFORM_ADMIN'), 

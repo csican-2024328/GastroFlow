@@ -14,11 +14,13 @@ export const createInvoice = async (req, res) => {
             orderID,
             eventID,
             restaurantID,
-            subtotal,
-            propina = 0,
-            cargosExtra = 0,
-            metodoPago
+            subtotal
         } = req.body;
+
+        let resolvedRestaurantID = restaurantID || null;
+        let resolvedSubtotal = subtotal;
+        let resolvedPropina = 0;
+        let resolvedCargosExtra = 0;
 
         // Validar que la orden existe si se proporciona
         if (orderID) {
@@ -37,6 +39,12 @@ export const createInvoice = async (req, res) => {
                     message: 'Ya existe una factura para esta orden'
                 });
             }
+
+            // Cuando se factura por orden, tomar restaurante, subtotal, propina y cargosExtra de la orden
+            resolvedRestaurantID = order.restaurantID;
+            resolvedSubtotal = order.subtotal;
+            resolvedPropina = order.propina || 0;
+            resolvedCargosExtra = order.cargosExtra || 0;
         }
 
         // Validar que el evento existe si se proporciona
@@ -48,13 +56,26 @@ export const createInvoice = async (req, res) => {
                     message: 'Evento no encontrado'
                 });
             }
+
+            // Si no viene de orden, tomar restaurante del evento
+            if (!resolvedRestaurantID) {
+                resolvedRestaurantID = event.restaurantID;
+            }
+
             // Verificar si ya existe una factura para este evento (opcional, dependiendo de la lógica de negocio)
             // Si un evento puede ser pagado múltiples veces por diferentes usuarios, no deberíamos bloquearlo aquí.
             // Asumiremos que un usuario puede pagar su participación en un evento.
         }
 
+        if (resolvedSubtotal === undefined || resolvedSubtotal === null) {
+            return res.status(400).json({
+                success: false,
+                message: 'El subtotal es obligatorio cuando no se factura desde una orden'
+            });
+        }
+
         // Validar que el restaurante existe
-        const restaurant = await Restaurant.findById(restaurantID);
+        const restaurant = await Restaurant.findById(resolvedRestaurantID);
         if (!restaurant) {
             return res.status(404).json({
                 success: false,
@@ -66,13 +87,14 @@ export const createInvoice = async (req, res) => {
         const nuevaFactura = new Invoice({
             orderID: orderID || null,
             eventID: eventID || null,
-            restaurantID,
+            restaurantID: resolvedRestaurantID,
             userID: req.usuario.sub, // ID del usuario autenticado
-            subtotal,
-            propina,
-            cargosExtra,
-            metodoPago,
-            estado: 'PAGADA' // Por defecto asumimos que si se factura es porque se pagó, o puede venir en el body
+            subtotal: resolvedSubtotal,
+            propina: resolvedPropina,
+            cargosExtra: resolvedCargosExtra,
+            total: resolvedSubtotal + resolvedPropina + resolvedCargosExtra,
+            metodoPago: 'OTRO', // Inicialmente OTRO hasta que se registre el método de pago real
+            estado: 'PAGADA'
         });
 
         await nuevaFactura.save();

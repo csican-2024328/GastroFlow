@@ -38,7 +38,7 @@ const invoiceSchema = mongoose.Schema(
         },
         total: {
             type: Number,
-            required: [true, 'El total es requerido'],
+            default: 0,
             min: [0, 'El total no puede ser negativo']
         },
         estado: {
@@ -55,7 +55,7 @@ const invoiceSchema = mongoose.Schema(
                 values: ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'OTRO'],
                 message: 'Método de pago no válido'
             },
-            required: [true, 'El método de pago es requerido']
+            default: 'OTRO'
         },
         fechaEmision: {
             type: Date,
@@ -76,18 +76,5 @@ const invoiceSchema = mongoose.Schema(
 invoiceSchema.index({ restaurantID: 1, estado: 1 });
 invoiceSchema.index({ userID: 1 });
 invoiceSchema.index({ fechaEmision: -1 });
-
-// Pre-save hook para calcular el total automáticamente si no viene y validar orderID/eventID
-invoiceSchema.pre('validate', function(next) {
-    if (!this.orderID && !this.eventID) {
-        this.invalidate('orderID', 'Debe proporcionar un ID de orden o un ID de evento');
-        this.invalidate('eventID', 'Debe proporcionar un ID de orden o un ID de evento');
-    }
-
-    if (this.subtotal !== undefined) {
-        this.total = this.subtotal + (this.propina || 0) + (this.cargosExtra || 0);
-    }
-    next();
-});
 
 export default mongoose.model('Invoice', invoiceSchema);

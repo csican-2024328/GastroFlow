@@ -47,7 +47,10 @@ const menuSchema = mongoose.Schema(
 			},
 		},
 		ingredientes: {
-			type: [String],
+			type: [{
+				type: mongoose.Schema.Types.ObjectId,
+				ref: 'Inventory'
+			}],
 			default: [],
 		},
 		foto: {

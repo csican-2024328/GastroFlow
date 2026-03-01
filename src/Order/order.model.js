@@ -6,14 +6,30 @@ import mongoose from "mongoose";
  * Schema para los items individuales de un pedido
  */
 const orderItemSchema = mongoose.Schema({
+    tipo: {
+        type: String,
+        required: [true, 'El tipo de item es requerido'],
+        enum: {
+            values: ['PLATO', 'MENU'],
+            message: 'El tipo debe ser PLATO o MENU'
+        }
+    },
     plato: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Plato',
-        required: [true, 'El plato es requerido']
+        required: function() {
+            return this.tipo === 'PLATO';
+        }
+    },
+    menu: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Menu',
+        required: function() {
+            return this.tipo === 'MENU';
+        }
     },
     nombre: {
         type: String,
-        required: [true, 'El nombre del plato es requerido'],
         trim: true
     },
     cantidad: {
@@ -144,6 +160,16 @@ const orderSchema = mongoose.Schema(
             default: 0,
             min: [0, 'El descuento del cupón debe ser mayor o igual a 0']
         },
+        propina: {
+            type: Number,
+            default: 0,
+            min: [0, 'La propina debe ser mayor o igual a 0']
+        },
+        cargosExtra: {
+            type: Number,
+            default: 0,
+            min: [0, 'Los cargos extra deben ser mayor o igual a 0']
+        },
         total: {
             type: Number,
             default: 0,
@@ -181,6 +207,10 @@ const orderSchema = mongoose.Schema(
         horaCancelacion: {
             type: Date
         },
+        inventarioDecrementado: {
+            type: Boolean,
+            default: false
+        },
         isActive: {
             type: Boolean,
             default: true,
@@ -212,8 +242,8 @@ orderSchema.pre('save', function() {
         }, 0);
     }
     
-    // Calcular total
-    this.total = this.subtotal + this.impuesto - this.descuento;
+    // Calcular total: subtotal + impuesto - descuento + propina + cargosExtra
+    this.total = this.subtotal + this.impuesto - this.descuento + (this.propina || 0) + (this.cargosExtra || 0);
 });
 
 export default mongoose.model('Order', orderSchema);

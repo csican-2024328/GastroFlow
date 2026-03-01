@@ -36,12 +36,48 @@ export const validateCreateOrder = [
         .isArray({ min: 1 })
         .withMessage('Debe incluir al menos un item en el pedido'),
 
-    check('items.*.plato')
+    check('items.*.tipo')
         .not()
         .isEmpty()
-        .withMessage('El ID del plato es obligatorio en cada item')
-        .isMongoId()
-        .withMessage('ID de plato inválido'),
+        .withMessage('El tipo de item es obligatorio en cada item')
+        .isIn(['PLATO', 'MENU'])
+        .withMessage('El tipo de item debe ser PLATO o MENU'),
+
+    check('items.*.plato')
+        .custom((value, { req, path }) => {
+            const index = Number(path.split('.')[1]);
+            const item = req.body.items?.[index];
+
+            if (item?.tipo === 'PLATO') {
+                if (!value) {
+                    throw new Error('El ID del plato es obligatorio cuando tipo es PLATO');
+                }
+                const mongoIdRegex = /^[0-9a-fA-F]{24}$/;
+                if (!mongoIdRegex.test(value)) {
+                    throw new Error('ID de plato inválido');
+                }
+            }
+
+            return true;
+        }),
+
+    check('items.*.menu')
+        .custom((value, { req, path }) => {
+            const index = Number(path.split('.')[1]);
+            const item = req.body.items?.[index];
+
+            if (item?.tipo === 'MENU') {
+                if (!value) {
+                    throw new Error('El ID del menú es obligatorio cuando tipo es MENU');
+                }
+                const mongoIdRegex = /^[0-9a-fA-F]{24}$/;
+                if (!mongoIdRegex.test(value)) {
+                    throw new Error('ID de menú inválido');
+                }
+            }
+
+            return true;
+        }),
 
     check('items.*.cantidad')
         .isInt({ min: 1 })
@@ -95,10 +131,40 @@ export const validateUpdateOrder = [
         .isArray({ min: 1 })
         .withMessage('Debe incluir al menos un item en el pedido'),
 
-    check('items.*.plato')
+    check('items.*.tipo')
         .optional()
-        .isMongoId()
-        .withMessage('ID de plato inválido'),
+        .isIn(['PLATO', 'MENU'])
+        .withMessage('El tipo de item debe ser PLATO o MENU'),
+
+    check('items.*.plato')
+        .custom((value, { req, path }) => {
+            const index = Number(path.split('.')[1]);
+            const item = req.body.items?.[index];
+
+            if (item?.tipo === 'PLATO' && value) {
+                const mongoIdRegex = /^[0-9a-fA-F]{24}$/;
+                if (!mongoIdRegex.test(value)) {
+                    throw new Error('ID de plato inválido');
+                }
+            }
+
+            return true;
+        }),
+
+    check('items.*.menu')
+        .custom((value, { req, path }) => {
+            const index = Number(path.split('.')[1]);
+            const item = req.body.items?.[index];
+
+            if (item?.tipo === 'MENU' && value) {
+                const mongoIdRegex = /^[0-9a-fA-F]{24}$/;
+                if (!mongoIdRegex.test(value)) {
+                    throw new Error('ID de menú inválido');
+                }
+            }
+
+            return true;
+        }),
 
     check('items.*.cantidad')
         .optional()
@@ -140,8 +206,8 @@ export const validateUpdateOrderStatus = [
         .not()
         .isEmpty()
         .withMessage('El estado es obligatorio')
-        .isIn(['PENDIENTE', 'EN_PREPARACION', 'LISTO', 'SERVIDO', 'PAGADO', 'CANCELADO'])
-        .withMessage('Estado no válido. Debe ser: PENDIENTE, EN_PREPARACION, LISTO, SERVIDO, PAGADO o CANCELADO')
+        .isIn(['EN_PREPARACION', 'LISTO', 'ENTREGADO', 'CANCELADO'])
+        .withMessage('Estado no válido. Debe ser: EN_PREPARACION, LISTO, ENTREGADO o CANCELADO')
 ];
 
 /**
@@ -153,11 +219,21 @@ export const validatePayOrder = [
         .withMessage('ID de pedido inválido'),
 
     body('metodoPago')
-        .not()
-        .isEmpty()
+        .trim()
+        .notEmpty()
         .withMessage('El método de pago es obligatorio')
         .isIn(['EFECTIVO', 'TARJETA', 'TRANSFERENCIA'])
-        .withMessage('Método de pago no válido. Debe ser: EFECTIVO, TARJETA o TRANSFERENCIA')
+        .withMessage('Método de pago no válido. Debe ser: EFECTIVO, TARJETA o TRANSFERENCIA'),
+
+    body('propina')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('La propina debe ser un monto fijo mayor o igual a 0'),
+
+    body('cargosExtra')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('Los cargos extra deben ser un monto fijo mayor o igual a 0')
 ];
 
 /**

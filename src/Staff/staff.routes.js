@@ -12,7 +12,7 @@ router.post(
   autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
   body('name').notEmpty().isString().withMessage('Nombre requerido'),
   body('surname').notEmpty().isString().withMessage('Apellido requerido'),
-  body('restaurantId').notEmpty().isString().withMessage('ID de restaurante requerido'),
+  body('restaurantId').notEmpty().isMongoId().withMessage('ID de restaurante inválido'),
   body('role').notEmpty().isString().withMessage('Rol requerido'),
   validarCampos,
   createStaff

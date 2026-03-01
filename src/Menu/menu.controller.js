@@ -1,6 +1,7 @@
 
 import Menu from './menu.model.js';
 import { calcularPrecioYTipoDePlatos } from './menu-helpers.js';
+import { verificarStockMenu, actualizarDisponibilidadMenus } from '../../helper/inventory-helpers.js';
 
 // Helper: verifica si una fecha (Date) cae dentro del rango availableFrom/To
 const isWithinDateRange = (menu, date) => {
@@ -46,6 +47,14 @@ export const createMenu = async (req, res) => {
 		const menu = new Menu(menuData);
 		await menu.save();
 
+		// Verificar disponibilidad inicial del menú
+		const menuPopulado = await Menu.findById(menu._id).populate('platos');
+		const tieneStock = await verificarStockMenu(menuPopulado);
+		if (menu.disponible !== tieneStock) {
+			menu.disponible = tieneStock;
+			await menu.save();
+		}
+
 		return res.status(201).json({ success: true, message: 'Menú creado exitosamente', data: menu });
 	} catch (error) {
 		return res.status(400).json({ success: false, message: 'Error al crear menú', error: error.message });
@@ -60,10 +69,15 @@ export const getMenus = async (req, res) => {
 		if (restaurantID) filter.restaurantID = restaurantID;
 		if (tipo) filter.tipo = tipo;
 
+		// Actualizar disponibilidad de menús antes de consultar
+		await actualizarDisponibilidadMenus(restaurantID);
+
 		const parsedPage = parseInt(page);
 		const parsedLimit = parseInt(limit);
 
 		let menus = await Menu.find(filter)
+			.populate('ingredientes')
+			.populate('platos')
 			.limit(parsedLimit)
 			.skip((parsedPage - 1) * parsedLimit)
 			.sort({ createdAt: -1 });
@@ -85,8 +99,19 @@ export const getMenus = async (req, res) => {
 export const getMenuById = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const menu = await Menu.findById(id).populate('restaurantID');
+		const menu = await Menu.findById(id)
+			.populate('restaurantID')
+			.populate('platos')
+			.populate('ingredientes');
 		if (!menu) return res.status(404).json({ success: false, message: 'Menú no encontrado' });
+		
+		// Verificar disponibilidad actual del menú
+		const tieneStock = await verificarStockMenu(menu);
+		if (menu.disponible !== tieneStock) {
+			menu.disponible = tieneStock;
+			await menu.save();
+		}
+		
 		return res.status(200).json({ success: true, data: menu });
 	} catch (error) {
 		return res.status(500).json({ success: false, message: 'Error al obtener menú', error: error.message });
@@ -102,7 +127,17 @@ export const updateMenu = async (req, res) => {
 		const updateData = { ...req.body };
 		if (req.file) updateData.foto = req.file.path;
 
-		const updated = await Menu.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+		const updated = await Menu.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+			.populate('platos')
+			.populate('ingredientes');
+		
+		// Verificar disponibilidad después de actualizar
+		const tieneStock = await verificarStockMenu(updated);
+		if (updated.disponible !== tieneStock) {
+			updated.disponible = tieneStock;
+			await updated.save();
+		}
+		
 		return res.status(200).json({ success: true, message: 'Menú actualizado', data: updated });
 	} catch (error) {
 		return res.status(500).json({ success: false, message: 'Error al actualizar menú', error: error.message });
@@ -129,8 +164,14 @@ export const getMenuByRestaurant = async (req, res) => {
 		const { date } = req.query;
 		if (!restaurantID) return res.status(400).json({ success: false, message: 'ID del restaurante es requerido' });
 
+		// Actualizar disponibilidad de menús del restaurante antes de consultar
+		await actualizarDisponibilidadMenus(restaurantID);
+
 		const filter = { restaurantID, isActive: true, disponible: true };
-		let menus = await Menu.find(filter).sort({ createdAt: -1 });
+		let menus = await Menu.find(filter)
+			.populate('ingredientes')
+			.populate('platos')
+			.sort({ createdAt: -1 });
 
 		if (date) {
 			const dt = new Date(date);

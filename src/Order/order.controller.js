@@ -1,8 +1,155 @@
 import Order from './order.model.js';
 import Plato from '../Platos/platos-model.js';
+import Menu from '../Menu/menu.model.js';
 import Mesa from '../Mesas/mesa.model.js';
 import Coupon from '../Coupon/coupon.model.js';
+import Invoice from '../Invoice/invoice.model.js';
+import Inventory from '../Inventory/inventory.model.js';
 import { notifyNewOrder, notifyOrderStatusChange } from '../../configs/socket.js';
+
+
+/**
+ * Decrementa el inventario de ingredientes según los platos/menús de una orden
+ * Por cada plato/menú en la orden, resta la cantidad del stock de cada ingrediente
+ */
+const decrementInventoryForOrder = async (order) => {
+    try {
+        // Refresh del documento para asegurar que tenemos la versión más reciente
+        await order.populate({
+            path: 'items'
+        });
+
+        // Populate para obtener los platos y menús con sus ingredientes/platos
+        await order.populate([
+            { path: 'items.plato', select: 'nombre ingredientes' },
+            { path: 'items.menu', select: 'nombre platos' }
+        ]);
+
+        console.log('Order después de populate:', JSON.stringify(order.items.map(item => ({
+            tipo: item.tipo,
+            plato: item.plato?.nombre,
+            menu: item.menu?.nombre,
+            cantidad: item.cantidad
+        })), null, 2));
+
+        // Recorrer cada item de la orden
+        for (const item of order.items) {
+            console.log(`Procesando item tipo: ${item.tipo}`);
+            
+            if (item.tipo === 'PLATO') {
+                if (item.plato && item.plato.ingredientes && item.plato.ingredientes.length > 0) {
+                    console.log(`Decrementando ingredientes del plato: ${item.plato.nombre}`);
+                    // Para cada ingrediente del plato
+                    for (const ingredienteID of item.plato.ingredientes) {
+                        console.log(`  - Decrementando ingrediente: ${ingredienteID}`);
+                        // Restar la cantidad de platos del stock
+                        await Inventory.findByIdAndUpdate(
+                            ingredienteID,
+                            { $inc: { stock: -item.cantidad } },
+                            { new: true }
+                        );
+                    }
+                } else {
+                    console.log(`No hay ingredientes para decrementar en plato`);
+                }
+            } else if (item.tipo === 'MENU') {
+                if (item.menu && item.menu.platos && item.menu.platos.length > 0) {
+                    console.log(`Menu tiene ${item.menu.platos.length} platos`);
+                    
+                    // Obtener todos los platos del menú con sus ingredientes
+                    const platosDelMenu = await Plato.find({
+                        _id: { $in: item.menu.platos }
+                    }).select('nombre ingredientes');
+                    
+                    console.log(`Platos obtenidos del menu: ${platosDelMenu.map(p => p.nombre).join(', ')}`);
+                    
+                    // Para cada plato del menú
+                    for (const plato of platosDelMenu) {
+                        if (plato.ingredientes && plato.ingredientes.length > 0) {
+                            console.log(`  - Decrementando ingredientes del plato del menú: ${plato.nombre}`);
+                            // Para cada ingrediente del plato
+                            for (const ingredienteID of plato.ingredientes) {
+                                console.log(`    - Decrementando ingrediente: ${ingredienteID}`);
+                                // Restar la cantidad de menús del stock
+                                await Inventory.findByIdAndUpdate(
+                                    ingredienteID,
+                                    { $inc: { stock: -item.cantidad } },
+                                    { new: true }
+                                );
+                            }
+                        }
+                    }
+                } else {
+                    console.log(`No hay platos para decrementar en menu`);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error decrementando inventario:', error);
+        throw error;
+    }
+};
+
+/**
+ * Restaura el inventario de ingredientes cuando una orden se cancela
+ * Por cada plato/menú en la orden, suma la cantidad del stock de cada ingrediente
+ */
+const restoreInventoryForOrder = async (order) => {
+    try {
+        // Refresh del documento para asegurar que tenemos la versión más reciente
+        await order.populate({
+            path: 'items'
+        });
+
+        // Populate para obtener los platos y menús con sus ingredientes/platos
+        await order.populate([
+            { path: 'items.plato', select: 'nombre ingredientes' },
+            { path: 'items.menu', select: 'nombre platos' }
+        ]);
+
+        // Recorrer cada item de la orden
+        for (const item of order.items) {
+            if (item.tipo === 'PLATO') {
+                if (item.plato && item.plato.ingredientes && item.plato.ingredientes.length > 0) {
+                    // Para cada ingrediente del plato
+                    for (const ingredienteID of item.plato.ingredientes) {
+                        // Suma la cantidad de platos de vuelta al stock
+                        await Inventory.findByIdAndUpdate(
+                            ingredienteID,
+                            { $inc: { stock: item.cantidad } },
+                            { new: true }
+                        );
+                    }
+                }
+            } else if (item.tipo === 'MENU') {
+                if (item.menu && item.menu.platos && item.menu.platos.length > 0) {
+                    // Obtener todos los platos del menú con sus ingredientes
+                    const platosDelMenu = await Plato.find({
+                        _id: { $in: item.menu.platos }
+                    }).select('nombre ingredientes');
+                    
+                    // Para cada plato del menú
+                    for (const plato of platosDelMenu) {
+                        if (plato.ingredientes && plato.ingredientes.length > 0) {
+                            // Para cada ingrediente del plato
+                            for (const ingredienteID of plato.ingredientes) {
+                                // Suma la cantidad de menús de vuelta al stock
+                                await Inventory.findByIdAndUpdate(
+                                    ingredienteID,
+                                    { $inc: { stock: item.cantidad } },
+                                    { new: true }
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error restaurando inventario:', error);
+        throw error;
+    }
+};
 
 
 const generateOrderNumber = () => {
@@ -77,31 +224,87 @@ export const createOrder = async (req, res) => {
             }
         }
 
-        // Validar y obtener información de cada plato
+        // Validar y obtener información de cada item (plato o menú)
         const orderItems = [];
         for (const item of items) {
-            const plato = await Plato.findById(item.plato);
-            
-            if (!plato || !plato.isActive) {
-                return res.status(404).json({
+            // Validar que el tipo sea válido
+            if (!item.tipo || !['PLATO', 'MENU'].includes(item.tipo)) {
+                return res.status(400).json({
                     success: false,
-                    message: `Plato con ID ${item.plato} no encontrado o inactivo`
+                    message: 'El tipo de item debe ser PLATO o MENU'
                 });
             }
 
-            if (!plato.disponible) {
-                return res.status(400).json({
-                    success: false,
-                    message: `El plato "${plato.nombre}" no está disponible en este momento`
-                });
+            let itemData = null;
+            let nombre = '';
+            let precio = 0;
+
+            if (item.tipo === 'PLATO') {
+                // Validar plato
+                if (!item.plato) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'El ID del plato es requerido cuando tipo es PLATO'
+                    });
+                }
+
+                const plato = await Plato.findById(item.plato);
+                
+                if (!plato || !plato.isActive) {
+                    return res.status(404).json({
+                        success: false,
+                        message: `Plato con ID ${item.plato} no encontrado o inactivo`
+                    });
+                }
+
+                if (!plato.disponible) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `El plato "${plato.nombre}" no está disponible en este momento`
+                    });
+                }
+
+                itemData = { plato: plato._id };
+                nombre = plato.nombre;
+                precio = plato.precio;
+
+            } else if (item.tipo === 'MENU') {
+                // Validar menú
+                if (!item.menu) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'El ID del menú es requerido cuando tipo es MENU'
+                    });
+                }
+
+                const menu = await Menu.findById(item.menu);
+                
+                if (!menu || !menu.isActive) {
+                    return res.status(404).json({
+                        success: false,
+                        message: `Menú con ID ${item.menu} no encontrado o inactivo`
+                    });
+                }
+
+                if (!menu.disponible) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `El menú "${menu.nombre}" no está disponible en este momento`
+                    });
+                }
+
+                itemData = { menu: menu._id };
+                nombre = menu.nombre;
+                precio = menu.precio;
             }
 
             orderItems.push({
-                plato: plato._id,
-                nombre: plato.nombre,
-                cantidad: item.cantidad,
-                precioUnitario: plato.precio,
-                subtotal: plato.precio * item.cantidad,
+                tipo: item.tipo,
+                ...itemData,
+                nombre,
+                cantidad: item.cantidad || 1,
+                precioUnitario: precio,
+                subtotal: precio * (item.cantidad || 1),
                 notas: item.notas || ''
             });
         }
@@ -189,7 +392,8 @@ export const createOrder = async (req, res) => {
         await newOrder.populate([
             { path: 'restaurantID', select: 'nombre' },
             { path: 'mesaID', select: 'numero ubicacion' },
-            { path: 'items.plato', select: 'nombre precio categoria' }
+            { path: 'items.plato', select: 'nombre precio categoria' },
+            { path: 'items.menu', select: 'nombre precio tipo' }
         ]);
 
         // Notificar al admin del restaurante sobre nuevo pedido
@@ -245,6 +449,7 @@ export const getOrders = async (req, res) => {
             .populate('restaurantID', 'nombre')
             .populate('mesaID', 'numero ubicacion')
             .populate('items.plato', 'nombre precio categoria')
+            .populate('items.menu', 'nombre precio tipo')
             .limit(parsedLimit)
             .skip((parsedPage - 1) * parsedLimit)
             .sort({ createdAt: -1 });
@@ -280,7 +485,8 @@ export const getOrderById = async (req, res) => {
         const order = await Order.findById(id)
             .populate('restaurantID', 'nombre email phone')
             .populate('mesaID', 'numero ubicacion capacidad')
-            .populate('items.plato', 'nombre descripcion precio categoria');
+            .populate('items.plato', 'nombre descripcion precio categoria')
+            .populate('items.menu', 'nombre descripcion precio tipo');
 
         if (!order || !order.isActive) {
             return res.status(404).json({
@@ -312,7 +518,8 @@ export const getOrderByNumber = async (req, res) => {
         const order = await Order.findOne({ numeroOrden, isActive: true })
             .populate('restaurantID', 'nombre email phone')
             .populate('mesaID', 'numero ubicacion capacidad')
-            .populate('items.plato', 'nombre descripcion precio categoria');
+            .populate('items.plato', 'nombre descripcion precio categoria')
+            .populate('items.menu', 'nombre descripcion precio tipo');
 
         if (!order) {
             return res.status(404).json({
@@ -393,8 +600,20 @@ export const updateOrderStatus = async (req, res) => {
             } else {
                 order.horaEntrega = new Date();
             }
+            
+            // Decrementar inventario si no ha sido decrmentado aún
+            if (!order.inventarioDecrementado) {
+                await decrementInventoryForOrder(order);
+                order.inventarioDecrementado = true;
+            }
         } else if (estado === 'CANCELADO') {
             order.horaCancelacion = new Date();
+            
+            // Restaurar inventario si fue decrementado anteriormente
+            if (order.inventarioDecrementado) {
+                await restoreInventoryForOrder(order);
+                order.inventarioDecrementado = false;
+            }
         }
 
         await order.save();
@@ -536,7 +755,7 @@ export const updateOrder = async (req, res) => {
 export const payOrder = async (req, res) => {
     try {
         const { id } = req.params;
-        const { metodoPago } = req.body;
+        const { metodoPago, propina = 0, cargosExtra = 0 } = req.body;
 
         const order = await Order.findById(id);
 
@@ -554,17 +773,50 @@ export const payOrder = async (req, res) => {
             });
         }
 
-        // Solo se puede pagar pedidos en estado ENTREGADO
-        if (order.estado !== 'ENTREGADO') {
+        // Verificar si la orden ya ha sido pagada (metodoPago no es PENDIENTE)
+        if (order.metodoPago !== 'PENDIENTE') {
             return res.status(400).json({
                 success: false,
-                message: `Pedido debe estar en estado ENTREGADO para ser pagado. Estado actual: ${order.estado}`
+                message: 'Esta orden ya ha sido pagada. No se puede pagar nuevamente'
+            });
+        }
+
+        // Solo se puede pagar pedidos en estado LISTO o ENTREGADO
+        if (!['LISTO', 'ENTREGADO'].includes(order.estado)) {
+            return res.status(400).json({
+                success: false,
+                message: `Pedido debe estar en estado LISTO o ENTREGADO para ser pagado. Estado actual: ${order.estado}`
             });
         }
 
         order.metodoPago = metodoPago;
+        order.propina = propina;
+        order.cargosExtra = cargosExtra;
+
+        if (order.estado === 'LISTO') {
+            order.estado = 'ENTREGADO';
+            if (order.tipoPedido === 'A_DOMICILIO') {
+                order.horaEntregaDomicilio = new Date();
+            } else {
+                order.horaEntrega = new Date();
+            }
+            
+            // Decrementar inventario si no ha sido decrmentado aún
+            if (!order.inventarioDecrementado) {
+                await decrementInventoryForOrder(order);
+                order.inventarioDecrementado = true;
+            }
+        }
 
         await order.save();
+
+        // Actualizar la factura asociada con el método de pago correcto y estado PAGADA
+        const invoice = await Invoice.findOne({ orderID: order._id });
+        if (invoice) {
+            invoice.metodoPago = metodoPago;
+            invoice.estado = 'PAGADA';
+            await invoice.save();
+        }
 
         await order.populate([
             { path: 'restaurantID', select: 'nombre' },
@@ -628,6 +880,12 @@ export const cancelOrder = async (req, res) => {
 
         order.estado = 'CANCELADO';
         order.horaCancelacion = new Date();
+        
+        // Restaurar inventario si fue decrementado anteriormente
+        if (order.inventarioDecrementado) {
+            await restoreInventoryForOrder(order);
+            order.inventarioDecrementado = false;
+        }
         
         if (motivo) {
             order.notas = order.notas 

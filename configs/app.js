@@ -26,7 +26,8 @@ import couponRoutes from '../src/Coupon/coupon.routes.js';
 import reservationRoutes from '../src/Reservation/reservation.routes.js';
 import notificationsRoutes from '../src/Notifications/notifications.routes.js';
 import invoiceRoutes from '../src/Invoice/invoice.routes.js';
-import userAuthRoutes from '../src/User/auth.routes.js';
+import reviewRoutes from '../src/Review/review.routes.js';
+import staffRoutes from '../src/Staff/staff.routes.js';
 import { errorMiddleware } from '../middlewares/error.middleware.js';
 import { initializeEmailService, verificarConexionSMTP } from '../helper/email-service.js';
 import { initSocket } from './socket.js';
@@ -56,13 +57,8 @@ const routes = (app) => {
   app.use(`${BASE_PATH}/reservation`, reservationRoutes);
   app.use(`${BASE_PATH}/notifications`, notificationsRoutes);
   app.use(`${BASE_PATH}/invoices`, invoiceRoutes);
-  app.use(`${BASE_PATH}/user/auth`, userAuthRoutes);
-  import('../src/Review/review.routes.js').then(module => {
-    app.use(`${BASE_PATH}/reviews`, module.default);
-  });
-  import('../src/Staff/staff.routes.js').then(module => {
-    app.use(`${BASE_PATH}/staff`, module.default);
-  });
+  app.use(`${BASE_PATH}/reviews`, reviewRoutes);
+  app.use(`${BASE_PATH}/staff`, staffRoutes);
 
 
   app.get(`${BASE_PATH}/health`, (req, res) => {

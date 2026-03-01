@@ -28,7 +28,7 @@ export const Staff = sequelize.define(
       },
     },
     RestaurantId: {
-      type: DataTypes.STRING(16),
+      type: DataTypes.STRING(24),
       allowNull: false,
       field: 'restaurant_id',
     },

@@ -70,24 +70,26 @@ export const exportarTodosReportesPDF = async (req, res, next) => {
 
 export const topPlatos = async (req, res, next) => {
     try {
-        const resultado = await mongoose.model('Mesa').aggregate([
-            { $match: { estado: 'CERRADA' } },
-
-            { $unwind: '$platos' },
-
+        const resultado = await mongoose.model('Order').aggregate([
+            { $match: { estado: 'ENTREGADO' } },
+            { $unwind: '$items' },
+            {
+                $match: {
+                    'items.tipo': 'PLATO'
+                }
+            },
             {
                 $group: {
-                    _id: '$platos.plato',
-                    nombre: { $first: '$platos.nombre' },
-                    totalVendidos: { $sum: '$platos.cantidad' },
+                    _id: '$items.plato',
+                    nombre: { $first: '$items.nombre' },
+                    totalVendidos: { $sum: '$items.cantidad' },
                     ingresos: {
                         $sum: {
-                            $multiply: ['$platos.cantidad', '$platos.precio']
+                            $multiply: ['$items.cantidad', '$items.precioUnitario']
                         }
                     }
                 }
             },
-
             { $sort: { totalVendidos: -1 } },
             { $limit: 5 }
         ]);
@@ -117,10 +119,10 @@ export const ingresosPorFecha = async (req, res, next) => {
         const inicio = new Date(start);
         const fin = new Date(end);
 
-        const resultado = await mongoose.model('Mesa').aggregate([
+        const resultado = await mongoose.model('Order').aggregate([
             {
                 $match: {
-                    estado: 'CERRADA',
+                    estado: 'ENTREGADO',
                     createdAt: { $gte: inicio, $lte: fin }
                 }
             },
@@ -128,7 +130,7 @@ export const ingresosPorFecha = async (req, res, next) => {
                 $group: {
                     _id: null,
                     totalIngresos: { $sum: '$total' },
-                    totalMesas: { $sum: 1 },
+                    totalOrdenes: { $sum: 1 },
                     promedioCuenta: { $avg: '$total' }
                 }
             }
@@ -139,7 +141,7 @@ export const ingresosPorFecha = async (req, res, next) => {
             message: 'Ingresos por rango de fechas',
             data: resultado[0] || {
                 totalIngresos: 0,
-                totalMesas: 0,
+                totalOrdenes: 0,
                 promedioCuenta: 0
             }
         });
@@ -151,27 +153,79 @@ export const ingresosPorFecha = async (req, res, next) => {
 
 export const horariosOcupacion = async (req, res, next) => {
     try {
-        const resultado = await mongoose.model('Mesa').aggregate([
-            { $match: { estado: 'CERRADA' } },
+        const { restaurantID, desde, hasta } = req.query;
 
+        if (!restaurantID) {
+            return res.status(400).json({
+                success: false,
+                message: 'El restaurantID es requerido'
+            });
+        }
+
+        // Rango de fechas por defecto: últimos 30 días
+        const fechaHasta = hasta ? new Date(hasta) : new Date();
+        const fechaDesde = desde ? new Date(desde) : new Date(fechaHasta.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+        // Contar mesas del restaurante
+        const totalMesas = await mongoose.model('Mesa').countDocuments({
+            restaurantID: new mongoose.Types.ObjectId(restaurantID),
+            isActive: true
+        });
+
+        // Agregar pedidos EN_MESA por hora
+        const resultado = await mongoose.model('Order').aggregate([
+            {
+                $match: {
+                    restaurantID: new mongoose.Types.ObjectId(restaurantID),
+                    tipoPedido: 'EN_MESA',
+                    estado: { $in: ['EN_PREPARACION', 'LISTO', 'ENTREGADO'] },
+                    createdAt: {
+                        $gte: fechaDesde,
+                        $lte: fechaHasta
+                    }
+                }
+            },
             {
                 $project: {
-                    hora: { $hour: '$createdAt' }
+                    hora: { $hour: '$createdAt' },
+                    mesaID: 1,
+                    estado: 1
                 }
             },
             {
                 $group: {
                     _id: '$hora',
-                    totalMesas: { $sum: 1 }
+                    totalPedidos: { $sum: 1 },
+                    mesasOcupadas: { $addToSet: '$mesaID' }
                 }
             },
-            { $sort: { totalMesas: -1 } }
+            {
+                $project: {
+                    hora: '$_id',
+                    totalPedidos: 1,
+                    mesasOcupadas: { $size: '$mesasOcupadas' },
+                    porcentajeOcupacion: {
+                        $multiply: [
+                            { $divide: [{ $size: '$mesasOcupadas' }, totalMesas] },
+                            100
+                        ]
+                    }
+                }
+            },
+            { $sort: { hora: 1 } }
         ]);
 
         res.status(200).json({
             success: true,
-            message: 'Horarios de mayor ocupación',
-            data: resultado
+            message: 'Horarios de ocupación de mesas (basado en pedidos)',
+            data: {
+                totalMesas,
+                horarios: resultado,
+                periodo: {
+                    desde: fechaDesde,
+                    hasta: fechaHasta
+                }
+            }
         });
 
     } catch (error) {
@@ -196,7 +250,7 @@ export const clientesFrecuentes = async (req, res, next) => {
         }
 
         const resultado = await mongoose.model('Order').aggregate([
-            { $match: { restaurantID: new mongoose.Types.ObjectId(restaurantID), estado: 'PAGADO' } },
+            { $match: { restaurantID: new mongoose.Types.ObjectId(restaurantID), estado: 'ENTREGADO' } },
             {
                 $group: {
                     _id: '$clienteNombre',
@@ -245,7 +299,7 @@ export const estadisticasCliente = async (req, res, next) => {
                 $match: {
                     restaurantID: new mongoose.Types.ObjectId(restaurantID),
                     clienteNombre: new RegExp(nombreCliente, 'i'),
-                    estado: 'PAGADO'
+                    estado: 'ENTREGADO'
                 }
             },
             {
@@ -303,7 +357,7 @@ export const platoFavoritoCliente = async (req, res, next) => {
                 $match: {
                     restaurantID: new mongoose.Types.ObjectId(restaurantID),
                     clienteNombre: new RegExp(nombreCliente, 'i'),
-                    estado: 'PAGADO'
+                    estado: 'ENTREGADO'
                 }
             },
             { $unwind: '$items' },
@@ -352,7 +406,7 @@ export const pedidosRecurrentes = async (req, res, next) => {
             {
                 $match: {
                     restaurantID: new mongoose.Types.ObjectId(restaurantID),
-                    estado: 'PAGADO'
+                    estado: 'ENTREGADO'
                 }
             },
             {
@@ -374,7 +428,7 @@ export const pedidosRecurrentes = async (req, res, next) => {
                         $match: {
                             restaurantID: new mongoose.Types.ObjectId(restaurantID),
                             clienteNombre: cliente._id,
-                            estado: 'PAGADO'
+                            estado: 'ENTREGADO'
                         }
                     },
                     { $unwind: '$items' },

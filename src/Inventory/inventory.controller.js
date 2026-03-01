@@ -1,4 +1,5 @@
 import Inventory from './inventory.model.js';
+import { actualizarPlatosPorIngrediente } from '../../helper/inventory-helpers.js';
 
 export const crearInsumo = async (req, res, next) => {
     try {
@@ -25,6 +26,9 @@ export const crearInsumo = async (req, res, next) => {
             stock,
             unidadMedida
         });
+
+        // Actualizar disponibilidad de platos que usen este ingrediente
+        await actualizarPlatosPorIngrediente(nuevoInsumo._id);
 
         res.status(201).json({
             success: true,
@@ -95,6 +99,9 @@ export const actualizarInsumo = async (req, res, next) => {
             });
         }
 
+        // Actualizar disponibilidad de platos que usen este ingrediente
+        await actualizarPlatosPorIngrediente(insumo._id);
+
         res.status(200).json({
             success: true,
             message: 'Insumo actualizado correctamente',
@@ -120,6 +127,9 @@ export const eliminarInsumo = async (req, res, next) => {
                 message: 'Insumo no encontrado'
             });
         }
+
+        // Actualizar disponibilidad de platos que usen este ingrediente (los marca como no disponibles)
+        await actualizarPlatosPorIngrediente(insumo._id);
 
         res.status(200).json({
             success: true,

@@ -3,6 +3,7 @@ import Restaurant from '../Restaurant/Restaurant.model.js';
 import Mesa from '../Mesas/mesa.model.js';
 import { findUserById } from '../../helper/user-db.js';
 import { notifyNewReservation, notifyReservationStatusChange } from '../../configs/socket.js';
+import { enviarEmailAlertaTiempoReal } from '../../helper/email-service.js';
 
 const isClientRole = (req) => req.usuario?.role === 'CLIENT';
 const isRestaurantAdminRole = (req) => req.usuario?.role === 'RESTAURANT_ADMIN';
@@ -159,6 +160,9 @@ export const createReservation = async (req, res) => {
             });
         }
 
+        const requesterUser = await findUserById(requesterId);
+        const requesterEmail = requesterUser?.Email?.toLowerCase()?.trim();
+
         const clienteId = isClientRole(req) ? requesterId : (req.body.clienteId || requesterId);
         const clientUser = await findUserById(clienteId);
 
@@ -214,7 +218,7 @@ export const createReservation = async (req, res) => {
             horaFin,
             cantidadPersonas,
             notas,
-            estado: 'PENDIENTE',
+            estado: 'CONFIRMADA',
         });
 
         await reservation.save();
@@ -234,6 +238,23 @@ export const createReservation = async (req, res) => {
             mesa: reservation.mesaID,
             estado: reservation.estado
         });
+
+        if (requesterEmail) {
+            await enviarEmailAlertaTiempoReal({
+                to: requesterEmail,
+                asunto: 'Alerta Tiempo Real: Nueva reservación',
+                titulo: 'Nueva reservación emitida por socket',
+                mensaje: 'Se emitió el evento nueva-reserva para validar notificaciones en tiempo real.',
+                detalles: [
+                    { label: 'Reserva ID', value: reservation._id?.toString() },
+                    { label: 'Restaurante', value: reservation.restaurantID?._id?.toString() || restaurantID },
+                    { label: 'Cliente', value: reservation.clienteNombre },
+                    { label: 'Fecha', value: reservation.fechaReserva?.toISOString?.() || reservation.fechaReserva },
+                    { label: 'Hora', value: `${reservation.horaInicio} - ${reservation.horaFin}` },
+                    { label: 'Estado', value: reservation.estado },
+                ],
+            });
+        }
 
         res.status(201).json({
             success: true,
@@ -312,7 +333,7 @@ export const getReservations = async (req, res) => {
         } else if (isPlatformAdminRole(req)) {
             if (restaurantID) filter.restaurantID = restaurantID;
             if (mesaID) filter.mesaID = mesaID;
-            filter.clienteId = req.query.clienteId;
+            if (req.query.clienteId) filter.clienteId = req.query.clienteId;
         } else {
             return res.status(403).json({
                 success: false,
@@ -485,6 +506,27 @@ export const updateReservation = async (req, res) => {
                 restaurante: updatedReservation.restaurantID,
                 mesa: updatedReservation.mesaID
             });
+
+            const requesterId = req.usuario?.sub;
+            const requesterUser = requesterId ? await findUserById(requesterId) : null;
+            const requesterEmail = requesterUser?.Email?.toLowerCase()?.trim();
+
+            if (requesterEmail) {
+                await enviarEmailAlertaTiempoReal({
+                    to: requesterEmail,
+                    asunto: 'Alerta Tiempo Real: Cambio de estado de reservación',
+                    titulo: 'Cambio de estado emitido por socket',
+                    mensaje: 'Se emitió el evento cambio-estado-reserva para validar notificaciones en tiempo real.',
+                    detalles: [
+                        { label: 'Reserva ID', value: updatedReservation._id?.toString() },
+                        { label: 'Cliente ID', value: reservation.clienteId },
+                        { label: 'Estado anterior', value: reservation.estado },
+                        { label: 'Estado nuevo', value: updatedReservation.estado },
+                        { label: 'Fecha', value: updatedReservation.fechaReserva?.toISOString?.() || updatedReservation.fechaReserva },
+                        { label: 'Hora', value: `${updatedReservation.horaInicio} - ${updatedReservation.horaFin}` },
+                    ],
+                });
+            }
         }
 
         res.status(200).json({

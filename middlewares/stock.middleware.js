@@ -1,4 +1,5 @@
 import Plato from '../src/Platos/platos-model.js';
+import Menu from '../src/Menu/menu.model.js';
 
 export const validateStockAvailability = async (req, res, next) => {
     try {
@@ -15,10 +16,10 @@ export const validateStockAvailability = async (req, res, next) => {
         const validatedItems = [];
 
         for (const item of items) {
-            if (!item.plato) {
+            if (!item.tipo || !['PLATO', 'MENU'].includes(item.tipo)) {
                 return res.status(400).json({
                     success: false,
-                    message: 'ID del plato es requerido para cada item'
+                    message: 'El tipo de item debe ser PLATO o MENU'
                 });
             }
 
@@ -29,53 +30,129 @@ export const validateStockAvailability = async (req, res, next) => {
                 });
             }
 
-            const plato = await Plato.findById(item.plato);
+            if (item.tipo === 'PLATO') {
+                if (!item.plato) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'ID del plato es requerido cuando tipo es PLATO'
+                    });
+                }
 
-            if (!plato) {
+                const plato = await Plato.findById(item.plato);
+
+                if (!plato) {
+                    unavailableItems.push({
+                        tipo: 'PLATO',
+                        platoId: item.plato,
+                        reason: 'Plato no encontrado',
+                        cantidad: item.cantidad
+                    });
+                    continue;
+                }
+
+                if (!plato.isActive) {
+                    unavailableItems.push({
+                        tipo: 'PLATO',
+                        platoNombre: plato.nombre,
+                        platoId: plato._id,
+                        reason: 'Plato inactivo',
+                        cantidad: item.cantidad
+                    });
+                    continue;
+                }
+
+                if (!plato.disponible) {
+                    unavailableItems.push({
+                        tipo: 'PLATO',
+                        platoNombre: plato.nombre,
+                        platoId: plato._id,
+                        reason: 'Plato no disponible en este momento',
+                        cantidad: item.cantidad
+                    });
+                    continue;
+                }
+
+                if (restaurantID && plato.restaurantID.toString() !== restaurantID) {
+                    unavailableItems.push({
+                        tipo: 'PLATO',
+                        platoNombre: plato.nombre,
+                        platoId: plato._id,
+                        reason: 'Plato no pertenece a este restaurante',
+                        cantidad: item.cantidad
+                    });
+                    continue;
+                }
+
+                validatedItems.push({
+                    tipo: 'PLATO',
+                    platoId: plato._id,
+                    platoNombre: plato.nombre,
+                    precio: plato.precio,
+                    cantidad: item.cantidad,
+                    subtotal: plato.precio * item.cantidad
+                });
+                continue;
+            }
+
+            if (!item.menu) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'ID del menú es requerido cuando tipo es MENU'
+                });
+            }
+
+            const menu = await Menu.findById(item.menu);
+
+            if (!menu) {
                 unavailableItems.push({
-                    platoId: item.plato,
-                    reason: 'Plato no encontrado',
+                    tipo: 'MENU',
+                    menuId: item.menu,
+                    reason: 'Menú no encontrado',
                     cantidad: item.cantidad
                 });
                 continue;
             }
 
-            if (!plato.isActive) {
+            if (!menu.isActive) {
                 unavailableItems.push({
-                    platoNombre: plato.nombre,
-                    platoId: plato._id,
-                    reason: 'Plato inactivo',
+                    tipo: 'MENU',
+                    menuNombre: menu.nombre,
+                    menuId: menu._id,
+                    reason: 'Menú inactivo',
                     cantidad: item.cantidad
                 });
                 continue;
             }
 
-            if (!plato.disponible) {
+            if (!menu.disponible) {
                 unavailableItems.push({
-                    platoNombre: plato.nombre,
-                    platoId: plato._id,
-                    reason: 'Plato no disponible en este momento',
+                    tipo: 'MENU',
+                    menuNombre: menu.nombre,
+                    menuId: menu._id,
+                    reason: 'Menú no disponible en este momento',
                     cantidad: item.cantidad
                 });
                 continue;
             }
 
-            if (restaurantID && plato.restaurantID.toString() !== restaurantID) {
+            if (restaurantID && menu.restaurantID.toString() !== restaurantID) {
                 unavailableItems.push({
-                    platoNombre: plato.nombre,
-                    platoId: plato._id,
-                    reason: 'Plato no pertenece a este restaurante',
+                    tipo: 'MENU',
+                    menuNombre: menu.nombre,
+                    menuId: menu._id,
+                    reason: 'Menú no pertenece a este restaurante',
                     cantidad: item.cantidad
                 });
                 continue;
             }
 
             validatedItems.push({
-                platoId: plato._id,
-                platoNombre: plato.nombre,
-                precio: plato.precio,
+                tipo: 'MENU',
+                menuId: menu._id,
+                menuNombre: menu.nombre,
+                precio: menu.precio,
                 cantidad: item.cantidad,
-                subtotal: plato.precio * item.cantidad
+                subtotal: menu.precio * item.cantidad
             });
         }
 

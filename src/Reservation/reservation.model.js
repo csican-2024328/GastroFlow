@@ -58,7 +58,7 @@ const reservationSchema = mongoose.Schema(
                 values: ['PENDIENTE', 'CONFIRMADA', 'CANCELADA', 'COMPLETADA'],
                 message: 'Estado de reservación no válido',
             },
-            default: 'PENDIENTE',
+            default: 'CONFIRMADA',
             index: true,
         },
         notas: {

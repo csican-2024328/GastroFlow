@@ -504,7 +504,7 @@ export const getEventosVigentes = async (req, res) => {
             fechaInicio: { $lte: ahora },
             fechaFin: { $gte: ahora }
         })
-            .populate('platosAplicables', 'nombre precio')
+            .populate('menusAplicables', 'nombre precio')
             .sort({ fechaFin: 1 });
 
         res.status(200).json({
