@@ -6,7 +6,7 @@
 
 import Event from './event.model.js';
 import Restaurant from '../Restaurant/Restaurant.model.js';
-import Plato from '../Platos/platos-model.js';
+import Menu from '../Menu/menu.model.js';
 
 /**
  * Crear un nuevo evento o promoción
@@ -23,9 +23,10 @@ import Plato from '../Platos/platos-model.js';
  * @param {number} req.body.descuentoValor - Valor del descuento
  * @param {Date} req.body.fechaInicio - Fecha y hora de inicio
  * @param {Date} req.body.fechaFin - Fecha y hora de fin
- * @param {Array} req.body.platosAplicables - IDs de platos a los que aplica
+ * @param {Array} req.body.menusAplicables - IDs de menús a los que aplica
  * @param {string} [req.body.condiciones] - Condiciones del evento
- * @param {number} [req.body.compraMinima] - Compra mínima requerida
+ * @param {string} [req.body.musica] - Tipo de música
+ * @param {string} [req.body.tematica] - Temática o decoración
  * @param {number} [req.body.cantidadMaximaUsos] - Máximos usos de la promoción
  * @param {Object} res - Objeto de respuesta Express
  * 
@@ -42,8 +43,10 @@ import Plato from '../Platos/platos-model.js';
  *   "descuentoValor": 20,
  *   "fechaInicio": "2026-02-21T00:00:00Z",
  *   "fechaFin": "2026-02-22T23:59:59Z",
- *   "platosAplicables": ["507f1f77bcf86cd799439013"],
- *   "condiciones": "solo viernes y sábado"
+ *   "menusAplicables": ["507f1f77bcf86cd799439013"],
+ *   "condiciones": "solo viernes y sábado",
+ *   "musica": "Jazz en vivo",
+ *   "tematica": "Años 80"
  * }
  */
 export const createEvent = async (req, res) => {
@@ -57,9 +60,10 @@ export const createEvent = async (req, res) => {
             descuentoValor,
             fechaInicio,
             fechaFin,
-            platosAplicables,
+            menusAplicables,
             condiciones,
-            compraMinima = 0,
+            musica,
+            tematica,
             cantidadMaximaUsos
         } = req.body;
 
@@ -72,13 +76,13 @@ export const createEvent = async (req, res) => {
             });
         }
 
-        // Validar que los platos existen
-        if (platosAplicables && platosAplicables.length > 0) {
-            const platos = await Plato.find({ _id: { $in: platosAplicables } });
-            if (platos.length !== platosAplicables.length) {
+        // Validar que los menús existen
+        if (menusAplicables && menusAplicables.length > 0) {
+            const menus = await Menu.find({ _id: { $in: menusAplicables } });
+            if (menus.length !== menusAplicables.length) {
                 return res.status(404).json({
                     success: false,
-                    message: 'Uno o más platos no fueron encontrados'
+                    message: 'Uno o más menús no fueron encontrados'
                 });
             }
         }
@@ -92,11 +96,12 @@ export const createEvent = async (req, res) => {
             descuentoValor,
             fechaInicio: new Date(fechaInicio),
             fechaFin: new Date(fechaFin),
-            platosAplicables,
+            menusAplicables,
             condiciones,
-            compraMinima,
+            musica,
+            tematica,
             cantidadMaximaUsos,
-            criadoPor: req.usuario.sub
+            creadoPor: req.usuario.sub
         });
 
         await nuevoEvento.save();
@@ -104,7 +109,7 @@ export const createEvent = async (req, res) => {
         // Poblar referencias para la respuesta
         await nuevoEvento.populate([
             { path: 'restaurantID', select: 'nombre' },
-            { path: 'platosAplicables', select: 'nombre precio' }
+            { path: 'menusAplicables', select: 'nombre precio' }
         ]);
 
         res.status(201).json({
@@ -166,7 +171,7 @@ export const getEvents = async (req, res) => {
 
         const eventos = await Event.find(filtro)
             .populate('restaurantID', 'nombre')
-            .populate('platosAplicables', 'nombre precio')
+            .populate('menusAplicables', 'nombre precio')
             .limit(limit * 1)
             .skip((page - 1) * limit)
             .sort({ createdAt: -1 });
@@ -212,7 +217,7 @@ export const getEventById = async (req, res) => {
 
         const evento = await Event.findById(id)
             .populate('restaurantID')
-            .populate('platosAplicables');
+            .populate('menusAplicables');
 
         if (!evento) {
             return res.status(404).json({
@@ -255,7 +260,7 @@ export const updateEvent = async (req, res) => {
 
         // No permitir cambiar restaurante o creador
         delete actualizaciones.restaurantID;
-        delete actualizaciones.criadoPor;
+        delete actualizaciones.creadoPor;
 
         const evento = await Event.findByIdAndUpdate(
             id,
@@ -263,7 +268,7 @@ export const updateEvent = async (req, res) => {
             { new: true, runValidators: true }
         )
             .populate('restaurantID', 'nombre')
-            .populate('platosAplicables', 'nombre precio');
+            .populate('menusAplicables', 'nombre precio');
 
         if (!evento) {
             return res.status(404).json({
@@ -499,7 +504,7 @@ export const getEventosVigentes = async (req, res) => {
             fechaInicio: { $lte: ahora },
             fechaFin: { $gte: ahora }
         })
-            .populate('platosAplicables', 'nombre precio')
+            .populate('menusAplicables', 'nombre precio')
             .sort({ fechaFin: 1 });
 
         res.status(200).json({

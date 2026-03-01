@@ -391,3 +391,57 @@ export const enviarEmailContraseñaCambiada = async (email, nombre) => {
         return { success: false, message: error.message };
     }
 };
+
+export const enviarEmailAlertaTiempoReal = async ({ to, asunto, titulo, mensaje, detalles = [] }) => {
+    if (!initialized) {
+        initializeEmailService();
+    }
+
+    if (!to) {
+        return { success: false, message: 'Email destino requerido' };
+    }
+
+    if (!transporter || !smtpConfigured) {
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`\n📧 [DEVELOPMENT] Alerta en tiempo real:`);
+            console.log(`   ✉️  Para: ${to}`);
+            console.log(`   🏷️  Asunto: ${asunto || 'Alerta en tiempo real'}`);
+            console.log(`   📝 Mensaje: ${mensaje || ''}`);
+            return { success: true, isDevelopment: true };
+        }
+        return { success: false, message: 'SMTP no configurado' };
+    }
+
+    try {
+        const detallesHtml = Array.isArray(detalles)
+            ? detalles
+                  .filter((item) => item && item.label)
+                  .map((item) => `<li><strong>${item.label}:</strong> ${item.value ?? '-'}</li>`)
+                  .join('')
+            : '';
+
+        const mailOptions = {
+            from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
+            to,
+            subject: asunto || 'Alerta en tiempo real - GastroFlow',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>${titulo || 'Nueva alerta en tiempo real'}</h2>
+                    <p>${mensaje || 'Se ha generado una nueva alerta en el sistema.'}</p>
+                    ${detallesHtml ? `<ul style="line-height:1.8;">${detallesHtml}</ul>` : ''}
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                    <p style="font-size: 12px; color: #666;">
+                        Este es un correo automático para verificar alertas en tiempo real.
+                    </p>
+                </div>
+            `,
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log(`✅ Email de alerta enviado a ${to}`);
+        return { success: true, messageId: result.messageId };
+    } catch (error) {
+        console.error('❌ Error enviando email de alerta:', error.message);
+        return { success: false, message: error.message };
+    }
+};

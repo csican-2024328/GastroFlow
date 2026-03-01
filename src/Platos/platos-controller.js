@@ -5,6 +5,7 @@
  */
 
 import Plato from './platos-model.js';
+import { verificarStockIngredientes, actualizarDisponibilidadPlatos } from '../../helper/inventory-helpers.js';
 
 /**
  * Obtiene el menú (platos activos) de un restaurante específico
@@ -43,6 +44,9 @@ export const getMenuByRestaurant = async (req, res) => {
             })
         }
 
+        // Actualizar disponibilidad de platos del restaurante antes de consultar
+        await actualizarDisponibilidadPlatos(restaurantID);
+
         // Configura opciones de paginación y ordenamiento
         const parsedPage = parseInt(page);
         const parsedLimit = parseInt(limit);
@@ -50,6 +54,7 @@ export const getMenuByRestaurant = async (req, res) => {
         const filter = { restaurantID, isActive: true, disponible: true };
 
         const platos = await Plato.find(filter)
+            .populate('ingredientes')
             .limit(parsedLimit)
             .skip((parsedPage - 1) * parsedLimit)
             .sort({ createdAt: -1 });
@@ -108,6 +113,12 @@ export const createPlato = async (req, res) => {
             platoData.foto = req.file.path;
         }
 
+        // Verificar disponibilidad inicial basada en ingredientes
+        if (platoData.ingredientes && platoData.ingredientes.length > 0) {
+            const tieneStock = await verificarStockIngredientes(platoData.ingredientes);
+            platoData.disponible = tieneStock;
+        }
+
         // Crea una nueva instancia del modelo Plato con los datos
         const plato = new Plato(platoData);
         // Guarda el documento en la base de datos (MongoDB)
@@ -137,6 +148,9 @@ export const getPlatos = async (req, res) => {
         // Extrae los parámetros de query con valores por defecto
         const { page = 1, limit = 10, isActive = true, restaurantID, categoria } = req.query;
 
+        // Actualizar disponibilidad de platos antes de consultar
+        await actualizarDisponibilidadPlatos(restaurantID);
+
         // Inicia el objeto filtro con el estado activo
         const filter = { isActive };
 
@@ -161,6 +175,7 @@ export const getPlatos = async (req, res) => {
         // aplica límite, omite (skip) registros según la página, y ordena
         const platos = await Plato.find(filter)
             .populate('restaurantID')                // Incluye datos del restaurante
+            .populate('ingredientes')                // Incluye datos de ingredientes
             .limit(limit * 1)                        // Limita resultados por página
             .skip((page - 1) * limit)                // Salta los registros de páginas anteriores
             .sort(options.sort);                     // Ordena de más reciente a más antiguo
@@ -216,7 +231,9 @@ export const getPlatoById = async (req, res) => {
         const { id } = req.params;
 
         // Busca el plato por ID e incluye datos del restaurante relacionado
-        const plato = await Plato.findById(id).populate('restaurantID');
+        const plato = await Plato.findById(id)
+            .populate('restaurantID')
+            .populate('ingredientes');
 
         // Valida si el plato existe
         if (!plato) {
@@ -224,6 +241,15 @@ export const getPlatoById = async (req, res) => {
                 success: false,
                 message: 'Plato no encontrado',
             });
+        }
+
+        // Verificar disponibilidad actual del plato
+        if (plato.ingredientes && plato.ingredientes.length > 0) {
+            const tieneStock = await verificarStockIngredientes(plato.ingredientes);
+            if (plato.disponible !== tieneStock) {
+                plato.disponible = tieneStock;
+                await plato.save();
+            }
         }
 
         // Responde con el plato encontrado
@@ -285,6 +311,12 @@ export const updatePlato = async (req, res) => {
         // Si se cargó una nueva imagen, se asigna la nueva ruta
         if (req.file) {
             updateData.foto = req.file.path;
+        }
+
+        // Si se actualizaron los ingredientes, verificar disponibilidad
+        if (updateData.ingredientes && updateData.ingredientes.length > 0) {
+            const tieneStock = await verificarStockIngredientes(updateData.ingredientes);
+            updateData.disponible = tieneStock;
         }
 
         // Actualiza el plato con los nuevos datos, retorna el documento actualizado

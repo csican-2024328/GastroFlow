@@ -10,12 +10,13 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       address,
       city,
       openingHours,
+      aforoMaximo,
       category,
       description,
       averagePrice,
     } = req.body;
     
-    if (!name || !email || !phone || !address || !city || !openingHours) {
+    if (!name || !email || !phone || !address || !city || !openingHours || !aforoMaximo) {
       return res.status(400).json({
         success: false,
         message: 'Todos los campos son requeridos',
@@ -44,6 +45,7 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       address,
       city,
       openingHours,
+      aforoMaximo,
       category,
       description,
       averagePrice,

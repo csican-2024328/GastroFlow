@@ -1,0 +1,3219 @@
+{
+  "info": {
+    "_postman_id": "20f7965c-33b7-414e-bd91-1e848ceb35ee",
+    "name": "GastroFlow API (Completa)",
+    "description": "Colección única y completa de GastroFlow con todos los endpoints actualmente montados en la API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "48186863"
+  },
+  "item": [
+    {
+      "name": "Reportes",
+      "item": [
+        {
+          "name": "demanda-restaurantes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/demanda-restaurantes/pdf",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "demanda-restaurantes",
+                "pdf"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "top-platos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/top-platos/pdf",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "top-platos",
+                "pdf"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ingresos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/ingresos/pdf",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "ingresos",
+                "pdf"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reservaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/reservaciones/pdf",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "reservaciones",
+                "pdf"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "desempeno-restaurante",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/desempeno-restaurante/pdf?restaurantID=699f20a033c9218da676079c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "desempeno-restaurante",
+                "pdf"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ocupacion",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/ocupacion/pdf?restaurantID=699f20a033c9218da676079c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "ocupacion",
+                "pdf"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clientes-frecuentes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/clientes-frecuentes/pdf?restaurantID=699f20a033c9218da676079c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "clientes-frecuentes",
+                "pdf"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "pedidos-recurrentes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/pedidos-recurrentes/pdf?restaurantID=699f20a033c9218da676079c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "pedidos-recurrentes",
+                "pdf"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "horas-pico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/horas-pico/pdf",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "horas-pico",
+                "pdf"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Salud",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "health"
+              ]
+            },
+            "description": "Verifica el estado del servicio."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan\",\n  \"surname\": \"Juan\",\n  \"username\": \"juanperez\",\n  \"email\": \"bpineda-2024427@kinal.edu.gt\",\n  \"password\": \"Password123!\",\n  \"passwordConfirm\": \"Password123!\",\n  \"phone\": \"23456789\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Admin",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emailOrUsername\": \"admin@gastroflow.local\",\n  \"password\": \"Admin@1234!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"080da24ec7d9c8a34ecce14c10d5c3004190b495d96e8e8038dd5c6a529cfb1f\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/auth/verify-email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "auth",
+                "verify-email"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resend Verification",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"juan@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/auth/resend-verification",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "auth",
+                "resend-verification"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"juan@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "auth",
+                "forgot-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"\",\n  \"newPassword\": \"NuevaPassword123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "auth",
+                "reset-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfNFJkVVJHM0pHQ1JwIiwianRpIjoiODBjZGZjZTgtNDZmYi00Mzc3LWI3MTEtZjMwZWIyZWZmYTY1IiwiaWF0IjoxNzcyMDM1NDI5LCJyb2xlIjoiQ0xJRU5UIiwiZXhwIjoxNzcyMDM3MjI5LCJhdWQiOiJBdXRoU2VydmljZSIsImlzcyI6IkF1dGhTZXJ2aWNlIn0.mNf0Kw9FE_RYoGVL7CmgO-Cngd9cojSRjLPu24dD5dY",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/auth/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "auth",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile By Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"usr_4RdURG3JGCRp\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/auth/profile/by-id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "auth",
+                "profile",
+                "by-id"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emailOrUsername\": \"bpineda-2024427@kinal.edu.gt\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Restaurants",
+      "item": [
+        {
+          "name": "Create Restaurant (multipart)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNGE2NGZiMDgtOTcwNS00MTg1LTllZjctOTMxNzFlZWY1ZGJlIiwiaWF0IjoxNzcyMDM1NTc2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzczNzYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.XtUjx1m3fmMfgXAmCE9hqg2Qbz8dOu0myOmyq4k0mCo",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Mi Restaurante",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "admin@restaurante.com",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "23456789",
+                  "type": "text"
+                },
+                {
+                  "key": "address",
+                  "value": "Calle Principal 123",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "Ciudad de Guatemala",
+                  "type": "text"
+                },
+                {
+                  "key": "openingHours",
+                  "value": "Lun-Vie 9:00-18:00",
+                  "type": "text"
+                },
+                {
+                  "key": "fotos",
+                  "type": "file",
+                  "src": "/C:/Users/PC/Downloads/Kurumi.jpg"
+                },
+                {
+                  "key": "category",
+                  "value": "Italiana",
+                  "type": "text",
+                  "uuid": "f89530b8-e666-4e45-9d76-1d377100f677"
+                },
+                {
+                  "key": "description",
+                  "value": "Excelente",
+                  "type": "text",
+                  "uuid": "04bf1b8b-fc49-412c-b439-95d3ffedf3e7"
+                },
+                {
+                  "key": "averagePrice",
+                  "value": "25.50",
+                  "type": "text",
+                  "uuid": "44684e5d-4e61-4c98-9daf-4ee4f875e4f3"
+                },
+                {
+                  "key": "aforoMaximo",
+                  "value": "50",
+                  "type": "text",
+                  "uuid": "9c357ac2-2b4a-4fe8-b085-1f53d18c4e3b"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/restaurants/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "restaurants",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Restaurants",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/restaurants/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "restaurants",
+                "get"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Restaurant By Id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/restaurants/{{restaurantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "restaurants",
+                "{{restaurantId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Restaurant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNGE2NGZiMDgtOTcwNS00MTg1LTllZjctOTMxNzFlZWY1ZGJlIiwiaWF0IjoxNzcyMDM1NTc2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzczNzYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.XtUjx1m3fmMfgXAmCE9hqg2Qbz8dOu0myOmyq4k0mCo",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Restaurante Actualizado",
+                  "type": "text"
+                },
+                {
+                  "key": "",
+                  "type": "text",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/restaurants/{{restaurantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "restaurants",
+                "{{restaurantId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Restaurant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNGE2NGZiMDgtOTcwNS00MTg1LTllZjctOTMxNzFlZWY1ZGJlIiwiaWF0IjoxNzcyMDM1NTc2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzczNzYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.XtUjx1m3fmMfgXAmCE9hqg2Qbz8dOu0myOmyq4k0mCo",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/restaurants/{{restaurantId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "restaurants",
+                "{{restaurantId}}",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Restaurant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNGE2NGZiMDgtOTcwNS00MTg1LTllZjctOTMxNzFlZWY1ZGJlIiwiaWF0IjoxNzcyMDM1NTc2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzczNzYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.XtUjx1m3fmMfgXAmCE9hqg2Qbz8dOu0myOmyq4k0mCo",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/restaurants/{{restaurantId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "restaurants",
+                "{{restaurantId}}",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Restaurant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNGE2NGZiMDgtOTcwNS00MTg1LTllZjctOTMxNzFlZWY1ZGJlIiwiaWF0IjoxNzcyMDM1NTc2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzczNzYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.XtUjx1m3fmMfgXAmCE9hqg2Qbz8dOu0myOmyq4k0mCo",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/restaurants/{{restaurantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "restaurants",
+                "{{restaurantId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Mesas",
+      "item": [
+        {
+          "name": "Create Mesa",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": 1,\n  \"capacidad\": 4,\n  \"ubicacion\": \"Terraza\",\n  \"restaurantID\": \"699f20a033c9218da676079c\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/mesas/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "mesas",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Mesas",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/mesas/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "mesas",
+                "get"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Mesa By Id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/mesas/{{mesaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "mesas",
+                "{{mesaId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Mesa",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNGE2NGZiMDgtOTcwNS00MTg1LTllZjctOTMxNzFlZWY1ZGJlIiwiaWF0IjoxNzcyMDM1NTc2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzczNzYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.XtUjx1m3fmMfgXAmCE9hqg2Qbz8dOu0myOmyq4k0mCo",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"capacidad\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/mesas/{{mesaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "mesas",
+                "{{mesaId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Mesa",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/mesas/{{mesaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "mesas",
+                "{{mesaId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Platos",
+      "item": [
+        {
+          "name": "Create Plato (multipart)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNDExYWU1ZmUtYWQ3OC00ZTlkLWJhMDktYmJhNDcyZjY4YTg1IiwiaWF0IjoxNzcyMzEwNzIyLCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIzMTI1MjIsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.rX4A6PlMOAI4CY1PcaRJBnpc70jgmkNsmjJi5EuQmp0",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nombre",
+                  "value": "Pizza Margarita",
+                  "type": "text"
+                },
+                {
+                  "key": "restaurantID",
+                  "value": "{{restaurantId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "foto",
+                  "type": "file",
+                  "src": "/C:/Users/PC/Downloads/Endministrator-operator-arknight-enfield-1024x576.jpg"
+                },
+                {
+                  "key": "descripcion",
+                  "value": "Deliciosos",
+                  "type": "text",
+                  "uuid": "5b277b3c-8f9a-4388-a0a3-9ae243781755"
+                },
+                {
+                  "key": "precio",
+                  "value": "1000",
+                  "type": "text",
+                  "uuid": "2acdbaf8-ab13-4318-8112-f0e3c1364c5a"
+                },
+                {
+                  "key": "categoria",
+                  "value": "FUERTE",
+                  "type": "text",
+                  "uuid": "8e95f2cb-844c-498d-a6f0-5bd88d8b2900"
+                },
+                {
+                  "key": "ingredientes",
+                  "value": "69a34ef473fe5c375e7227a5",
+                  "type": "text",
+                  "uuid": "b73dc3f6-1ce0-4565-8be4-b3966f697cfe"
+                },
+                {
+                  "key": "disponible",
+                  "value": "true",
+                  "type": "text",
+                  "uuid": "d762ad1b-28f5-495a-a1b9-19dbfbfb3607"
+                },
+                {
+                  "key": "",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "1179a1c2-b3f6-4bc4-8d26-142ddf602844",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/platos/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "platos",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Platos",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/platos/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "platos",
+                "get"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Menu By Restaurant",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/platos/menu/{{restaurantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "platos",
+                "menu",
+                "{{restaurantId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Plato By Id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/platos/{{platoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "platos",
+                "{{platoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Plato",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nombre",
+                  "value": "Pizza Margarita XL",
+                  "type": "text"
+                },
+                {
+                  "key": "foto",
+                  "type": "file",
+                  "value": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/platos/{{platoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "platos",
+                "{{platoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Plato",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/platos/{{platoId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "platos",
+                "{{platoId}}",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Plato",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/platos/{{platoId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "platos",
+                "{{platoId}}",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Menus",
+      "item": [
+        {
+          "name": "Create Menu (multipart)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNTcwMTdkNGUtMjVjNS00M2Y0LWI1ZjctZGM5ZWMyY2ZhZTBkIiwiaWF0IjoxNzcyMDM3OTQ2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzk3NDYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.8N4O_BpWyZIUHVWT6w8POoPXaDxkHkor8p9sGNct5XI",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nombre",
+                  "value": "Menú Ejecutivo",
+                  "type": "text"
+                },
+                {
+                  "key": "restaurantID",
+                  "value": "{{restaurantId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "platos",
+                  "type": "text",
+                  "value": "699f232333c9218da67607a7"
+                },
+                {
+                  "key": "platos",
+                  "value": "699f220533c9218da67607a5",
+                  "type": "text",
+                  "uuid": "2ea9fdef-f3a7-4238-845b-64df043664d2"
+                },
+                {
+                  "key": "isActive",
+                  "value": "true",
+                  "type": "text",
+                  "uuid": "76459c0c-5991-4f4d-b1b8-6a8a1506a195"
+                },
+                {
+                  "key": "descripcion ",
+                  "value": "Es un menu muy bueno",
+                  "type": "text",
+                  "uuid": "e3aa98fd-eade-495a-b1d0-113f2c1962b6"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "menu",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Menus",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/menus/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "menus",
+                "get"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Menu By Restaurant",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/menus/menu/{{restaurantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "menus",
+                "menu",
+                "{{restaurantId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Menu By Id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/menus/{{menuId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "menus",
+                "{{menuId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Menu",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nombre",
+                  "value": "Menú Ejecutivo Premium",
+                  "type": "text"
+                },
+                {
+                  "key": "foto",
+                  "type": "file",
+                  "value": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/menus/{{menuId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "menus",
+                "{{menuId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Menu",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/menus/{{menuId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "menus",
+                "{{menuId}}",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Menu",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/menus/{{menuId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "menus",
+                "{{menuId}}",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "menu",
+                "get"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer"
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Top Platos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/top-platos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reports",
+                "top-platos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ingresos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/ingresos?start=2026-02-01&end=2027-02-28",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reports",
+                "ingresos"
+              ],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2026-02-01"
+                },
+                {
+                  "key": "end",
+                  "value": "2027-02-28"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ocupación",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/ocupacion?restaurantID=699f20a033c9218da676079c",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reports",
+                "ocupacion"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Clientes Frecuentes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/clientes-frecuentes?restaurantID={{restaurantId}}&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reports",
+                "clientes-frecuentes"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "{{restaurantId}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Estadísticas Cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/cliente/Juan%20Pérez?restaurantID=699f20a033c9218da676079c",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reports",
+                "cliente",
+                "Juan%20Pérez"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Plato Favorito Cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/cliente/Juan%20Pérez/plato-favorito?restaurantID=699f20a033c9218da676079c",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reports",
+                "cliente",
+                "Juan%20Pérez",
+                "plato-favorito"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pedidos Recurrentes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/pedidos-recurrentes?restaurantID=699f20a033c9218da676079c",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reports",
+                "pedidos-recurrentes"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "Create Insumo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Tomate\",\n  \"stock\": 100,\n  \"unidadMedida\": \"kg\",\n  \"restaurantID\": \"{{restaurantId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/inventory/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "inventory",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Insumos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/inventory/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "inventory",
+                "get"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Insumo By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/inventory/{{insumoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "inventory",
+                "{{insumoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Insumo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cantidad\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/inventory/{{insumoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "inventory",
+                "{{insumoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Insumo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/inventory/{{insumoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "inventory",
+                "{{insumoId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoPedido\": \"EN_MESA\",\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"mesaID\": \"699f211533c9218da676079e\",        \n  \"clienteNombre\": \"Juan\",\n  \"items\": [\n    {\n    \"tipo\": \"MENU\",\n    \"menu\": \"69a35a8afacd0e78feedb149\",     // ID del plato (obligatorio)\n    \"cantidad\": 2,               // Cantidad (obligatorio, mín 1)\n    \"notas\": \"Sin cebolla\"      // Notas especiales (opcional, máx 200 caracteres)\n    }\n],\n\n  \"couponCode\": \"PROMO-15\",\n  \"impuesto\": 10\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "get"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order By Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/numero/{{numeroOrden}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "numero",
+                "{{numeroOrden}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notas\": \"Sin cebolla\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"LISTO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/{{orderId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "{{orderId}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pay Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metodoPago\": \"TARJETA\",\n  \"propina\": 10,\n  \"cargosExtra\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/{{orderId}}/pagar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "{{orderId}}",
+                "pagar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Order Permanent",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/{{orderId}}/permanent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "{{orderId}}",
+                "permanent"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create orden Plato",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"tipoPedido\": \"EN_MESA\",\r\n  \"restaurantID\": \"699f20a033c9218da676079c\",\r\n  \"mesaID\": \"699f211533c9218da676079e\",\r\n  \"clienteNombre\": \"Juan Pérez\",\r\n  \"clienteTelefono\": \"50212345678\",\r\n  \"items\": [\r\n    {\r\n      \"tipo\": \"PLATO\",\r\n      \"plato\": \"69a352df9fc7e93c0d1e45bf\",\r\n      \"cantidad\": 2,\r\n      \"notas\": \"Sin cebolla\"\r\n    }\r\n  ],\r\n  \"impuesto\": 0,\r\n  \"descuento\": 0,\r\n  \"notas\": \"Cliente VIP\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Create Event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\"nombre\": \"Noche de Sushi\",\n\"descripcion\": \"15% en menús seleccionados\",\n\"tipo\": \"DESCUENTO\",\n\"restaurantID\": \"{{restaurantId}}\",\n\"descuentoTipo\": \"PORCENTAJE\",\n\"descuentoValor\": 15,\n\"fechaInicio\": \"2026-01-01\",\n\"fechaFin\": \"2027-03-10\",\n\"menusAplicables\": [\"69a35a8afacd0e78feedb149\"],\n\"condiciones\": \"No acumulable con otros descuentos\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/events/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "events",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/events/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "events",
+                "get"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Eventos Vigentes",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/events/restaurant/{{restaurantId}}/vigentes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "events",
+                "restaurant",
+                "{{restaurantId}}",
+                "vigentes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Use Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/events/{{eventId}}/usar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "events",
+                "{{eventId}}",
+                "usar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Event",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/events/{{eventId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "events",
+                "{{eventId}}",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Event",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/events/{{eventId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "events",
+                "{{eventId}}",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Noche de Sushi Premium\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/events/{{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "events",
+                "{{eventId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/events/{{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "events",
+                "{{eventId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Event",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/events/{{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "events",
+                "{{eventId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Coupons",
+      "item": [
+        {
+          "name": "Create Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\"codigo\": \"PROMO-15\",\n\"tipo\": \"PORCENTAJE\",\n\"porcentajeDescuento\": 15,\n\"fechaExpiracion\": \"2026-12-31T23:59:59.000Z\",\n\"descripcion\": \"15% en pedidos\",\n\"montoMinimo\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/coupons/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "coupons",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Validate Coupon",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"PROMO-15\",\n  \"montoTotal\": 120,\n  \"restaurantID\": \"{{restaurantId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/coupons/validate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "coupons",
+                "validate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Coupons",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/coupons/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "coupons",
+                "get"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Coupon By Code",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/coupons/code/{{couponCode}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "coupons",
+                "code",
+                "{{couponCode}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Cupones Vigentes",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/coupons/restaurant/{{restaurantId}}/vigentes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "coupons",
+                "restaurant",
+                "{{restaurantId}}",
+                "vigentes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Coupon",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/coupons/{{couponId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "coupons",
+                "{{couponId}}",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Coupon",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/coupons/{{couponId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "coupons",
+                "{{couponId}}",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Coupon",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descuento\": 15\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/coupons/{{couponId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "coupons",
+                "{{couponId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Coupon By Id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/coupons/{{couponId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "coupons",
+                "{{couponId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Coupon",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/coupons/{{couponId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "coupons",
+                "{{couponId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Create Reservation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"mesaID\": \"{{mesaId}}\",\n  \"fechaReserva\": \"2026-03-01\",\n  \"horaInicio\": \"20:00\",\n  \"horaFin\": \"20:00\",\n  \"cantidadPersonas\": 2,\n  \"notas\": \"Prueba alerta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reservation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reservation"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reservations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reservation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reservation"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reservation By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reservation/{{reservationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reservation",
+                "{{reservationId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hora\": \"20:00\",\n  \"estado\": \"CONFIRMADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reservation/{{reservationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reservation",
+                "{{reservationId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Reservation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reservations/{{reservationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reservations",
+                "{{reservationId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications (Socket.io)",
+      "item": [
+        {
+          "name": "Socket Test",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/notifications/test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "notifications",
+                "test"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"targetType\": \"restaurant\",\r\n  \"targetId\": \"{{restaurantId}}\",\r\n  \"event\": \"nueva-reserva\",\r\n  \"type\": \"NUEVA_RESERVA\",\r\n  \"message\": \"Nueva reserva recibida\",\r\n  \"data\": {\r\n    \"reservaId\": \"123\",\r\n    \"clienteNombre\": \"Juan\"\r\n  }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/notifications/emit-test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "notifications",
+                "emit-test"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Facturas y Auth Legacy",
+      "item": [
+        {
+          "name": "Invoices - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderID\": \"69a3673663110a5b8cdfc303\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/invoices/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "invoices",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invoices - Get",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{invoicesBasePath}}/get",
+              "host": [
+                "{{invoicesBasePath}}"
+              ],
+              "path": [
+                "get"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invoices - Get By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{invoicesBasePath}}/{{invoiceId}}",
+              "host": [
+                "{{invoicesBasePath}}"
+              ],
+              "path": [
+                "{{invoiceId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invoices - Update Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAGADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{invoicesBasePath}}/{{invoiceId}}/status",
+              "host": [
+                "{{invoicesBasePath}}"
+              ],
+              "path": [
+                "{{invoiceId}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invoices - Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{invoicesBasePath}}/{{invoiceId}}",
+              "host": [
+                "{{invoicesBasePath}}"
+              ],
+              "path": [
+                "{{invoiceId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints adicionales montados: facturas e historial de rutas de autenticación en /user/auth."
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"rating\": 5,\n  \"comment\": \"Excelente comida y servicio!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reviews/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reviews",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reviews/get?restaurantID={{restaurantId}}&platoID={{platoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reviews",
+                "get"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "{{restaurantId}}"
+                },
+                {
+                  "key": "platoID",
+                  "value": "{{platoId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/reviews/{{reviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "reviews",
+                "{{reviewId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Staff",
+      "item": [
+        {
+          "name": "Create Staff",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Carlos\",\n  \"surname\": \"Ramirez\",\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"role\": \"Mesero\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/staff/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "staff",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Staff",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/staff/get?restaurantId={{restaurantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "staff",
+                "get"
+              ],
+              "query": [
+                {
+                  "key": "restaurantId",
+                  "value": "{{restaurantId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Staff",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/staff/{{staffId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "staff",
+                "{{staffId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Delete Profile (Validación Previa)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Ya no deseo usar el servicio\",\n  \"confirmacion\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/auth/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "auth",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3006"
+    },
+    {
+      "key": "apiVersion",
+      "value": "api/v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "restaurantId",
+      "value": ""
+    },
+    {
+      "key": "mesaId",
+      "value": ""
+    },
+    {
+      "key": "platoId",
+      "value": ""
+    },
+    {
+      "key": "menuId",
+      "value": ""
+    },
+    {
+      "key": "insumoId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "numeroOrden",
+      "value": ""
+    },
+    {
+      "key": "eventId",
+      "value": ""
+    },
+    {
+      "key": "couponId",
+      "value": ""
+    },
+    {
+      "key": "couponCode",
+      "value": ""
+    },
+    {
+      "key": "reservationId",
+      "value": ""
+    },
+    {
+      "key": "invoiceId",
+      "value": ""
+    },
+    {
+      "key": "nombreCliente",
+      "value": "Juan"
+    },
+    {
+      "key": "invoicesBasePath",
+      "value": "{{baseUrl}}/{{apiVersion}}/invoices"
+    },
+    {
+      "key": "legacyAuthBasePath",
+      "value": "{{baseUrl}}/{{apiVersion}}/user/auth"
+    }
+  ]
+}

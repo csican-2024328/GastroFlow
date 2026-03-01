@@ -29,7 +29,10 @@ const platosSchema = mongoose.Schema(
             },
         },
         ingredientes: {
-            type: [String],
+            type: [{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Inventory'
+            }],
             required: [true, 'Los ingredientes son requeridos'],
             validate: {
                 validator: function(v) {

@@ -17,14 +17,20 @@ import authRoutes from '../src/auth/auth.routes.js';
 import restaurantRoutes from '../src/Restaurant/Restaurant.routes.js';
 import mesaRoutes from '../src/Mesas/mesa.routes.js';
 import platosRoutes from '../src/Platos/platos.routes.js';
+import menuRoutes from '../src/Menu/menu.routes.js';
 import reportsRoutes from '../src/Reports/reports.routes.js';
 import inventoryRoutes from '../src/Inventory/inventory.routes.js';
 import orderRoutes from '../src/Order/order.routes.js';
 import eventRoutes from '../src/Event/event.routes.js';
 import couponRoutes from '../src/Coupon/coupon.routes.js';
 import reservationRoutes from '../src/Reservation/reservation.routes.js';
+import notificationsRoutes from '../src/Notifications/notifications.routes.js';
+import invoiceRoutes from '../src/Invoice/invoice.routes.js';
+import reviewRoutes from '../src/Review/review.routes.js';
+import staffRoutes from '../src/Staff/staff.routes.js';
 import { errorMiddleware } from '../middlewares/error.middleware.js';
 import { initializeEmailService, verificarConexionSMTP } from '../helper/email-service.js';
+import { initSocket } from './socket.js';
 
 const BASE_PATH = '/api/v1';
 
@@ -42,12 +48,18 @@ const routes = (app) => {
   app.use(`${BASE_PATH}/restaurants`, restaurantRoutes);
   app.use(`${BASE_PATH}/mesas`, mesaRoutes);
   app.use(`${BASE_PATH}/platos`, platosRoutes);
+  app.use(`${BASE_PATH}/menu`, menuRoutes);
   app.use(`${BASE_PATH}/reports`, reportsRoutes);
   app.use(`${BASE_PATH}/inventory`, inventoryRoutes);
   app.use(`${BASE_PATH}/orders`, orderRoutes);
   app.use(`${BASE_PATH}/events`, eventRoutes);
   app.use(`${BASE_PATH}/coupons`, couponRoutes);
-  app.use(`${BASE_PATH}/reservations`, reservationRoutes);
+  app.use(`${BASE_PATH}/reservation`, reservationRoutes);
+  app.use(`${BASE_PATH}/notifications`, notificationsRoutes);
+  app.use(`${BASE_PATH}/invoices`, invoiceRoutes);
+  app.use(`${BASE_PATH}/reviews`, reviewRoutes);
+  app.use(`${BASE_PATH}/staff`, staffRoutes);
+
 
   app.get(`${BASE_PATH}/health`, (req, res) => {
     res.status(200).json({
@@ -94,6 +106,10 @@ export const initServer = async () => {
       console.log(`\n✅ GastroFlow API running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
+
+    // Inicializar Socket.io
+    const io = initSocket(server);
+    console.log('🔌 Socket.io inicializado para notificaciones en tiempo real');
 
     return server;
   } catch (error) {

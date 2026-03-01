@@ -41,6 +41,27 @@ export const deleteProfile = [
   asyncHandler(async (req, res) => {
     try {
       const userId = req.userId;
+      const { motivo, confirmacion } = req.body;
+      if (!confirmacion || confirmacion !== true) {
+        return res.status(400).json({
+          success: false,
+          message: 'Confirmación requerida para eliminar el usuario',
+        });
+      }
+      if (motivo && motivo.length > 200) {
+        return res.status(400).json({
+          success: false,
+          message: 'El motivo no puede exceder 200 caracteres',
+        });
+      }
+      // Restricción: no permitir eliminar si el usuario es PLATFORM_ADMIN
+      const user = await findUserById(userId);
+      if (user && user.UserRoles && user.UserRoles[0] && user.UserRoles[0].Role && user.UserRoles[0].Role.Name === 'PLATFORM_ADMIN') {
+        return res.status(403).json({
+          success: false,
+          message: 'No se permite eliminar usuarios con rol PLATFORM_ADMIN',
+        });
+      }
       const deletedUser = await softDeleteUser(userId);
       if (!deletedUser) {
         return res.status(404).json({
@@ -51,6 +72,7 @@ export const deleteProfile = [
       return res.status(200).json({
         success: true,
         message: 'Usuario eliminado lógicamente',
+        motivo: motivo || null,
       });
     } catch (error) {
       console.error('Error eliminando usuario:', error);

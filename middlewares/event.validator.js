@@ -58,23 +58,28 @@ export const validateCreateEvent = [
         .isISO8601()
         .withMessage('La fecha de fin debe ser válida'),
 
-    check('platosAplicables')
+    check('menusAplicables')
         .isArray({ min: 1 })
-        .withMessage('Debe seleccionar al menos un plato'),
+        .withMessage('Debe seleccionar al menos un menú'),
 
-    check('platosAplicables.*')
+    check('menusAplicables.*')
         .isMongoId()
-        .withMessage('Cada plato debe tener un ID válido'),
+        .withMessage('Cada menú debe tener un ID válido'),
 
     check('condiciones')
         .optional()
         .isLength({ max: 500 })
         .withMessage('Las condiciones no pueden exceder 500 caracteres'),
 
-    check('compraMinima')
+    check('musica')
         .optional()
-        .isFloat({ min: 0 })
-        .withMessage('La compra mínima debe ser mayor o igual a 0'),
+        .isLength({ max: 100 })
+        .withMessage('El tipo de música no puede exceder 100 caracteres'),
+
+    check('tematica')
+        .optional()
+        .isLength({ max: 100 })
+        .withMessage('La temática no puede exceder 100 caracteres'),
 
     check('cantidadMaximaUsos')
         .optional()
@@ -125,25 +130,30 @@ export const validateUpdateEvent = [
         .isISO8601()
         .withMessage('La fecha de fin debe ser válida'),
 
-    check('platosAplicables')
+    check('menusAplicables')
         .optional()
         .isArray({ min: 1 })
-        .withMessage('Debe seleccionar al menos un plato'),
+        .withMessage('Debe seleccionar al menos un menú'),
 
-    check('platosAplicables.*')
+    check('menusAplicables.*')
         .optional()
         .isMongoId()
-        .withMessage('Cada plato debe tener un ID válido'),
+        .withMessage('Cada menú debe tener un ID válido'),
 
     check('condiciones')
         .optional()
         .isLength({ max: 500 })
         .withMessage('Las condiciones no pueden exceder 500 caracteres'),
 
-    check('compraMinima')
+    check('musica')
         .optional()
-        .isFloat({ min: 0 })
-        .withMessage('La compra mínima debe ser mayor o igual a 0'),
+        .isLength({ max: 100 })
+        .withMessage('El tipo de música no puede exceder 100 caracteres'),
+
+    check('tematica')
+        .optional()
+        .isLength({ max: 100 })
+        .withMessage('La temática no puede exceder 100 caracteres'),
 
     check('cantidadMaximaUsos')
         .optional()

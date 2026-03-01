@@ -1,7 +1,7 @@
 import { check, param } from 'express-validator';
 
 export const validateCreateInventory = [
-    check('name')
+    check('nombre')
         .not()
         .isEmpty()
         .withMessage('El nombre del ingrediente es obligatorio')
@@ -15,7 +15,7 @@ export const validateCreateInventory = [
         .isFloat({ min: 0 })
         .withMessage('El stock debe ser un número positivo'),
 
-    check('unit')
+    check('unidadMedida')
         .not()
         .isEmpty()
         .withMessage('La unidad de medida es obligatoria')
@@ -34,7 +34,7 @@ export const validateUpdateInventory = [
         .isMongoId()
         .withMessage('ID de inventario inválido'),
 
-    check('name')
+    check('nombre')
         .optional()
         .isLength({ min: 2, max: 100 })
         .withMessage('El nombre debe tener entre 2 y 100 caracteres'),
@@ -44,7 +44,7 @@ export const validateUpdateInventory = [
         .isFloat({ min: 0 })
         .withMessage('El stock debe ser un número positivo'),
 
-    check('unit')
+    check('unidadMedida')
         .optional()
         .isLength({ min: 1, max: 20 })
         .withMessage('La unidad debe tener máximo 20 caracteres')

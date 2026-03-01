@@ -7,6 +7,7 @@ import {
   resetPasswordHelper,
 } from '../../helper/auth-operations.js';
 import { getUserProfileHelper } from '../../helper/profile-operations.js';
+import { findUserById, softDeleteUser } from '../../helper/user-db.js';
 import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
 
 export const register = asyncHandler(async (req, res) => {
@@ -188,5 +189,52 @@ export const getProfileById = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     user,
+  });
+});
+
+export const deleteProfile = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+  const { motivo, confirmacion } = req.body;
+
+  if (!confirmacion || confirmacion !== true) {
+    return res.status(400).json({
+      success: false,
+      message: 'Confirmación requerida para eliminar el usuario',
+    });
+  }
+
+  if (motivo && motivo.length > 200) {
+    return res.status(400).json({
+      success: false,
+      message: 'El motivo no puede exceder 200 caracteres',
+    });
+  }
+
+  const user = await findUserById(userId);
+  if (
+    user &&
+    user.UserRoles &&
+    user.UserRoles[0] &&
+    user.UserRoles[0].Role &&
+    user.UserRoles[0].Role.Name === 'PLATFORM_ADMIN'
+  ) {
+    return res.status(403).json({
+      success: false,
+      message: 'No se permite eliminar usuarios con rol PLATFORM_ADMIN',
+    });
+  }
+
+  const deletedUser = await softDeleteUser(userId);
+  if (!deletedUser) {
+    return res.status(404).json({
+      success: false,
+      message: 'Usuario no encontrado o ya eliminado',
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'Usuario eliminado lógicamente',
+    motivo: motivo || null,
   });
 });
