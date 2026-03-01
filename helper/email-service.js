@@ -3,35 +3,73 @@ import nodemailer from 'nodemailer';
 let transporter = null;
 let smtpConfigured = false;
 let initialized = false;
+let smtpValidationErrors = [];
+
+/**
+ * Valida variables de entorno SMTP
+ * @throws {Error} Si hay variables de entorno faltantes
+ */
+const validateSMTPEnvironment = () => {
+    const requiredVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USERNAME', 'SMTP_PASSWORD'];
+    const missingVars = requiredVars.filter(
+        varName => !process.env[varName] || !process.env[varName].trim()
+    );
+
+    if (missingVars.length > 0) {
+        const errorMsg = `Variables de entorno SMTP requeridas faltantes: ${missingVars.join(', ')}`;
+        smtpValidationErrors.push(errorMsg);
+        return false;
+    }
+
+    // Validar formato del puerto
+    const port = parseInt(process.env.SMTP_PORT?.trim());
+    if (isNaN(port) || port < 1 || port > 65535) {
+        const errorMsg = `Puerto SMTP inválido: ${process.env.SMTP_PORT}. Debe ser un número entre 1 y 65535.`;
+        smtpValidationErrors.push(errorMsg);
+        return false;
+    }
+
+    return true;
+};
 
 const createTransporter = () => {
-    const username = process.env.SMTP_USERNAME?.trim();
-    const password = process.env.SMTP_PASSWORD?.trim();
-    const host = process.env.SMTP_HOST?.trim();
-    const port = process.env.SMTP_PORT?.trim();
-
-    if (!username || !password || !host || !port) {
+    // Validar variables de entorno
+    if (!validateSMTPEnvironment()) {
+        console.warn('⚠️  Email service: Variables SMTP inválidas o incompletas');
         return null;
     }
-    smtpConfigured = true;
-    const portNum = parseInt(port);
-    const isSecure = portNum === 465;
-    
-    return nodemailer.createTransport({
-        host,
-        port: portNum,
-        secure: isSecure,
-        auth: {
-            user: username,
-            pass: password,
-        },
-        connectionTimeout: 10_000,
-        greetingTimeout: 10_000,
-        socketTimeout: 10_000,
-        tls: {
-            rejectUnauthorized: false,
-        },
-    });
+
+    try {
+        const username = process.env.SMTP_USERNAME.trim();
+        const password = process.env.SMTP_PASSWORD.trim();
+        const host = process.env.SMTP_HOST.trim();
+        const port = parseInt(process.env.SMTP_PORT.trim());
+
+        smtpConfigured = true;
+        const isSecure = port === 465;
+        
+        const transportConfig = {
+            host,
+            port,
+            secure: isSecure,
+            auth: {
+                user: username,
+                pass: password,
+            },
+            connectionTimeout: 10_000,
+            greetingTimeout: 10_000,
+            socketTimeout: 10_000,
+            tls: {
+                rejectUnauthorized: process.env.NODE_ENV === 'production',
+            },
+        };
+
+        return nodemailer.createTransport(transportConfig);
+    } catch (error) {
+        console.error('❌ Error creando transporter SMTP:', error.message);
+        smtpConfigured = false;
+        return null;
+    }
 };
 
 export const initializeEmailService = () => {
@@ -40,23 +78,35 @@ export const initializeEmailService = () => {
     transporter = createTransporter();
 };
 
+export const getSMTPStatus = () => ({
+    initialized,
+    configured: smtpConfigured,
+    validationErrors: smtpValidationErrors,
+});
+
 export const verificarConexionSMTP = async () => {
     if (!initialized) {
         initializeEmailService();
     }
     
     if (!transporter || !smtpConfigured) {
-        console.log('ℹEmail service: SMTP no configurado. Los emails se procesarán en background.');
+        if (smtpValidationErrors.length > 0) {
+            console.log('⚠️  Email service: Configuración SMTP incompleta');
+            smtpValidationErrors.forEach(err => console.log(`   - ${err}`));
+        } else {
+            console.log('ℹ️  Email service: SMTP no configurado. Los emails se procesarán en background.');
+        }
         return false;
     }
 
     try {
         await transporter.verify();
-        console.log('Email service: Conectado correctamente a SMTP');
+        console.log('✅ Email service: Conectado correctamente a SMTP');
         return true;
     } catch (error) {
-        console.warn('Email service: No se pudo conectar a SMTP - ' + error.message);
-        console.log('ℹLos emails NO se enviarán pero la aplicación continuará funcionando.');
+        console.warn('⚠️  Email service: No se pudo conectar a SMTP');
+        console.warn(`   Error: ${error.message}`);
+        console.log('ℹ️  Los emails NO se enviarán pero la aplicación continuará funcionando.');
         return false;
     }
 };
@@ -68,13 +118,14 @@ export const enviarEmailVerificacion = async (email, nombre, token) => {
     
     if (!transporter || !smtpConfigured) {
         if (process.env.NODE_ENV === 'development') {
-            console.log(`   [DEVELOPMENT] Email de verificación:`);
-            console.log(`   Para: ${email}`);
-            console.log(`   Nombre: ${nombre}`);
-            console.log(`   Link: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/verificar-email?token=${token.substring(0, 30)}...`);
+            console.log(`\n📧 [DEVELOPMENT] Email de verificación:`);
+            console.log(`   ✉️  Para: ${email}`);
+            console.log(`   👤 Nombre: ${nombre}`);
+            console.log(`   🔗 Link: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/verificar-email?token=${token.substring(0, 30)}...`);
+            console.log(`   ⏰ Token completo disponible para testing`);
             return { success: true, isDevelopment: true };
         }
-        throw new Error('SMTP not configured');
+        throw new Error('SMTP no configurado. No se puede enviar email de verificación.');
     }
 
     try {
@@ -121,15 +172,24 @@ export const enviarEmailVerificacion = async (email, nombre, token) => {
         };
 
         const result = await transporter.sendMail(mailOptions);
-        console.log(`Email de verificación enviado a ${email}`);
+        console.log(`✅ Email de verificación enviado a ${email}`);
         return { success: true, messageId: result.messageId };
 
     } catch (error) {
-        console.error('Error enviando email de verificación:', error.message);
+        console.error('❌ Error enviando email de verificación:', error.message);
+        if (error.code === 'EAUTH') {
+            throw new Error('Error de autenticación SMTP. Verifica credenciales en variables de entorno.');
+        }
+        if (error.code === 'ECONNREFUSED') {
+            throw new Error('No se puede conectar al servidor SMTP.');
+        }
+        if (error.code === 'ETIMEDOUT') {
+            throw new Error('Timeout al conectar con servidor SMTP.');
+        }
         if (process.env.NODE_ENV === 'development') {
             return { success: true, isDevelopment: true };
         }
-        throw error;
+        throw new Error(`Error enviando email: ${error.message}`);
     }
 };
 
@@ -140,13 +200,13 @@ export const enviarEmailResetPassword = async (email, nombre, token) => {
     
     if (!transporter || !smtpConfigured) {
         if (process.env.NODE_ENV === 'development') {
-            console.log(`   [DEVELOPMENT] Email de reset de contraseña:`);
-            console.log(`   Para: ${email}`);
-            console.log(`   Nombre: ${nombre}`);
-            console.log(`   Link: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token.substring(0, 30)}...`);
+            console.log(`\n📧 [DEVELOPMENT] Email de reset de contraseña:`);
+            console.log(`   ✉️  Para: ${email}`);
+            console.log(`   👤 Nombre: ${nombre}`);
+            console.log(`   🔗 Link: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token.substring(0, 30)}...`);
             return { success: true, isDevelopment: true };
         }
-        throw new Error('SMTP not configured');
+        throw new Error('SMTP no configurado. No se puede enviar email de reset.');
     }
 
     try {
@@ -195,15 +255,24 @@ export const enviarEmailResetPassword = async (email, nombre, token) => {
         };
 
         const result = await transporter.sendMail(mailOptions);
-        console.log(`Email de reset enviado a ${email}`);
+        console.log(`✅ Email de reset enviado a ${email}`);
         return { success: true, messageId: result.messageId };
 
     } catch (error) {
-        console.error('Error enviando email de reset:', error.message);
+        console.error('❌ Error enviando email de reset:', error.message);
+        if (error.code === 'EAUTH') {
+            throw new Error('Error de autenticación SMTP. Verifica credenciales en variables de entorno.');
+        }
+        if (error.code === 'ECONNREFUSED') {
+            throw new Error('No se puede conectar al servidor SMTP.');
+        }
+        if (error.code === 'ETIMEDOUT') {
+            throw new Error('Timeout al conectar con servidor SMTP.');
+        }
         if (process.env.NODE_ENV === 'development') {
             return { success: true, isDevelopment: true };
         }
-        throw error;
+        throw new Error(`Error enviando email: ${error.message}`);
     }
 };
 
@@ -214,12 +283,13 @@ export const enviarEmailBienvenida = async (email, nombre) => {
     
     if (!transporter || !smtpConfigured) {
         if (process.env.NODE_ENV === 'development') {
-            console.log(`   [DEVELOPMENT] Email de bienvenida:`);
-            console.log(`   Para: ${email}`);
-            console.log(`   Nombre: ${nombre}`);
+            console.log(`\n📧 [DEVELOPMENT] Email de bienvenida:`);
+            console.log(`   ✉️  Para: ${email}`);
+            console.log(`   👤 Nombre: ${nombre}`);
             return { success: true, isDevelopment: true };
         }
-        throw new Error('SMTP not configured');
+        // No throw en welcome email, es opcional
+        return { success: false, message: 'SMTP no configurado' };
     }
 
     try {
@@ -265,15 +335,13 @@ export const enviarEmailBienvenida = async (email, nombre) => {
         };
 
         const result = await transporter.sendMail(mailOptions);
-        console.log(`Email de bienvenida enviado a ${email}`);
+        console.log(`✅ Email de bienvenida enviado a ${email}`);
         return { success: true, messageId: result.messageId };
 
     } catch (error) {
-        console.error('Error enviando email de bienvenida:', error.message);
-        if (process.env.NODE_ENV === 'development') {
-            return { success: true, isDevelopment: true };
-        }
-        throw error;
+        console.error('❌ Error enviando email de bienvenida:', error.message);
+        // No re-throw en welcome email
+        return { success: false, message: error.message };
     }
 };
 
@@ -284,12 +352,13 @@ export const enviarEmailContraseñaCambiada = async (email, nombre) => {
     
     if (!transporter || !smtpConfigured) {
         if (process.env.NODE_ENV === 'development') {
-            console.log(`   [DEVELOPMENT] Email de contraseña cambiada:`);
-            console.log(`   Para: ${email}`);
-            console.log(`   Nombre: ${nombre}`);
+            console.log(`\n📧 [DEVELOPMENT] Email de contraseña cambiada:`);
+            console.log(`   ✉️  Para: ${email}`);
+            console.log(`   👤 Nombre: ${nombre}`);
             return { success: true, isDevelopment: true };
         }
-        throw new Error('SMTP not configured');
+        // No throw en password changed email, es opcional
+        return { success: false, message: 'SMTP no configurado' };
     }
 
     try {
@@ -313,14 +382,66 @@ export const enviarEmailContraseñaCambiada = async (email, nombre) => {
         };
 
         const result = await transporter.sendMail(mailOptions);
-        console.log(`Email de cambio de contraseña enviado a ${email}`);
+        console.log(`✅ Email de cambio de contraseña enviado a ${email}`);
         return { success: true, messageId: result.messageId };
 
     } catch (error) {
-        console.error('Error enviando email de cambio de contraseña:', error.message);
+        console.error('❌ Error enviando email de cambio de contraseña:', error.message);
+        // No re-throw para que la operación principal siga adelante
+        return { success: false, message: error.message };
+    }
+};
+
+export const enviarEmailAlertaTiempoReal = async ({ to, asunto, titulo, mensaje, detalles = [] }) => {
+    if (!initialized) {
+        initializeEmailService();
+    }
+
+    if (!to) {
+        return { success: false, message: 'Email destino requerido' };
+    }
+
+    if (!transporter || !smtpConfigured) {
         if (process.env.NODE_ENV === 'development') {
+            console.log(`\n📧 [DEVELOPMENT] Alerta en tiempo real:`);
+            console.log(`   ✉️  Para: ${to}`);
+            console.log(`   🏷️  Asunto: ${asunto || 'Alerta en tiempo real'}`);
+            console.log(`   📝 Mensaje: ${mensaje || ''}`);
             return { success: true, isDevelopment: true };
         }
-        throw error;
+        return { success: false, message: 'SMTP no configurado' };
+    }
+
+    try {
+        const detallesHtml = Array.isArray(detalles)
+            ? detalles
+                  .filter((item) => item && item.label)
+                  .map((item) => `<li><strong>${item.label}:</strong> ${item.value ?? '-'}</li>`)
+                  .join('')
+            : '';
+
+        const mailOptions = {
+            from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
+            to,
+            subject: asunto || 'Alerta en tiempo real - GastroFlow',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>${titulo || 'Nueva alerta en tiempo real'}</h2>
+                    <p>${mensaje || 'Se ha generado una nueva alerta en el sistema.'}</p>
+                    ${detallesHtml ? `<ul style="line-height:1.8;">${detallesHtml}</ul>` : ''}
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                    <p style="font-size: 12px; color: #666;">
+                        Este es un correo automático para verificar alertas en tiempo real.
+                    </p>
+                </div>
+            `,
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log(`✅ Email de alerta enviado a ${to}`);
+        return { success: true, messageId: result.messageId };
+    } catch (error) {
+        console.error('❌ Error enviando email de alerta:', error.message);
+        return { success: false, message: error.message };
     }
 };

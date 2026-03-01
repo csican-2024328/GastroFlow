@@ -1,41 +1,120 @@
+'use strict';
+
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import { dbConnection } from './db.js';
-import { createPlatformAdmin } from '../helper/createPlatformAdmin.js';
-import authRoutes from '../src/User/auth.routes.js';
+import { connectMongoDB } from './mongodb.js';
+import { corsOptions } from './cors-configuration.js';
+import { helmetConfiguration } from './helmet-configuration.js';
+import { requestLimit } from '../middlewares/request-limit.js';
+import {
+  errorHandler,
+  notFound,
+} from '../middlewares/server-genericError-handler.js';
+import authRoutes from '../src/auth/auth.routes.js';
+import restaurantRoutes from '../src/Restaurant/Restaurant.routes.js';
+import mesaRoutes from '../src/Mesas/mesa.routes.js';
+import platosRoutes from '../src/Platos/platos.routes.js';
+import menuRoutes from '../src/Menu/menu.routes.js';
+import reportsRoutes from '../src/Reports/reports.routes.js';
+import inventoryRoutes from '../src/Inventory/inventory.routes.js';
+import orderRoutes from '../src/Order/order.routes.js';
+import eventRoutes from '../src/Event/event.routes.js';
+import couponRoutes from '../src/Coupon/coupon.routes.js';
+import reservationRoutes from '../src/Reservation/reservation.routes.js';
+import notificationsRoutes from '../src/Notifications/notifications.routes.js';
+import invoiceRoutes from '../src/Invoice/invoice.routes.js';
+import reviewRoutes from '../src/Review/review.routes.js';
+import staffRoutes from '../src/Staff/staff.routes.js';
+import { errorMiddleware } from '../middlewares/error.middleware.js';
+import { initializeEmailService, verificarConexionSMTP } from '../helper/email-service.js';
+import { initSocket } from './socket.js';
+
+const BASE_PATH = '/api/v1';
+
+const middlewares = (app) => {
+  app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+  app.use(express.json({ limit: '10mb' }));
+  app.use(cors(corsOptions));
+  app.use(helmet(helmetConfiguration));
+  app.use(requestLimit);
+  app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
+};
+
+const routes = (app) => {
+  app.use(`${BASE_PATH}/auth`, authRoutes);
+  app.use(`${BASE_PATH}/restaurants`, restaurantRoutes);
+  app.use(`${BASE_PATH}/mesas`, mesaRoutes);
+  app.use(`${BASE_PATH}/platos`, platosRoutes);
+  app.use(`${BASE_PATH}/menu`, menuRoutes);
+  app.use(`${BASE_PATH}/reports`, reportsRoutes);
+  app.use(`${BASE_PATH}/inventory`, inventoryRoutes);
+  app.use(`${BASE_PATH}/orders`, orderRoutes);
+  app.use(`${BASE_PATH}/events`, eventRoutes);
+  app.use(`${BASE_PATH}/coupons`, couponRoutes);
+  app.use(`${BASE_PATH}/reservation`, reservationRoutes);
+  app.use(`${BASE_PATH}/notifications`, notificationsRoutes);
+  app.use(`${BASE_PATH}/invoices`, invoiceRoutes);
+  app.use(`${BASE_PATH}/reviews`, reviewRoutes);
+  app.use(`${BASE_PATH}/staff`, staffRoutes);
+
+
+  app.get(`${BASE_PATH}/health`, (req, res) => {
+    res.status(200).json({
+      status: 'Healthy',
+      timestamp: new Date().toISOString(),
+      service: 'GastroFlow',
+    });
+  });
+  app.use(notFound);
+};
 
 export const initServer = async () => {
-    const app = express();
-    const PORT = parseInt(process.env.PORT, 10) || 3006;
-    const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3006')
-        .split(',')
-        .map(origin => origin.trim());
+  const app = express();
+  const PORT = process.env.PORT;
+  app.set('trust proxy', 1);
 
-    app.use(cors({
-        origin: allowedOrigins,
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization']
-    }));
-
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
-    app.use('/api/auth', authRoutes);
-
-    try {
-        await dbConnection();
-
-        console.log('Base de datos conectada');
-
-        await createPlatformAdmin();
-
-        app.listen(PORT, () => {
-            console.log(`GastroFlow Admin server running on port ${PORT}`);
-            console.log(`CORS enabled for: ${allowedOrigins.join(', ')}`);
-        });
-
-    } catch (error) {
-        console.error(`Error starting server: ${error.message}`);
-        process.exit(1);
+  try {
+    // Inicializar servicio de Email
+    console.log('\n📧 Inicializando servicio de email...');
+    initializeEmailService();
+    const smtpConnectionOk = await verificarConexionSMTP();
+    if (!smtpConnectionOk) {
+      console.log('⚠️  ADVERTENCIA: El servicio de email no está disponible.');
+      console.log('   Todos los usuarios registrados verán el email como no verificado.');
+      console.log('   Asegúrate de configurar las variables de entorno SMTP correctamente.\n');
     }
+
+    // Conectar PostgreSQL (usuarios, auth)
+    await dbConnection();
+
+    // Conectar MongoDB (restaurantes, mesas, platos)
+    await connectMongoDB();
+
+    const { seedInitialData } = await import('../seeders/dataSeeder.js');
+    await seedInitialData();
+
+    middlewares(app);
+    routes(app);
+    app.use(errorMiddleware);
+
+    app.use(errorHandler);
+
+    const server = app.listen(PORT, () => {
+      console.log(`\n✅ GastroFlow API running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+
+    // Inicializar Socket.io
+    const io = initSocket(server);
+    console.log('🔌 Socket.io inicializado para notificaciones en tiempo real');
+
+    return server;
+  } catch (error) {
+    console.error(`\n❌ Error starting server:`, error.message);
+    console.error('Stack trace:', error.stack);
+    process.exit(1);
+  }
 };
