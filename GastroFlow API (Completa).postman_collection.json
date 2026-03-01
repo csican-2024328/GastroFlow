@@ -11,55 +11,251 @@
       "name": "Reportes",
       "item": [
         {
-          "name": "Exportar Reporte Individual a PDF",
+          "name": "demanda-restaurantes",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/reports/exportar/{{mesaId}}/pdf",
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/demanda-restaurantes/pdf",
+              "protocol": "http",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
+              "port": "3006",
               "path": [
-                "{{apiVersion}}",
+                "api",
+                "v1",
                 "reports",
                 "exportar",
-                "{{mesaId}}",
+                "reporte",
+                "demanda-restaurantes",
                 "pdf"
               ]
-            },
-            "description": "Exporta un reporte individual (mesa) a PDF. Requiere permisos PLATFORM_ADMIN o RESTAURANT_ADMIN."
+            }
           },
           "response": []
         },
         {
-          "name": "Exportar Todos los Reportes a PDF",
+          "name": "top-platos",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/reports/exportar/pdf",
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/top-platos/pdf",
+              "protocol": "http",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
+              "port": "3006",
               "path": [
-                "{{apiVersion}}",
+                "api",
+                "v1",
                 "reports",
                 "exportar",
+                "reporte",
+                "top-platos",
                 "pdf"
               ]
-            },
-            "description": "Exporta todos los reportes (mesas cerradas) a PDF. Requiere permisos PLATFORM_ADMIN o RESTAURANT_ADMIN."
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ingresos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/ingresos/pdf",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "ingresos",
+                "pdf"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reservaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/reservaciones/pdf",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "reservaciones",
+                "pdf"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "desempeno-restaurante",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/desempeno-restaurante/pdf?restaurantID=699f20a033c9218da676079c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "desempeno-restaurante",
+                "pdf"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ocupacion",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/ocupacion/pdf?restaurantID=699f20a033c9218da676079c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "ocupacion",
+                "pdf"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clientes-frecuentes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/clientes-frecuentes/pdf?restaurantID=699f20a033c9218da676079c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "clientes-frecuentes",
+                "pdf"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "pedidos-recurrentes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/pedidos-recurrentes/pdf?restaurantID=699f20a033c9218da676079c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "pedidos-recurrentes",
+                "pdf"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "horas-pico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3006/api/v1/reports/exportar/reporte/horas-pico/pdf",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3006",
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "exportar",
+                "reporte",
+                "horas-pico",
+                "pdf"
+              ]
+            }
           },
           "response": []
         }
@@ -110,7 +306,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Juan\",\n  \"surname\": \"Juan\",\n  \"username\": \"juanperez\",\n  \"email\": \"bpineda-2024427@kinal.edu.gt\",\n  \"password\": \"Password123!\",\n  \"phone\": \"23456789\"\n}",
+              "raw": "{\n  \"name\": \"Juan\",\n  \"surname\": \"Juan\",\n  \"username\": \"juanperez\",\n  \"email\": \"bpineda-2024427@kinal.edu.gt\",\n  \"password\": \"Password123!\",\n  \"passwordConfirm\": \"Password123!\",\n  \"phone\": \"23456789\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -182,7 +378,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"token\": \"2c297ba80088130cbac5073707302f8036acb0e238d873c19535dd700c8950a1\"\n}",
+              "raw": "{\n  \"token\": \"080da24ec7d9c8a34ecce14c10d5c3004190b495d96e8e8038dd5c6a529cfb1f\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -704,7 +900,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNGE2NGZiMDgtOTcwNS00MTg1LTllZjctOTMxNzFlZWY1ZGJlIiwiaWF0IjoxNzcyMDM1NTc2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzczNzYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.XtUjx1m3fmMfgXAmCE9hqg2Qbz8dOu0myOmyq4k0mCo",
+                  "value": "{{token}}",
                   "type": "string"
                 }
               ]
@@ -718,7 +914,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"numero\": 1,\n  \"capacidad\": 4,\n  \"ubicacion\": \"Terraza\",\n  \"restaurantID\": \"699f20a033c9218d476079c9\",\n  \"isActive\": true\n}",
+              "raw": "{\n  \"numero\": 1,\n  \"capacidad\": 4,\n  \"ubicacion\": \"Terraza\",\n  \"restaurantID\": \"699f20a033c9218da676079c\",\n  \"isActive\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -858,7 +1054,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNGE2NGZiMDgtOTcwNS00MTg1LTllZjctOTMxNzFlZWY1ZGJlIiwiaWF0IjoxNzcyMDM1NTc2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzczNzYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.XtUjx1m3fmMfgXAmCE9hqg2Qbz8dOu0myOmyq4k0mCo",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNDExYWU1ZmUtYWQ3OC00ZTlkLWJhMDktYmJhNDcyZjY4YTg1IiwiaWF0IjoxNzcyMzEwNzIyLCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIzMTI1MjIsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.rX4A6PlMOAI4CY1PcaRJBnpc70jgmkNsmjJi5EuQmp0",
                   "type": "string"
                 }
               ]
@@ -903,7 +1099,7 @@
                 },
                 {
                   "key": "ingredientes",
-                  "value": "tortilla, cerdo, piña, cilantro",
+                  "value": "69a34ef473fe5c375e7227a5",
                   "type": "text",
                   "uuid": "b73dc3f6-1ce0-4565-8be4-b3966f697cfe"
                 },
@@ -912,6 +1108,13 @@
                   "value": "true",
                   "type": "text",
                   "uuid": "d762ad1b-28f5-495a-a1b9-19dbfbfb3607"
+                },
+                {
+                  "key": "",
+                  "value": "",
+                  "type": "text",
+                  "uuid": "1179a1c2-b3f6-4bc4-8d26-142ddf602844",
+                  "disabled": true
                 }
               ]
             },
@@ -1282,6 +1485,52 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "menu",
+                "get"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer"
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
         }
       ]
     },
@@ -1313,7 +1562,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/reports/ingresos?start=2026-02-01&end=2026-02-28",
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/ingresos?start=2026-02-01&end=2027-02-28",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1329,7 +1578,7 @@
                 },
                 {
                   "key": "end",
-                  "value": "2026-02-28"
+                  "value": "2027-02-28"
                 }
               ]
             }
@@ -1342,7 +1591,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/reports/ocupacion",
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/ocupacion?restaurantID=699f20a033c9218da676079c",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1350,6 +1599,12 @@
                 "{{apiVersion}}",
                 "reports",
                 "ocupacion"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
               ]
             }
           },
@@ -1390,7 +1645,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/reports/cliente/{{nombreCliente}}",
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/cliente/Juan%20Pérez?restaurantID=699f20a033c9218da676079c",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1398,7 +1653,13 @@
                 "{{apiVersion}}",
                 "reports",
                 "cliente",
-                "{{nombreCliente}}"
+                "Juan%20Pérez"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
               ]
             }
           },
@@ -1410,7 +1671,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/reports/cliente/{{nombreCliente}}/plato-favorito",
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/cliente/Juan%20Pérez/plato-favorito?restaurantID=699f20a033c9218da676079c",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1418,8 +1679,14 @@
                 "{{apiVersion}}",
                 "reports",
                 "cliente",
-                "{{nombreCliente}}",
+                "Juan%20Pérez",
                 "plato-favorito"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
               ]
             }
           },
@@ -1431,7 +1698,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/reports/pedidos-recurrentes",
+              "raw": "{{baseUrl}}/{{apiVersion}}/reports/pedidos-recurrentes?restaurantID=699f20a033c9218da676079c",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1439,6 +1706,12 @@
                 "{{apiVersion}}",
                 "reports",
                 "pedidos-recurrentes"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "699f20a033c9218da676079c"
+                }
               ]
             }
           },
@@ -1461,7 +1734,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Tomate\",\n  \"cantidad\": 100,\n  \"unidad\": \"kg\",\n  \"restaurantID\": \"{{restaurantId}}\"\n}",
+              "raw": "{\n  \"nombre\": \"Tomate\",\n  \"stock\": 100,\n  \"unidadMedida\": \"kg\",\n  \"restaurantID\": \"{{restaurantId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1589,7 +1862,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"mesaID\": \"{{mesaId}}\",\n  \"detalles\": []\n}",
+              "raw": "{\n  \"tipoPedido\": \"EN_MESA\",\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"mesaID\": \"699f211533c9218da676079e\",        \n  \"clienteNombre\": \"Juan\",\n  \"items\": [\n    {\n    \"tipo\": \"MENU\",\n    \"menu\": \"69a35a8afacd0e78feedb149\",     // ID del plato (obligatorio)\n    \"cantidad\": 2,               // Cantidad (obligatorio, mín 1)\n    \"notas\": \"Sin cebolla\"      // Notas especiales (opcional, máx 200 caracteres)\n    }\n],\n\n  \"couponCode\": \"PROMO-15\",\n  \"impuesto\": 10\n}\n",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1713,7 +1986,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"estado\": \"EN_PREPARACION\"\n}",
+              "raw": "{\n  \"estado\": \"LISTO\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1747,7 +2020,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"metodoPago\": \"EFECTIVO\"\n}",
+              "raw": "{\n  \"metodoPago\": \"TARJETA\",\n  \"propina\": 10,\n  \"cargosExtra\": 5\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1807,6 +2080,34 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Create orden Plato",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"tipoPedido\": \"EN_MESA\",\r\n  \"restaurantID\": \"699f20a033c9218da676079c\",\r\n  \"mesaID\": \"699f211533c9218da676079e\",\r\n  \"clienteNombre\": \"Juan Pérez\",\r\n  \"clienteTelefono\": \"50212345678\",\r\n  \"items\": [\r\n    {\r\n      \"tipo\": \"PLATO\",\r\n      \"plato\": \"69a352df9fc7e93c0d1e45bf\",\r\n      \"cantidad\": 2,\r\n      \"notas\": \"Sin cebolla\"\r\n    }\r\n  ],\r\n  \"impuesto\": 0,\r\n  \"descuento\": 0,\r\n  \"notas\": \"Cliente VIP\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "create"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -1816,6 +2117,16 @@
         {
           "name": "Create Event",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {
@@ -1825,7 +2136,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"nombre\": \"Noche de Sushi\"\n}",
+              "raw": "{\n\"nombre\": \"Noche de Sushi\",\n\"descripcion\": \"15% en menús seleccionados\",\n\"tipo\": \"DESCUENTO\",\n\"restaurantID\": \"{{restaurantId}}\",\n\"descuentoTipo\": \"PORCENTAJE\",\n\"descuentoValor\": 15,\n\"fechaInicio\": \"2026-01-01\",\n\"fechaFin\": \"2027-03-10\",\n\"menusAplicables\": [\"69a35a8afacd0e78feedb149\"],\n\"condiciones\": \"No acumulable con otros descuentos\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2037,7 +2348,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"codigo\": \"DESC10\",\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"descuento\": 10\n}",
+              "raw": "{\n\"codigo\": \"PROMO-15\",\n\"tipo\": \"PORCENTAJE\",\n\"porcentajeDescuento\": 15,\n\"fechaExpiracion\": \"2026-12-31T23:59:59.000Z\",\n\"descripcion\": \"15% en pedidos\",\n\"montoMinimo\": 50\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2073,7 +2384,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"codigo\": \"{{couponCode}}\",\n  \"restaurantID\": \"{{restaurantId}}\"\n}",
+              "raw": "{\n  \"codigo\": \"PROMO-15\",\n  \"montoTotal\": 120,\n  \"restaurantID\": \"{{restaurantId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2285,6 +2596,16 @@
         {
           "name": "Create Reservation",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {
@@ -2294,7 +2615,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"mesaID\": \"{{mesaId}}\",\n  \"fecha\": \"2026-03-01\",\n  \"hora\": \"19:00\"\n}",
+              "raw": "{\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"mesaID\": \"{{mesaId}}\",\n  \"fechaReserva\": \"2026-03-01\",\n  \"horaInicio\": \"20:00\",\n  \"horaFin\": \"20:00\",\n  \"cantidadPersonas\": 2,\n  \"notas\": \"Prueba alerta\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2302,13 +2623,13 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/reservations",
+              "raw": "{{baseUrl}}/{{apiVersion}}/reservation",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "reservations"
+                "reservation"
               ]
             }
           },
@@ -2320,13 +2641,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/reservations",
+              "raw": "{{baseUrl}}/{{apiVersion}}/reservation",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "reservations"
+                "reservation"
               ]
             }
           },
@@ -2338,13 +2659,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/reservations/{{reservationId}}",
+              "raw": "{{baseUrl}}/{{apiVersion}}/reservation/{{reservationId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "reservations",
+                "reservation",
                 "{{reservationId}}"
               ]
             }
@@ -2363,7 +2684,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"hora\": \"20:00\"\n}",
+              "raw": "{\n  \"hora\": \"20:00\",\n  \"estado\": \"CONFIRMADA\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2371,13 +2692,13 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/reservations/{{reservationId}}",
+              "raw": "{{baseUrl}}/{{apiVersion}}/reservation/{{reservationId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "reservations",
+                "reservation",
                 "{{reservationId}}"
               ]
             }
@@ -2429,6 +2750,34 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"targetType\": \"restaurant\",\r\n  \"targetId\": \"{{restaurantId}}\",\r\n  \"event\": \"nueva-reserva\",\r\n  \"type\": \"NUEVA_RESERVA\",\r\n  \"message\": \"Nueva reserva recibida\",\r\n  \"data\": {\r\n    \"reservaId\": \"123\",\r\n    \"clienteNombre\": \"Juan\"\r\n  }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/notifications/emit-test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "notifications",
+                "emit-test"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -2447,7 +2796,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderID\": \"{{orderId}}\"\n}",
+              "raw": "{\n  \"orderID\": \"69a3673663110a5b8cdfc303\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2455,11 +2804,13 @@
               }
             },
             "url": {
-              "raw": "{{invoicesBasePath}}/create",
+              "raw": "{{baseUrl}}/{{apiVersion}}/invoices/create",
               "host": [
-                "{{invoicesBasePath}}"
+                "{{baseUrl}}"
               ],
               "path": [
+                "{{apiVersion}}",
+                "invoices",
                 "create"
               ]
             }
@@ -2548,74 +2899,6 @@
             }
           },
           "response": []
-        },
-        {
-          "name": "Legacy User Auth - Register",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Juan\",\n  \"surname\": \"Pérez\",\n  \"username\": \"juanperez\",\n  \"email\": \"juan@example.com\",\n  \"password\": \"Password123!\",\n  \"phone\": \"50212345678\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{legacyAuthBasePath}}/register",
-              "host": [
-                "{{legacyAuthBasePath}}"
-              ],
-              "path": [
-                "register"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Legacy User Auth - Login",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"emailOrUsername\": \"admin\",\n  \"password\": \"Admin@1234!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{legacyAuthBasePath}}/login",
-              "host": [
-                "{{legacyAuthBasePath}}"
-              ],
-              "path": [
-                "login"
-              ]
-            }
-          },
-          "response": []
         }
       ],
       "description": "Endpoints adicionales montados: facturas e historial de rutas de autenticación en /user/auth."
@@ -2639,7 +2922,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"platoID\": \"{{platoId}}\",\n  \"rating\": 5,\n  \"comment\": \"Excelente comida y servicio!\"\n}"
+              "raw": "{\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"rating\": 5,\n  \"comment\": \"Excelente comida y servicio!\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/{{apiVersion}}/reviews/create",
@@ -2807,6 +3090,16 @@
         {
           "name": "Delete Profile (Validación Previa)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "DELETE",
             "header": [
               {
@@ -2823,13 +3116,12 @@
               "raw": "{\n  \"motivo\": \"Ya no deseo usar el servicio\",\n  \"confirmacion\": true\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/user/auth/profile",
+              "raw": "{{baseUrl}}/{{apiVersion}}/auth/profile",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "user",
                 "auth",
                 "profile"
               ]
