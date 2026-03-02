@@ -160,6 +160,16 @@ const orderSchema = mongoose.Schema(
             default: 0,
             min: [0, 'El descuento del cupón debe ser mayor o igual a 0']
         },
+        eventID: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Event',
+            default: null,
+        },
+        descuentoPorEvento: {
+            type: Number,
+            default: 0,
+            min: [0, 'El descuento del evento debe ser mayor o igual a 0']
+        },
         propina: {
             type: Number,
             default: 0,
