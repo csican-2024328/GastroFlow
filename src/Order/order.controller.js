@@ -3,6 +3,7 @@ import Plato from '../Platos/platos-model.js';
 import Menu from '../Menu/menu.model.js';
 import Mesa from '../Mesas/mesa.model.js';
 import Coupon from '../Coupon/coupon.model.js';
+import Event from '../Event/event.model.js';
 import Invoice from '../Invoice/invoice.model.js';
 import Inventory from '../Inventory/inventory.model.js';
 import { notifyNewOrder, notifyOrderStatusChange } from '../../configs/socket.js';
@@ -159,6 +160,58 @@ const generateOrderNumber = () => {
     const day = String(date.getDate()).padStart(2, '0');
     const random = Math.floor(Math.random() * 99999).toString().padStart(5, '0');
     return `ORD-${year}${month}${day}-${random}`;
+};
+
+/**
+ * Busca y aplica eventos/promociones vigentes a los menús de la orden
+ * @param {string} restaurantID - ID del restaurante
+ * @param {Array} orderItems - Items de la orden con sus menús
+ * @returns {Object} { evento, descuentoPorEvento }
+ */
+const buscarYAplicarEvento = async (restaurantID, orderItems) => {
+    try {
+        const ahora = new Date();
+        
+        // Obtener IDs de menús en la orden
+        const menuIdsEnOrden = orderItems
+            .filter(item => item.tipo === 'MENU' && item.menu)
+            .map(item => item.menu.toString());
+        
+        if (menuIdsEnOrden.length === 0) {
+            return { evento: null, descuentoPorEvento: 0 };
+        }
+
+        // Buscar eventos vigentes que apliquen a estos menús
+        const evento = await Event.findOne({
+            restaurantID,
+            isActive: true,
+            estado: 'ACTIVA',
+            fechaInicio: { $lte: ahora },
+            fechaFin: { $gte: ahora },
+            menusAplicables: { $in: menuIdsEnOrden }
+        });
+
+        if (!evento || !evento.esVigente() || !evento.puedeUsarse()) {
+            return { evento: null, descuentoPorEvento: 0 };
+        }
+
+        // Calcular el descuento
+        const subtotalMenusEnPromo = orderItems
+            .filter(item => item.tipo === 'MENU' && menuIdsEnOrden.includes(item.menu.toString()))
+            .reduce((acc, item) => acc + item.subtotal, 0);
+
+        let descuentoPorEvento = 0;
+        if (evento.descuentoTipo === 'PORCENTAJE') {
+            descuentoPorEvento = subtotalMenusEnPromo * (evento.descuentoValor / 100);
+        } else if (evento.descuentoTipo === 'CANTIDAD_FIJA') {
+            descuentoPorEvento = evento.descuentoValor;
+        }
+
+        return { evento, descuentoPorEvento };
+    } catch (error) {
+        console.error('Error buscando eventos:', error);
+        return { evento: null, descuentoPorEvento: 0 };
+    }
 };
 
 
@@ -361,6 +414,13 @@ export const createOrder = async (req, res) => {
             descuentoPorCoupon = coupon.calcularDescuento(subtotalCalculado);
         }
 
+        // Buscar y aplicar eventos/promociones automáticamente
+        let evento = null;
+        let descuentoPorEvento = 0;
+        const { evento: eventoEncontrado, descuentoPorEvento: descuento_evento } = await buscarYAplicarEvento(restaurantID, orderItems);
+        evento = eventoEncontrado;
+        descuentoPorEvento = descuento_evento;
+
         // Crear el pedido
         const newOrder = new Order({
             numeroOrden,
@@ -374,10 +434,12 @@ export const createOrder = async (req, res) => {
             horaProgramada: tipoPedido === 'PARA_LLEVAR' ? horaProgramada : null,
             items: orderItems,
             impuesto: impuesto || 0,
-            descuento: (descuento || 0) + descuentoPorCoupon,
+            descuento: (descuento || 0) + descuentoPorCoupon + descuentoPorEvento,
             couponCode: coupon ? coupon.codigo : null,
             couponID: coupon ? coupon._id : null,
             descuentoPorCoupon,
+            eventID: evento ? evento._id : null,
+            descuentoPorEvento,
             notas,
             estado: 'EN_PREPARACION'
         });
@@ -387,6 +449,11 @@ export const createOrder = async (req, res) => {
         if (coupon) {
             const usuarioID = req.usuario?.sub || req.usuario?.id || null;
             await coupon.registrarUso(usuarioID || 'ANONIMO');
+        }
+
+        // Registrar uso del evento si aplica
+        if (evento && evento.puedeUsarse()) {
+            await evento.incrementarUsos();
         }
 
         await newOrder.populate([

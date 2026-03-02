@@ -378,7 +378,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"token\": \"080da24ec7d9c8a34ecce14c10d5c3004190b495d96e8e8038dd5c6a529cfb1f\"\n}",
+              "raw": "{\n  \"token\": \"7f44b7aaf4b35df8eb0b3d61b9ddc4ef7114f8102cb01fab87e2d4be491a88a6\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -515,7 +515,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfNFJkVVJHM0pHQ1JwIiwianRpIjoiODBjZGZjZTgtNDZmYi00Mzc3LWI3MTEtZjMwZWIyZWZmYTY1IiwiaWF0IjoxNzcyMDM1NDI5LCJyb2xlIjoiQ0xJRU5UIiwiZXhwIjoxNzcyMDM3MjI5LCJhdWQiOiJBdXRoU2VydmljZSIsImlzcyI6IkF1dGhTZXJ2aWNlIn0.mNf0Kw9FE_RYoGVL7CmgO-Cngd9cojSRjLPu24dD5dY",
+                  "value": "{{token}}",
                   "type": "string"
                 }
               ]
@@ -624,7 +624,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNGE2NGZiMDgtOTcwNS00MTg1LTllZjctOTMxNzFlZWY1ZGJlIiwiaWF0IjoxNzcyMDM1NTc2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzczNzYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.XtUjx1m3fmMfgXAmCE9hqg2Qbz8dOu0myOmyq4k0mCo",
+                  "value": "{{token}}",
                   "type": "string"
                 }
               ]
@@ -641,7 +641,7 @@
                 },
                 {
                   "key": "email",
-                  "value": "admin@restaurante.com",
+                  "value": "bpineda-2024427@kinal.edu.gt",
                   "type": "text"
                 },
                 {
@@ -667,7 +667,7 @@
                 {
                   "key": "fotos",
                   "type": "file",
-                  "src": "/C:/Users/PC/Downloads/Kurumi.jpg"
+                  "src": "/C:/Users/PC/Downloads/WA_00138-scaled.jpg"
                 },
                 {
                   "key": "category",
@@ -761,7 +761,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNGE2NGZiMDgtOTcwNS00MTg1LTllZjctOTMxNzFlZWY1ZGJlIiwiaWF0IjoxNzcyMDM1NTc2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzczNzYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.XtUjx1m3fmMfgXAmCE9hqg2Qbz8dOu0myOmyq4k0mCo",
+                  "value": "{{token}}",
                   "type": "string"
                 }
               ]
@@ -777,10 +777,21 @@
                   "type": "text"
                 },
                 {
-                  "key": "",
+                  "key": "category",
                   "type": "text",
-                  "value": "",
-                  "disabled": true
+                  "value": "Chilero"
+                },
+                {
+                  "key": "description",
+                  "value": "Piolin",
+                  "type": "text",
+                  "uuid": "d3ca6631-5410-4fe0-92db-b7eb8cfaf7a4"
+                },
+                {
+                  "key": "averagePrice",
+                  "value": "1000000",
+                  "type": "text",
+                  "uuid": "2b9fb63d-c251-4c63-8cbf-8b67ffc2a923"
                 }
               ]
             },
@@ -914,7 +925,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"numero\": 1,\n  \"capacidad\": 4,\n  \"ubicacion\": \"Terraza\",\n  \"restaurantID\": \"699f20a033c9218da676079c\",\n  \"isActive\": true\n}",
+              "raw": "{\n    \"numero\": 3,\n    \"capacidad\": 4,\n    \"ubicacion\": \"Terraza\",\n    \"restaurantID\": \"69a4cede3866c97c86805c81\",\n    \"isActive\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -987,7 +998,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNGE2NGZiMDgtOTcwNS00MTg1LTllZjctOTMxNzFlZWY1ZGJlIiwiaWF0IjoxNzcyMDM1NTc2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzczNzYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.XtUjx1m3fmMfgXAmCE9hqg2Qbz8dOu0myOmyq4k0mCo",
+                  "value": "{{token}}",
                   "type": "string"
                 }
               ]
@@ -1054,7 +1065,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNDExYWU1ZmUtYWQ3OC00ZTlkLWJhMDktYmJhNDcyZjY4YTg1IiwiaWF0IjoxNzcyMzEwNzIyLCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIzMTI1MjIsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.rX4A6PlMOAI4CY1PcaRJBnpc70jgmkNsmjJi5EuQmp0",
+                  "value": "{{token}}",
                   "type": "string"
                 }
               ]
@@ -1077,7 +1088,7 @@
                 {
                   "key": "foto",
                   "type": "file",
-                  "src": "/C:/Users/PC/Downloads/Endministrator-operator-arknight-enfield-1024x576.jpg"
+                  "src": "/C:/Users/PC/Downloads/WA_00138-scaled.jpg"
                 },
                 {
                   "key": "descripcion",
@@ -1099,7 +1110,7 @@
                 },
                 {
                   "key": "ingredientes",
-                  "value": "69a34ef473fe5c375e7227a5",
+                  "value": "69a4d40b08f0c9812574202d",
                   "type": "text",
                   "uuid": "b73dc3f6-1ce0-4565-8be4-b3966f697cfe"
                 },
@@ -1107,7 +1118,8 @@
                   "key": "disponible",
                   "value": "true",
                   "type": "text",
-                  "uuid": "d762ad1b-28f5-495a-a1b9-19dbfbfb3607"
+                  "uuid": "d762ad1b-28f5-495a-a1b9-19dbfbfb3607",
+                  "disabled": true
                 },
                 {
                   "key": "",
@@ -1286,7 +1298,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYk53NlZNUENRWEJSIiwianRpIjoiNTcwMTdkNGUtMjVjNS00M2Y0LWI1ZjctZGM5ZWMyY2ZhZTBkIiwiaWF0IjoxNzcyMDM3OTQ2LCJyb2xlIjoiUExBVEZPUk1fQURNSU4iLCJleHAiOjE3NzIwMzk3NDYsImF1ZCI6IkF1dGhTZXJ2aWNlIiwiaXNzIjoiQXV0aFNlcnZpY2UifQ.8N4O_BpWyZIUHVWT6w8POoPXaDxkHkor8p9sGNct5XI",
+                  "value": "{{token}}",
                   "type": "string"
                 }
               ]
@@ -1309,13 +1321,14 @@
                 {
                   "key": "platos",
                   "type": "text",
-                  "value": "699f232333c9218da67607a7"
+                  "value": "69a4d82d1fd621e03085455c"
                 },
                 {
                   "key": "platos",
-                  "value": "699f220533c9218da67607a5",
+                  "value": "69a39fff512202c9c3022a14",
                   "type": "text",
-                  "uuid": "2ea9fdef-f3a7-4238-845b-64df043664d2"
+                  "uuid": "2ea9fdef-f3a7-4238-845b-64df043664d2",
+                  "disabled": true
                 },
                 {
                   "key": "isActive",
@@ -1354,13 +1367,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/menus/get",
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/get",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "menus",
+                "menu",
                 "get"
               ]
             }
@@ -1399,13 +1412,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/menus/{{menuId}}",
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/{{menuId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "menus",
+                "menu",
                 "{{menuId}}"
               ]
             }
@@ -1734,7 +1747,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Tomate\",\n  \"stock\": 100,\n  \"unidadMedida\": \"kg\",\n  \"restaurantID\": \"{{restaurantId}}\"\n}",
+              "raw": "{\n  \"nombre\": \"Sañ\",\n  \"stock\": 100,\n  \"unidadMedida\": \"kg\",\n  \"restaurantID\": \"{{restaurantId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1862,7 +1875,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipoPedido\": \"EN_MESA\",\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"mesaID\": \"699f211533c9218da676079e\",        \n  \"clienteNombre\": \"Juan\",\n  \"items\": [\n    {\n    \"tipo\": \"MENU\",\n    \"menu\": \"69a35a8afacd0e78feedb149\",     // ID del plato (obligatorio)\n    \"cantidad\": 2,               // Cantidad (obligatorio, mín 1)\n    \"notas\": \"Sin cebolla\"      // Notas especiales (opcional, máx 200 caracteres)\n    }\n],\n\n  \"couponCode\": \"PROMO-15\",\n  \"impuesto\": 10\n}\n",
+              "raw": "{\n  \"tipoPedido\": \"EN_MESA\",\n  \"restaurantID\": \"69a4cede3866c97c86805c81\",\n  \"mesaID\": \"699f211533c9218da676079e\",        \n  \"clienteNombre\": \"Juan\", \n  \"items\": [\n    {\n    \"tipo\": \"MENU\",\n    \"menu\": \"69a4d8661fd621e030854577\",    \n    \"cantidad\": 2,            \n    \"notas\": \"Sin cebolla\"   \n    }\n],\n\n  //\"couponCode\": \"\",\n  \"impuesto\": 10\n}\n",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2088,7 +2101,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"tipoPedido\": \"EN_MESA\",\r\n  \"restaurantID\": \"699f20a033c9218da676079c\",\r\n  \"mesaID\": \"699f211533c9218da676079e\",\r\n  \"clienteNombre\": \"Juan Pérez\",\r\n  \"clienteTelefono\": \"50212345678\",\r\n  \"items\": [\r\n    {\r\n      \"tipo\": \"PLATO\",\r\n      \"plato\": \"69a352df9fc7e93c0d1e45bf\",\r\n      \"cantidad\": 2,\r\n      \"notas\": \"Sin cebolla\"\r\n    }\r\n  ],\r\n  \"impuesto\": 0,\r\n  \"descuento\": 0,\r\n  \"notas\": \"Cliente VIP\"\r\n}",
+              "raw": "{\r\n  \"tipoPedido\": \"EN_MESA\",\r\n  \"restaurantID\": \"{{restaurantId}}\",\r\n  \"mesaID\": \"{{mesaId}}\",\r\n  \"clienteNombre\": \"Juan Pérez\",\r\n  \"clienteTelefono\": \"50212345678\",\r\n  \"items\": [\r\n    {\r\n      \"tipo\": \"PLATO\",\r\n      \"plato\": \"69a4d82d1fd621e03085455c\",\r\n      \"cantidad\": 2,\r\n      \"notas\": \"Sin cebolla\"\r\n    }\r\n  ],\r\n  \"impuesto\": 0,\r\n  \"descuento\": 0,\r\n  \"notas\": \"Cliente VIP\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2136,7 +2149,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n\"nombre\": \"Noche de Sushi\",\n\"descripcion\": \"15% en menús seleccionados\",\n\"tipo\": \"DESCUENTO\",\n\"restaurantID\": \"{{restaurantId}}\",\n\"descuentoTipo\": \"PORCENTAJE\",\n\"descuentoValor\": 15,\n\"fechaInicio\": \"2026-01-01\",\n\"fechaFin\": \"2027-03-10\",\n\"menusAplicables\": [\"69a35a8afacd0e78feedb149\"],\n\"condiciones\": \"No acumulable con otros descuentos\"\n}",
+              "raw": "{\n\"nombre\": \"Noche de Sushi\",\n\"descripcion\": \"15% en menús seleccionados\",\n\"tipo\": \"DESCUENTO\",\n\"restaurantID\": \"{{restaurantId}}\",\n\"descuentoTipo\": \"PORCENTAJE\",\n\"descuentoValor\": 15,\n\"fechaInicio\": \"2026-01-01\",\n\"fechaFin\": \"2027-03-10\",\n\"menusAplicables\": [\"69a4d8661fd621e030854577\"],\n\"condiciones\": \"No acumulable con otros descuentos\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2348,7 +2361,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n\"codigo\": \"PROMO-15\",\n\"tipo\": \"PORCENTAJE\",\n\"porcentajeDescuento\": 15,\n\"fechaExpiracion\": \"2026-12-31T23:59:59.000Z\",\n\"descripcion\": \"15% en pedidos\",\n\"montoMinimo\": 50\n}",
+              "raw": "{\n\"codigo\": \"PROMO-15\",\n\"tipo\": \"PORCENTAJE\",\n\"porcentajeDescuento\": 15,\n\"fechaExpiracion\": \"2026-12-31\",\n\"descripcion\": \"15% en pedidos\",\n\"montoMinimo\": 50\n}",
               "options": {
                 "raw": {
                   "language": "json"
