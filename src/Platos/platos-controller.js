@@ -113,22 +113,22 @@ export const createPlato = async (req, res) => {
             platoData.foto = req.file.path;
         }
 
-        // Verificar disponibilidad inicial basada en ingredientes
-        if (platoData.ingredientes && platoData.ingredientes.length > 0) {
-            const tieneStock = await verificarStockIngredientes(platoData.ingredientes);
-            platoData.disponible = tieneStock;
-        }
-
         // Crea una nueva instancia del modelo Plato con los datos
         const plato = new Plato(platoData);
         // Guarda el documento en la base de datos (MongoDB)
         await plato.save();
 
+        // Actualizar disponibilidad después de crear el plato
+        await actualizarDisponibilidadPlatos(platoData.restaurantID);
+
+        // Obtener el plato actualizado con la disponibilidad correcta
+        const platoActualizado = await Plato.findById(plato._id).populate('ingredientes');
+
         // Responde con el plato creado y su ID generado automáticamente
         res.status(201).json({
             success: true,
             message: 'Plato creado exitosamente',
-            data: plato
+            data: platoActualizado
         })
 
     } catch (error) {

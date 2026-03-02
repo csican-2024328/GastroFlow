@@ -47,15 +47,13 @@ export const createMenu = async (req, res) => {
 		const menu = new Menu(menuData);
 		await menu.save();
 
-		// Verificar disponibilidad inicial del menú
-		const menuPopulado = await Menu.findById(menu._id).populate('platos');
-		const tieneStock = await verificarStockMenu(menuPopulado);
-		if (menu.disponible !== tieneStock) {
-			menu.disponible = tieneStock;
-			await menu.save();
-		}
+		// Actualizar disponibilidad después de crear el menú
+		await actualizarDisponibilidadMenus(menuData.restaurantID);
 
-		return res.status(201).json({ success: true, message: 'Menú creado exitosamente', data: menu });
+		// Obtener el menú actualizado con la disponibilidad correcta
+		const menuActualizado = await Menu.findById(menu._id).populate('platos').populate('ingredientes');
+
+		return res.status(201).json({ success: true, message: 'Menú creado exitosamente', data: menuActualizado });
 	} catch (error) {
 		return res.status(400).json({ success: false, message: 'Error al crear menú', error: error.message });
 	}
