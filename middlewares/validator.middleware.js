@@ -204,3 +204,32 @@ export const validateResetPassword = [
             return true;
         }),
 ];
+
+/**
+ * Validador para ASIGNAR ROLES a un usuario
+ * Solo PLATFORM_ADMIN y RESTAURANT_ADMIN pueden asignar roles
+ */
+export const validateAssignRole = [
+    body('targetUserId')
+        .trim()
+        .notEmpty()
+        .withMessage('El ID del usuario destino es obligatorio.')
+        .isString()
+        .withMessage('El ID del usuario destino debe ser un string válido.'),
+
+    body('roleName')
+        .trim()
+        .notEmpty()
+        .withMessage('El nombre del rol es obligatorio.')
+        .isString()
+        .withMessage('El nombre del rol debe ser texto.')
+        .custom((value) => {
+            const validRoles = ['PLATFORM_ADMIN', 'RESTAURANT_ADMIN', 'CLIENT'];
+            if (!validRoles.includes(value)) {
+                throw new Error(
+                    `El rol '${value}' no es válido. Roles permitidos: ${validRoles.join(', ')}`
+                );
+            }
+            return true;
+        }),
+];

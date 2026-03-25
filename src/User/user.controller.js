@@ -1,7 +1,7 @@
-import { asyncHandler } from '../../middlewares/validate-JWT.js';
+import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
 import { validateJWT } from '../../middlewares/validate-JWT.js';
 import { findUserById, updateUserProfile } from '../../helper/user-db.js';
-import { buildUserResponse } from '../../helper/user-helpers.js';
+import { buildUserResponse } from '../../utils/user-helpers.js';
 
 // Controlador para obtener el perfil del usuario actual autenticado
 export const getProfile = [

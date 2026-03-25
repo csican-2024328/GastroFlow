@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import * as authController from './auth.controller.js';
 import { validateJWT } from '../../middlewares/validate-JWT.js';
+import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 import {
   authRateLimit,
   requestLimit,
@@ -13,8 +14,10 @@ import {
   validateResendVerification,
   validateForgotPassword,
   validateResetPassword,
+  validateAssignRole,
   validarCampos,
 } from '../../middlewares/validator.middleware.js';
+import { updateProfile } from '../User/user.controller.js';
 
 const router = Router();
 
@@ -68,8 +71,19 @@ router.post(
 
 router.get('/profile', validateJWT, authController.getProfile);
 
+router.put('/profile', updateProfile);
+
 router.delete('/profile', validateJWT, authController.deleteProfile);
 
 router.post('/profile/by-id', requestLimit, authController.getProfileById);
+
+router.put(
+  '/assign-role',
+  autenticar,
+  autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+  validateAssignRole,
+  validarCampos,
+  authController.assignRole
+);
 
 export default router;

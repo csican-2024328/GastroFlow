@@ -1,4 +1,36 @@
-import { check, param } from 'express-validator';
+import { check, param, body } from 'express-validator';
+import Event from '../src/Event/event.model.js';
+
+/**
+ * Validar que no existan eventos solapados para el mismo restaurante
+ * @param {string} restaurantID - ID del restaurante
+ * @param {Date} fechaInicio - Fecha de inicio del evento
+ * @param {Date} fechaFin - Fecha de fin del evento
+ * @param {string} [excludeEventId] - ID del evento a excluir (para updates)
+ * @returns {Promise<boolean>}
+ */
+const validarNoHayEventosSolapados = async (restaurantID, fechaInicio, fechaFin, excludeEventId = null) => {
+    try {
+        const filtro = {
+            restaurantID,
+            isActive: true,
+            estado: { $in: ['ACTIVA', 'INACTIVA'] }, // Excluir FINALIZADA
+            $or: [
+                { fechaInicio: { $lt: new Date(fechaFin) }, fechaFin: { $gt: new Date(fechaInicio) } }
+            ]
+        };
+
+        if (excludeEventId) {
+            filtro._id = { $ne: excludeEventId };
+        }
+
+        const eventosConflicto = await Event.findOne(filtro);
+        return !eventosConflicto;
+    } catch (error) {
+        console.error('Error validando eventos solapados:', error);
+        return false;
+    }
+};
 
 /**
  * Validaciones para crear un nuevo evento
@@ -81,10 +113,36 @@ export const validateCreateEvent = [
         .isLength({ max: 100 })
         .withMessage('La temática no puede exceder 100 caracteres'),
 
+    check('staffAsignados')
+        .isArray({ min: 1 })
+        .withMessage('Debe asignar al menos un miembro del staff'),
+
+    check('staffAsignados.*')
+        .isString()
+        .withMessage('Cada ID de staff debe ser texto válido')
+        .notEmpty()
+        .withMessage('Cada ID de staff es obligatorio'),
+
     check('cantidadMaximaUsos')
         .optional()
         .isInt({ min: 1 })
-        .withMessage('La cantidad de usos debe ser un número entero positivo')
+        .withMessage('La cantidad de usos debe ser un número entero positivo'),
+
+    body().custom(async (value, { req }) => {
+        const { restaurantID, fechaInicio, fechaFin } = req.body;
+        
+        if (restaurantID && fechaInicio && fechaFin) {
+            const noHaySolapamiento = await validarNoHayEventosSolapados(
+                restaurantID,
+                fechaInicio,
+                fechaFin
+            );
+            
+            if (!noHaySolapamiento) {
+                throw new Error('Ya existe un evento activo en este restaurante con fechas que se superponen');
+            }
+        }
+    })
 ];
 
 /**
@@ -155,10 +213,40 @@ export const validateUpdateEvent = [
         .isLength({ max: 100 })
         .withMessage('La temática no puede exceder 100 caracteres'),
 
+    check('staffAsignados')
+        .optional()
+        .isArray({ min: 1 })
+        .withMessage('Debe asignar al menos un miembro del staff'),
+
+    check('staffAsignados.*')
+        .optional()
+        .isString()
+        .withMessage('Cada ID de staff debe ser texto válido')
+        .notEmpty()
+        .withMessage('Cada ID de staff es obligatorio'),
+
     check('cantidadMaximaUsos')
         .optional()
         .isInt({ min: 1 })
-        .withMessage('La cantidad de usos debe ser un número entero positivo')
+        .withMessage('La cantidad de usos debe ser un número entero positivo'),
+
+    body().custom(async (value, { req }) => {
+        const { id } = req.params;
+        const { restaurantID, fechaInicio, fechaFin } = req.body;
+        
+        if (restaurantID && fechaInicio && fechaFin) {
+            const noHaySolapamiento = await validarNoHayEventosSolapados(
+                restaurantID,
+                fechaInicio,
+                fechaFin,
+                id
+            );
+            
+            if (!noHaySolapamiento) {
+                throw new Error('Ya existe un evento activo en este restaurante con fechas que se superponen');
+            }
+        }
+    })
 ];
 
 /**

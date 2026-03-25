@@ -4,6 +4,13 @@ import { check, param, body } from 'express-validator';
  * Validaciones para crear un nuevo pedido
  */
 export const validateCreateOrder = [
+    check('tipoPedido')
+        .not()
+        .isEmpty()
+        .withMessage('El tipo de pedido es obligatorio')
+        .isIn(['EN_MESA', 'A_DOMICILIO', 'PARA_LLEVAR'])
+        .withMessage('Tipo de pedido no válido. Debe ser: EN_MESA, A_DOMICILIO o PARA_LLEVAR'),
+
     check('restaurantID')
         .not()
         .isEmpty()
@@ -12,11 +19,38 @@ export const validateCreateOrder = [
         .withMessage('ID de restaurante inválido'),
 
     check('mesaID')
-        .not()
-        .isEmpty()
-        .withMessage('El ID de la mesa es obligatorio')
-        .isMongoId()
-        .withMessage('ID de mesa inválido'),
+        .custom((value, { req }) => {
+            if (req.body.tipoPedido === 'EN_MESA') {
+                if (!value) {
+                    throw new Error('El ID de la mesa es obligatorio para pedidos EN_MESA');
+                }
+                const mongoIdRegex = /^[0-9a-fA-F]{24}$/;
+                if (!mongoIdRegex.test(value)) {
+                    throw new Error('ID de mesa inválido');
+                }
+            }
+            return true;
+        }),
+
+    check('clienteDireccion')
+        .custom((value, { req }) => {
+            if (req.body.tipoPedido === 'A_DOMICILIO') {
+                if (!value) {
+                    throw new Error('La dirección del cliente es obligatoria para pedidos A_DOMICILIO');
+                }
+            }
+            return true;
+        }),
+
+    check('horaProgramada')
+        .custom((value, { req }) => {
+            if (req.body.tipoPedido === 'PARA_LLEVAR') {
+                if (!value) {
+                    throw new Error('La hora programada es obligatoria para pedidos PARA_LLEVAR');
+                }
+            }
+            return true;
+        }),
 
     check('clienteNombre')
         .not()
@@ -98,6 +132,13 @@ export const validateCreateOrder = [
         .optional()
         .isFloat({ min: 0 })
         .withMessage('El descuento debe ser mayor o igual a 0'),
+
+    check('couponCode')
+        .optional()
+        .isLength({ min: 1, max: 50 })
+        .withMessage('El código del cupón debe tener entre 1 y 50 caracteres')
+        .trim()
+        .toUpperCase(),
 
     check('notas')
         .optional()

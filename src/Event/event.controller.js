@@ -4,9 +4,42 @@
  * Incluye validaciones, manejo de errores y respuestas HTTP estandarizadas
  */
 
+import { Op } from 'sequelize';
 import Event from './event.model.js';
 import Restaurant from '../Restaurant/Restaurant.model.js';
 import Menu from '../Menu/menu.model.js';
+import { Staff } from '../Staff/staff.model.js';
+
+const validarStaffAsignado = async (staffAsignados, restaurantID) => {
+    if (!Array.isArray(staffAsignados) || staffAsignados.length === 0) {
+        return {
+            valido: false,
+            message: 'Debe asignar al menos un miembro del staff'
+        };
+    }
+
+    const idsUnicos = [...new Set(staffAsignados.map((id) => String(id).trim()).filter(Boolean))];
+
+    const staffEncontrado = await Staff.findAll({
+        where: {
+            Id: { [Op.in]: idsUnicos },
+            RestaurantId: String(restaurantID),
+            Status: true
+        }
+    });
+
+    if (staffEncontrado.length !== idsUnicos.length) {
+        return {
+            valido: false,
+            message: 'Uno o más IDs de staff no existen, están inactivos o no pertenecen al restaurante'
+        };
+    }
+
+    return {
+        valido: true,
+        idsValidados: idsUnicos
+    };
+};
 
 /**
  * Crear un nuevo evento o promoción
@@ -27,6 +60,7 @@ import Menu from '../Menu/menu.model.js';
  * @param {string} [req.body.condiciones] - Condiciones del evento
  * @param {string} [req.body.musica] - Tipo de música
  * @param {string} [req.body.tematica] - Temática o decoración
+ * @param {Array<string>} req.body.staffAsignados - IDs del staff asignado al evento
  * @param {number} [req.body.cantidadMaximaUsos] - Máximos usos de la promoción
  * @param {Object} res - Objeto de respuesta Express
  * 
@@ -46,7 +80,8 @@ import Menu from '../Menu/menu.model.js';
  *   "menusAplicables": ["507f1f77bcf86cd799439013"],
  *   "condiciones": "solo viernes y sábado",
  *   "musica": "Jazz en vivo",
- *   "tematica": "Años 80"
+ *   "tematica": "Años 80",
+ *   "staffAsignados": ["STF000000000001", "STF000000000002"]
  * }
  */
 export const createEvent = async (req, res) => {
@@ -64,6 +99,7 @@ export const createEvent = async (req, res) => {
             condiciones,
             musica,
             tematica,
+            staffAsignados,
             cantidadMaximaUsos
         } = req.body;
 
@@ -87,6 +123,14 @@ export const createEvent = async (req, res) => {
             }
         }
 
+        const validacionStaff = await validarStaffAsignado(staffAsignados, restaurantID);
+        if (!validacionStaff.valido) {
+            return res.status(400).json({
+                success: false,
+                message: validacionStaff.message
+            });
+        }
+
         const nuevoEvento = new Event({
             nombre,
             descripcion,
@@ -100,6 +144,7 @@ export const createEvent = async (req, res) => {
             condiciones,
             musica,
             tematica,
+            staffAsignados: validacionStaff.idsValidados,
             cantidadMaximaUsos,
             creadoPor: req.usuario.sub
         });
@@ -258,9 +303,33 @@ export const updateEvent = async (req, res) => {
         const { id } = req.params;
         const actualizaciones = req.body;
 
+        const eventoExistente = await Event.findById(id);
+        if (!eventoExistente) {
+            return res.status(404).json({
+                success: false,
+                message: 'Evento no encontrado'
+            });
+        }
+
         // No permitir cambiar restaurante o creador
         delete actualizaciones.restaurantID;
         delete actualizaciones.creadoPor;
+
+        if (actualizaciones.staffAsignados !== undefined) {
+            const validacionStaff = await validarStaffAsignado(
+                actualizaciones.staffAsignados,
+                eventoExistente.restaurantID
+            );
+
+            if (!validacionStaff.valido) {
+                return res.status(400).json({
+                    success: false,
+                    message: validacionStaff.message
+                });
+            }
+
+            actualizaciones.staffAsignados = validacionStaff.idsValidados;
+        }
 
         const evento = await Event.findByIdAndUpdate(
             id,
@@ -269,13 +338,6 @@ export const updateEvent = async (req, res) => {
         )
             .populate('restaurantID', 'nombre')
             .populate('menusAplicables', 'nombre precio');
-
-        if (!evento) {
-            return res.status(404).json({
-                success: false,
-                message: 'Evento no encontrado'
-            });
-        }
 
         res.status(200).json({
             success: true,

@@ -10,5 +10,5 @@ export const authRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 5,
   message: 'Demasiados intentos de autenticación, intenta más tarde.',
-  skipSuccessfulRequests: true,
+  skip: (req, res) => res.statusCode !== 400, // Solo limita si el error es 400
 });

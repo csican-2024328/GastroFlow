@@ -336,3 +336,137 @@ export const updateUserPassword = async (userId, hashedPassword) => {
     throw new Error('Error al actualizar contraseña');
   }
 };
+
+/**
+ * Asigna un rol a un usuario (reemplaza el rol anterior)
+ * El usuario solo puede tener UN rol a la vez
+ * Validaciones:
+ * - El usuario debe existir
+ * - El rol debe existir
+ * - Elimina el rol anterior y asigna el nuevo
+ */
+export const assignRoleToUser = async (userId, newRoleName) => {
+  const transaction = await User.sequelize.transaction();
+
+  try {
+    // Validar que el usuario existe
+    const user = await User.findByPk(userId, {
+      include: [
+        {
+          model: UserRole,
+          as: 'UserRoles',
+          include: [{ model: Role, as: 'Role' }],
+        },
+      ],
+    });
+
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    // Validar que el rol existe
+    const newRole = await Role.findOne({
+      where: { Name: newRoleName },
+      transaction,
+    });
+
+    if (!newRole) {
+      throw new Error(`Rol '${newRoleName}' no existe`);
+    }
+
+    // Eliminar todos los roles anteriores
+    await UserRole.destroy(
+      {
+        where: { UserId: userId },
+        transaction,
+      }
+    );
+
+    // Crear la nueva relación de rol
+    await UserRole.create(
+      {
+        UserId: userId,
+        RoleId: newRole.Id,
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
+
+    // Retornar el usuario actualizado
+    const updatedUser = await findUserById(userId);
+    return updatedUser;
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error asignando rol al usuario:', error);
+    throw error;
+  }
+};
+
+/**
+ * Actualiza el perfil del usuario (nombre, apellido, teléfono, etc.)
+ * NO permite cambiar email ni username en este endpoint
+ */
+export const updateUserProfile = async (userId, updateData) => {
+  const transaction = await User.sequelize.transaction();
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    // Campos permitidos para actualizar
+    const allowedFields = ['Name', 'Surname', 'Phone'];
+    const updateFields = {};
+
+    // Filtrar solo campos permitidos
+    allowedFields.forEach(field => {
+      const dataKey = field.charAt(0).toLowerCase() + field.slice(1);
+      if (updateData[dataKey] !== undefined) {
+        updateFields[field] = updateData[dataKey];
+      }
+    });
+
+    // Actualizar campos en User
+    if (Object.keys(updateFields).length > 0) {
+      await User.update(updateFields, {
+        where: { Id: userId },
+        transaction,
+      });
+    }
+
+    // Actualizar perfiles extendidos si existen
+    const userProfile = await UserProfile.findOne({
+      where: { UserId: userId },
+      transaction,
+    });
+
+    if (userProfile) {
+      const profileUpdates = {};
+      if (updateData.phone !== undefined) {
+        profileUpdates.Phone = updateData.phone;
+      }
+      if (updateData.profilePicture !== undefined) {
+        profileUpdates.ProfilePicture = updateData.profilePicture;
+      }
+
+      if (Object.keys(profileUpdates).length > 0) {
+        await UserProfile.update(profileUpdates, {
+          where: { UserId: userId },
+          transaction,
+        });
+      }
+    }
+
+    await transaction.commit();
+
+    // Retornar usuario actualizado
+    const updatedUser = await findUserById(userId);
+    return updatedUser;
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error actualizando perfil del usuario:', error);
+    throw error;
+  }
+};

@@ -98,6 +98,16 @@ const eventSchema = mongoose.Schema(
             maxLength: [100, 'La temática o decoración no puede exceder 100 caracteres'],
             default: null
         },
+        staffAsignados: {
+            type: [String],
+            default: [],
+            validate: {
+                validator: function(v) {
+                    return Array.isArray(v);
+                },
+                message: 'staffAsignados debe ser un array'
+            }
+        },
         //maximos
         cantidadMaximaUsos: {
             type: Number,

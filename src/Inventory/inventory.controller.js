@@ -1,9 +1,16 @@
 import Inventory from './inventory.model.js';
 import { actualizarPlatosPorIngrediente } from '../../helper/inventory-helpers.js';
 
+// Función auxiliar para excluir restaurantId de la respuesta
+const excluirRestaurantId = (doc) => {
+    const objeto = doc.toObject();
+    delete objeto.restaurantId;
+    return objeto;
+};
+
 export const crearInsumo = async (req, res, next) => {
     try {
-        const { nombre, stock, unidadMedida } = req.body;
+        const { nombre, stock, unidadMedida, restaurantId } = req.body;
 
         if (!nombre || stock === undefined || !unidadMedida) {
             return res.status(400).json({
@@ -12,7 +19,10 @@ export const crearInsumo = async (req, res, next) => {
             });
         }
 
-        const existe = await Inventory.findOne({ nombre: nombre.toLowerCase() });
+        const existe = await Inventory.findOne({ 
+            nombre: nombre.toLowerCase(),
+            restaurantId: restaurantId || null
+        });
 
         if (existe) {
             return res.status(409).json({
@@ -24,7 +34,8 @@ export const crearInsumo = async (req, res, next) => {
         const nuevoInsumo = await Inventory.create({
             nombre: nombre.toLowerCase(),
             stock,
-            unidadMedida
+            unidadMedida,
+            restaurantId: restaurantId || null
         });
 
         // Actualizar disponibilidad de platos que usen este ingrediente
@@ -33,7 +44,7 @@ export const crearInsumo = async (req, res, next) => {
         res.status(201).json({
             success: true,
             message: 'Insumo creado correctamente',
-            data: nuevoInsumo
+            data: excluirRestaurantId(nuevoInsumo)
         });
 
     } catch (error) {
@@ -43,11 +54,21 @@ export const crearInsumo = async (req, res, next) => {
 
 export const obtenerInsumos = async (req, res, next) => {
     try {
-        const insumos = await Inventory.find({ activo: true });
+        const { restaurantId } = req.query;
+
+        // Filtro base
+        const filtro = { activo: true };
+        
+        // Si se proporciona restaurantId, filtrar por restaurante
+        if (restaurantId) {
+            filtro.restaurantId = restaurantId;
+        }
+
+        const insumos = await Inventory.find(filtro);
 
         res.status(200).json({
             success: true,
-            data: insumos
+            data: insumos.map(excluirRestaurantId)
         });
 
     } catch (error) {
@@ -68,7 +89,7 @@ export const obtenerInsumoPorId = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            data: insumo
+            data: excluirRestaurantId(insumo)
         });
 
     } catch (error) {
@@ -105,7 +126,7 @@ export const actualizarInsumo = async (req, res, next) => {
         res.status(200).json({
             success: true,
             message: 'Insumo actualizado correctamente',
-            data: insumo
+            data: excluirRestaurantId(insumo)
         });
 
     } catch (error) {

@@ -17,6 +17,11 @@ const inventorySchema = new mongoose.Schema(
             required: true,
             enum: ['kg', 'g', 'l', 'ml', 'unidad', 'paquete']
         },
+        restaurantId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Restaurant',
+            default: null
+        },
         activo: {
             type: Boolean,
             default: true

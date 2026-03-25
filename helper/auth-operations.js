@@ -334,3 +334,89 @@ export const getUserProfileHelper = async (userId) => {
   }
   return buildUserResponse(user);
 };
+
+/**
+ * Helper para asignar roles a un usuario con validaciones de seguridad
+ * Restricciones:
+ * - Solo se puede AGREGAR roles, nunca QUITAR
+ * - PLATFORM_ADMIN puede asignar cualquier rol
+ * - RESTAURANT_ADMIN puede asignar RESTAURANT_ADMIN y CLIENT, pero no PLATFORM_ADMIN
+ * - CLIENT no puede asignar roles
+ */
+export const assignRoleHelper = async (
+  requestingUserId,
+  targetUserId,
+  newRoleName
+) => {
+  try {
+    // Importar aquí para evitar circular dependencies
+    const { assignRoleToUser } = await import('./user-db.js');
+
+    // Validar que el usuario destino existe
+    const targetUser = await findUserById(targetUserId);
+    if (!targetUser) {
+      const err = new Error('Usuario destino no encontrado');
+      err.status = 404;
+      throw err;
+    }
+
+    // Validar que el usuario que solicita existe y obtener su rol
+    const requestingUser = await findUserById(requestingUserId);
+    if (!requestingUser) {
+      const err = new Error('Usuario autenticado no encontrado');
+      err.status = 401;
+      throw err;
+    }
+
+    const requesterRole = requestingUser.UserRoles?.[0]?.Role?.Name || 'CLIENT';
+
+    // Validaciones de permisos
+    // Solo PLATFORM_ADMIN puede asignar PLATFORM_ADMIN
+    if (newRoleName === 'PLATFORM_ADMIN' && requesterRole !== 'PLATFORM_ADMIN') {
+      const err = new Error(
+        'Solo PLATFORM_ADMIN puede asignar el rol PLATFORM_ADMIN'
+      );
+      err.status = 403;
+      throw err;
+    }
+
+    // RESTAURANT_ADMIN no puede asignar PLATFORM_ADMIN
+    if (
+      newRoleName === 'PLATFORM_ADMIN' &&
+      requesterRole === 'RESTAURANT_ADMIN'
+    ) {
+      const err = new Error(
+        'RESTAURANT_ADMIN no puede asignar PLATFORM_ADMIN'
+      );
+      err.status = 403;
+      throw err;
+    }
+
+    // CLIENT no puede asignar roles
+    if (requesterRole === 'CLIENT') {
+      const err = new Error('CLIENT no tiene permisos para asignar roles');
+      err.status = 403;
+      throw err;
+    }
+
+    // Validar que el rol que se intenta asignar existe en ALLOWED_ROLES
+    const { ALLOWED_ROLES } = await import('./role-constants.js');
+    if (!ALLOWED_ROLES.includes(newRoleName)) {
+      const err = new Error(`Rol '${newRoleName}' no está permitido`);
+      err.status = 400;
+      throw err;
+    }
+
+    // Asignar el rol mediante user-db
+    const updatedUser = await assignRoleToUser(targetUserId, newRoleName);
+
+    return {
+      success: true,
+      message: `Rol '${newRoleName}' asignado exitosamente al usuario (rol anterior eliminado)`,
+      user: buildUserResponse(updatedUser),
+    };
+  } catch (error) {
+    console.error('Error en assignRoleHelper:', error);
+    throw error;
+  }
+};

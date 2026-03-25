@@ -5,6 +5,7 @@ import {
   resendVerificationEmailHelper,
   forgotPasswordHelper,
   resetPasswordHelper,
+  assignRoleHelper,
 } from '../../helper/auth-operations.js';
 import { getUserProfileHelper } from '../../helper/profile-operations.js';
 import { findUserById, softDeleteUser } from '../../helper/user-db.js';
@@ -237,4 +238,52 @@ export const deleteProfile = asyncHandler(async (req, res) => {
     message: 'Usuario eliminado lógicamente',
     motivo: motivo || null,
   });
+});
+
+/**
+ * Controlador para asignar roles a un usuario
+ * Solo PLATFORM_ADMIN puede asignar PLATFORM_ADMIN
+ * RESTAURANT_ADMIN puede asignar RESTAURANT_ADMIN y CLIENT
+ * CLIENT no puede asignar roles
+ */
+export const assignRole = asyncHandler(async (req, res) => {
+  try {
+    const { targetUserId, roleName } = req.body;
+    const requestingUserId = req.usuario?.sub || req.usuario?.userId;
+
+    if (!requestingUserId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Usuario no autenticado',
+      });
+    }
+
+    const result = await assignRoleHelper(
+      requestingUserId,
+      targetUserId,
+      roleName
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error en assignRole controller:', error);
+
+    let statusCode = 400;
+    if (error.status) {
+      statusCode = error.status;
+    } else if (error.message.includes('no encontrado')) {
+      statusCode = 404;
+    } else if (
+      error.message.includes('ya posee') ||
+      error.message.includes('no permitido')
+    ) {
+      statusCode = 409; // Conflict
+    }
+
+    res.status(statusCode).json({
+      success: false,
+      message: error.message || 'Error al asignar rol',
+      error: error.message,
+    });
+  }
 });
