@@ -20,7 +20,13 @@ export const validateCreateInventory = [
         .isEmpty()
         .withMessage('La unidad de medida es obligatoria')
         .isLength({ min: 1, max: 20 })
-        .withMessage('La unidad debe tener máximo 20 caracteres')
+        .withMessage('La unidad debe tener máximo 20 caracteres'),
+
+    check('restaurantId')
+        .notEmpty()
+        .withMessage('El restaurantId es obligatorio')
+        .isMongoId()
+        .withMessage('restaurantId debe ser un ID de MongoDB válido')
 ];
 
 export const validateInventoryId = [
@@ -47,5 +53,10 @@ export const validateUpdateInventory = [
     check('unidadMedida')
         .optional()
         .isLength({ min: 1, max: 20 })
-        .withMessage('La unidad debe tener máximo 20 caracteres')
+        .withMessage('La unidad debe tener máximo 20 caracteres'),
+
+    check('restaurantId')
+        .optional()
+        .isMongoId()
+        .withMessage('restaurantId debe ser un ID de MongoDB válido')
 ];

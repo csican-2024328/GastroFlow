@@ -1,17 +1,12 @@
 import Inventory from './inventory.model.js';
 import { actualizarPlatosPorIngrediente } from '../../helper/inventory-helpers.js';
-
-// Función auxiliar para excluir restaurantId de la respuesta
-const excluirRestaurantId = (doc) => {
-    const objeto = doc.toObject();
-    delete objeto.restaurantId;
-    return objeto;
-};
+import mongoose from 'mongoose';
 
 export const crearInsumo = async (req, res, next) => {
     try {
         const { nombre, stock, unidadMedida, restaurantId } = req.body;
 
+        // Validación: nombre, stock, unidad de medida son requeridos
         if (!nombre || stock === undefined || !unidadMedida) {
             return res.status(400).json({
                 success: false,
@@ -19,15 +14,32 @@ export const crearInsumo = async (req, res, next) => {
             });
         }
 
+        // Validación: restaurantId es obligatorio
+        if (!restaurantId) {
+            return res.status(400).json({
+                success: false,
+                message: 'restaurantId es obligatorio'
+            });
+        }
+
+        // Validación: restaurantId debe ser un ObjectId válido
+        if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'restaurantId debe ser un ID válido'
+            });
+        }
+
+        // Validación: nombre e ingrediente debe ser único por restaurante (manejado por índice unique en BD)
         const existe = await Inventory.findOne({ 
             nombre: nombre.toLowerCase(),
-            restaurantId: restaurantId || null
+            restaurantId: restaurantId
         });
 
         if (existe) {
             return res.status(409).json({
                 success: false,
-                message: 'El insumo ya existe'
+                message: 'El insumo con este nombre ya existe en este restaurante'
             });
         }
 
@@ -35,7 +47,7 @@ export const crearInsumo = async (req, res, next) => {
             nombre: nombre.toLowerCase(),
             stock,
             unidadMedida,
-            restaurantId: restaurantId || null
+            restaurantId
         });
 
         // Actualizar disponibilidad de platos que usen este ingrediente
@@ -44,7 +56,7 @@ export const crearInsumo = async (req, res, next) => {
         res.status(201).json({
             success: true,
             message: 'Insumo creado correctamente',
-            data: excluirRestaurantId(nuevoInsumo)
+            data: nuevoInsumo
         });
 
     } catch (error) {
@@ -61,6 +73,12 @@ export const obtenerInsumos = async (req, res, next) => {
         
         // Si se proporciona restaurantId, filtrar por restaurante
         if (restaurantId) {
+            if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'restaurantId debe ser un ID válido'
+                });
+            }
             filtro.restaurantId = restaurantId;
         }
 
@@ -68,7 +86,7 @@ export const obtenerInsumos = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            data: insumos.map(excluirRestaurantId)
+            data: insumos
         });
 
     } catch (error) {
@@ -89,7 +107,7 @@ export const obtenerInsumoPorId = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            data: excluirRestaurantId(insumo)
+            data: insumo
         });
 
     } catch (error) {
@@ -99,26 +117,46 @@ export const obtenerInsumoPorId = async (req, res, next) => {
 
 export const actualizarInsumo = async (req, res, next) => {
     try {
-        const { nombre, stock, unidadMedida } = req.body;
+        const { nombre, stock, unidadMedida, restaurantId } = req.body;
 
-        const insumo = await Inventory.findByIdAndUpdate(
-            req.params.id,
-            {
-                $set: {
-                    nombre: nombre?.toLowerCase(),
-                    stock,
-                    unidadMedida
-                }
-            },
-            { new: true, runValidators: true }
-        );
+        // Obtener el insumo actual
+        const insumoActual = await Inventory.findById(req.params.id);
 
-        if (!insumo) {
+        if (!insumoActual) {
             return res.status(404).json({
                 success: false,
                 message: 'Insumo no encontrado'
             });
         }
+
+        // Protección: NO permitir cambiar o eliminar restaurantId
+        if (restaurantId && restaurantId !== insumoActual.restaurantId.toString()) {
+            return res.status(400).json({
+                success: false,
+                message: 'No se puede cambiar el restaurante de un insumo existente'
+            });
+        }
+
+        // Protección: validar que restaurantId siga siendo válido
+        if (!restaurantId) {
+            return res.status(400).json({
+                success: false,
+                message: 'restaurantId no puede estar vacío'
+            });
+        }
+
+        // Construir objeto de actualización (sin restaurantId)
+        const updateData = {
+            nombre: nombre ? nombre.toLowerCase() : insumoActual.nombre,
+            stock: stock !== undefined ? stock : insumoActual.stock,
+            unidadMedida: unidadMedida || insumoActual.unidadMedida
+        };
+
+        const insumo = await Inventory.findByIdAndUpdate(
+            req.params.id,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
 
         // Actualizar disponibilidad de platos que usen este ingrediente
         await actualizarPlatosPorIngrediente(insumo._id);
@@ -126,7 +164,7 @@ export const actualizarInsumo = async (req, res, next) => {
         res.status(200).json({
             success: true,
             message: 'Insumo actualizado correctamente',
-            data: excluirRestaurantId(insumo)
+            data: insumo
         });
 
     } catch (error) {

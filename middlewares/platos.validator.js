@@ -10,7 +10,29 @@ export const validateCreatePlato = [
 
     check('precio')
         .isFloat({ min: 0.01 })
-        .withMessage('El precio debe ser mayor a 0')
+        .withMessage('El precio debe ser mayor a 0'),
+
+    check('restaurantId')
+        .notEmpty()
+        .withMessage('El restaurantId es obligatorio')
+        .isMongoId()
+        .withMessage('restaurantId debe ser un ID de MongoDB válido'),
+
+    check('ingredientes')
+        .notEmpty()
+        .withMessage('Los ingredientes son obligatorios')
+        .isArray({ min: 1 })
+        .withMessage('Debe haber al menos un ingrediente'),
+
+    check('ingredientes.*')
+        .isMongoId()
+        .withMessage('Cada ingrediente debe ser un ID de MongoDB válido'),
+
+    check('categoria')
+        .notEmpty()
+        .withMessage('La categoría es obligatoria')
+        .isIn(['ENTRADA', 'FUERTE', 'POSTRE', 'BEBIDA'])
+        .withMessage('La categoría debe ser: ENTRADA, FUERTE, POSTRE o BEBIDA')
 ];
 
 export const validatePlatoId = [
@@ -24,6 +46,22 @@ export const validateUpdatePlato = [
         .isMongoId()
         .withMessage('ID de plato inválido'),
 
+    check('restaurantId')
+        .notEmpty()
+        .withMessage('El restaurantId es obligatorio')
+        .isMongoId()
+        .withMessage('restaurantId debe ser un ID de MongoDB válido'),
+
+    check('ingredientes')
+        .notEmpty()
+        .withMessage('Los ingredientes son obligatorios')
+        .isArray({ min: 1 })
+        .withMessage('Debe haber al menos un ingrediente'),
+
+    check('ingredientes.*')
+        .isMongoId()
+        .withMessage('Cada ingrediente debe ser un ID de MongoDB válido'),
+
     check('nombre')
         .optional()
         .isLength({ min: 3, max: 100 })
@@ -32,5 +70,10 @@ export const validateUpdatePlato = [
     check('precio')
         .optional()
         .isFloat({ min: 0.01 })
-        .withMessage('El precio debe ser mayor a 0')
+        .withMessage('El precio debe ser mayor a 0'),
+
+    check('categoria')
+        .optional()
+        .isIn(['ENTRADA', 'FUERTE', 'POSTRE', 'BEBIDA'])
+        .withMessage('La categoría debe ser: ENTRADA, FUERTE, POSTRE o BEBIDA')
 ];

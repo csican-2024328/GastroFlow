@@ -57,7 +57,7 @@ const menuSchema = mongoose.Schema(
 			type: String,
 			default: null,
 		},
-		restaurantID: {
+		restaurantId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Restaurant',
 			required: [true, 'El ID del restaurante es requerido'],
@@ -99,7 +99,7 @@ const menuSchema = mongoose.Schema(
 
 menuSchema.index({ isActive: 1 });
 menuSchema.index({ tipo: 1 });
-menuSchema.index({ restaurantID: 1 });
+menuSchema.index({ restaurantId: 1 });
 menuSchema.index({ isActive: 1, tipo: 1 });
 
 export default mongoose.model('Menu', menuSchema);

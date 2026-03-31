@@ -1081,7 +1081,7 @@
                   "type": "text"
                 },
                 {
-                  "key": "restaurantID",
+                  "key": "restaurantId",
                   "value": "{{restaurantId}}",
                   "type": "text"
                 },
@@ -1113,6 +1113,11 @@
                   "value": "69a4d40b08f0c9812574202d",
                   "type": "text",
                   "uuid": "b73dc3f6-1ce0-4565-8be4-b3966f697cfe"
+                },
+                {
+                  "key": "ingredientes",
+                  "value": "69a4d40b08f0c9812574202d",
+                  "type": "text"
                 },
                 {
                   "key": "disponible",
@@ -1215,21 +1220,20 @@
           "name": "Update Plato",
           "request": {
             "method": "PUT",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "nombre",
-                  "value": "Pizza Margarita XL",
-                  "type": "text"
-                },
-                {
-                  "key": "foto",
-                  "type": "file",
-                  "value": ""
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Pizza Margarita XL\",\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"ingredientes\": [\"69a4d40b08f0c9812574202d\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/{{apiVersion}}/platos/{{platoId}}",
@@ -1314,7 +1318,7 @@
                   "type": "text"
                 },
                 {
-                  "key": "restaurantID",
+                  "key": "restaurantId",
                   "value": "{{restaurantId}}",
                   "type": "text"
                 },
@@ -1337,7 +1341,7 @@
                   "uuid": "76459c0c-5991-4f4d-b1b8-6a8a1506a195"
                 },
                 {
-                  "key": "descripcion ",
+                  "key": "descripcion",
                   "value": "Es un menu muy bueno",
                   "type": "text",
                   "uuid": "e3aa98fd-eade-495a-b1d0-113f2c1962b6"
@@ -1389,13 +1393,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/menus/menu/{{restaurantId}}",
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/menu/{{restaurantId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "menus",
+                "menu",
                 "menu",
                 "{{restaurantId}}"
               ]
@@ -1446,13 +1450,13 @@
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/menus/{{menuId}}",
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/{{menuId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "menus",
+                "menu",
                 "{{menuId}}"
               ]
             }
@@ -1465,13 +1469,13 @@
             "method": "PUT",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/menus/{{menuId}}/activate",
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/{{menuId}}/activate",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "menus",
+                "menu",
                 "{{menuId}}",
                 "activate"
               ]
@@ -1485,13 +1489,13 @@
             "method": "PUT",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/menus/{{menuId}}/deactivate",
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/{{menuId}}/deactivate",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "menus",
+                "menu",
                 "{{menuId}}",
                 "deactivate"
               ]
@@ -1747,7 +1751,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Sañ\",\n  \"stock\": 100,\n  \"unidadMedida\": \"kg\",\n  \"restaurantID\": \"{{restaurantId}}\"\n}",
+              "raw": "{\n  \"nombre\": \"Sal\",\n  \"stock\": 100,\n  \"unidadMedida\": \"kg\",\n  \"restaurantId\": \"{{restaurantId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1818,7 +1822,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cantidad\": 90\n}",
+              "raw": "{\n  \"stock\": 90,\n  \"restaurantId\": \"{{restaurantId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

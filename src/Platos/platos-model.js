@@ -45,7 +45,7 @@ const platosSchema = mongoose.Schema(
             type: String,
             default: null,
         },
-        restaurantID: {
+        restaurantId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Restaurant',
             required: [true, 'El ID del restaurante es requerido']

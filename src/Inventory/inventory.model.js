@@ -20,7 +20,7 @@ const inventorySchema = new mongoose.Schema(
         restaurantId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Restaurant',
-            default: null
+            required: [true, 'El restaurante es requerido']
         },
         activo: {
             type: Boolean,
@@ -31,5 +31,8 @@ const inventorySchema = new mongoose.Schema(
         timestamps: true
     }
 );
+
+// Índice compuesto para evitar ingredientes duplicados por restaurante
+inventorySchema.index({ restaurantId: 1, nombre: 1 }, { unique: true });
 
 export default mongoose.model('Inventory', inventorySchema);

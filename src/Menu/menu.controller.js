@@ -1,5 +1,7 @@
 
 import Menu from './menu.model.js';
+import Plato from '../Platos/platos-model.js';
+import mongoose from 'mongoose';
 import { calcularPrecioYTipoDePlatos } from './menu-helpers.js';
 import { verificarStockMenu, actualizarDisponibilidadMenus } from '../../helper/inventory-helpers.js';
 
@@ -26,10 +28,74 @@ const isWithinSchedule = (menu, date) => {
 	});
 };
 
+// Helper: valida que todos los platos pertenezcan al mismo restaurante
+const validarPlatosPertenecenAlRestaurante = async (platosIds, restaurantId) => {
+	if (!platosIds || !Array.isArray(platosIds) || platosIds.length === 0) {
+		return { valid: false, error: 'Los platos son obligatorios y debe haber al menos uno' };
+	}
+
+	// Validar que todos los IDs de platos sean válidos
+	for (const platoId of platosIds) {
+		if (!mongoose.Types.ObjectId.isValid(platoId)) {
+			return { valid: false, error: `ID de plato inválido: ${platoId}` };
+		}
+	}
+
+	// Obtener todos los platos y validar que pertenezcan al restaurante
+	const platos = await Plato.find({ _id: { $in: platosIds } });
+
+	if (platos.length !== platosIds.length) {
+		return { valid: false, error: 'Uno o más platos no existen' };
+	}
+
+	// Validar que todos los platos pertenezcan al mismo restaurante
+	for (const plato of platos) {
+		if (plato.restaurantId.toString() !== restaurantId) {
+			return { valid: false, error: `El plato ${plato.nombre} no pertenece a este restaurante` };
+		}
+	}
+
+	return { valid: true };
+};
+
 export const createMenu = async (req, res) => {
 	try {
 		const menuData = { ...req.body };
-		if (req.file) menuData.foto = req.file.path;
+
+		// Validación: restaurantId es obligatorio
+		if (!menuData.restaurantId) {
+			return res.status(400).json({
+				success: false,
+				message: 'restaurantId es obligatorio'
+			});
+		}
+
+		// Validación: restaurantId debe ser un ObjectId válido
+		if (!mongoose.Types.ObjectId.isValid(menuData.restaurantId)) {
+			return res.status(400).json({
+				success: false,
+				message: 'restaurantId debe ser un ID válido'
+			});
+		}
+
+		// Validación: ingredientes
+		if (menuData.ingredientes) {
+			if (!Array.isArray(menuData.ingredientes)) {
+				return res.status(400).json({
+					success: false,
+					message: 'Ingredientes debe ser un array'
+				});
+			}
+			// Validar que todos los ingredientes sean ObjectIds válidos
+			for (const ingredienteId of menuData.ingredientes) {
+				if (!mongoose.Types.ObjectId.isValid(ingredienteId)) {
+					return res.status(400).json({
+						success: false,
+						message: `ID de ingrediente inválido: ${ingredienteId}`
+					});
+				}
+			}
+		}
 
 		// Obtener los IDs de platos del body (puede venir como string o array)
 		let platosIDs = menuData.platos;
@@ -38,17 +104,28 @@ export const createMenu = async (req, res) => {
 		}
 		if (!Array.isArray(platosIDs)) platosIDs = [];
 
+		// Validación cruzada: verificar que todos los platos pertenezcan al restaurante
+		const validacionPlatos = await validarPlatosPertenecenAlRestaurante(platosIDs, menuData.restaurantId);
+		if (!validacionPlatos.valid) {
+			return res.status(400).json({
+				success: false,
+				message: validacionPlatos.error
+			});
+		}
+
 		// Calcular precio y tipo
 		const { precio, tipo } = await calcularPrecioYTipoDePlatos(platosIDs);
 		menuData.precio = precio;
 		menuData.tipo = tipo;
 		menuData.platos = platosIDs;
 
+		if (req.file) menuData.foto = req.file.path;
+
 		const menu = new Menu(menuData);
 		await menu.save();
 
 		// Actualizar disponibilidad después de crear el menú
-		await actualizarDisponibilidadMenus(menuData.restaurantID);
+		await actualizarDisponibilidadMenus(menuData.restaurantId);
 
 		// Obtener el menú actualizado con la disponibilidad correcta
 		const menuActualizado = await Menu.findById(menu._id).populate('platos').populate('ingredientes');
@@ -61,14 +138,22 @@ export const createMenu = async (req, res) => {
 
 export const getMenus = async (req, res) => {
 	try {
-		const { page = 1, limit = 10, isActive = true, restaurantID, tipo, date } = req.query;
+		const { page = 1, limit = 10, isActive = true, restaurantId, tipo, date } = req.query;
 		const filter = {};
 		if (typeof isActive !== 'undefined') filter.isActive = isActive === 'true' || isActive === true;
-		if (restaurantID) filter.restaurantID = restaurantID;
+		if (restaurantId) {
+			if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+				return res.status(400).json({
+					success: false,
+					message: 'restaurantId debe ser un ID válido'
+				});
+			}
+			filter.restaurantId = restaurantId;
+		}
 		if (tipo) filter.tipo = tipo;
 
 		// Actualizar disponibilidad de menús antes de consultar
-		await actualizarDisponibilidadMenus(restaurantID);
+		await actualizarDisponibilidadMenus(restaurantId);
 
 		const parsedPage = parseInt(page);
 		const parsedLimit = parseInt(limit);
@@ -98,7 +183,7 @@ export const getMenuById = async (req, res) => {
 	try {
 		const { id } = req.params;
 		const menu = await Menu.findById(id)
-			.populate('restaurantID')
+			.populate('restaurantId')
 			.populate('platos')
 			.populate('ingredientes');
 		if (!menu) return res.status(404).json({ success: false, message: 'Menú no encontrado' });
@@ -123,6 +208,56 @@ export const updateMenu = async (req, res) => {
 		if (!existing) return res.status(404).json({ success: false, message: 'Menú no encontrado' });
 
 		const updateData = { ...req.body };
+
+		// Protección: NO permitir cambiar restaurantId
+		if (updateData.restaurantId && updateData.restaurantId !== existing.restaurantId.toString()) {
+			return res.status(400).json({
+				success: false,
+				message: 'No se puede cambiar el restaurante de un menú existente'
+			});
+		}
+		// No incluir restaurantId en updateData
+		delete updateData.restaurantId;
+
+		// Validación: ingredientes
+		if (updateData.ingredientes) {
+			if (!Array.isArray(updateData.ingredientes)) {
+				return res.status(400).json({
+					success: false,
+					message: 'Ingredientes debe ser un array'
+				});
+			}
+			// Validar que todos los ingredientes sean ObjectIds válidos
+			for (const ingredienteId of updateData.ingredientes) {
+				if (!mongoose.Types.ObjectId.isValid(ingredienteId)) {
+					return res.status(400).json({
+						success: false,
+						message: `ID de ingrediente inválido: ${ingredienteId}`
+					});
+				}
+			}
+		}
+
+		// Validación cruzada: si se actualizan los platos
+		if (updateData.platos) {
+			let platosIds = updateData.platos;
+			if (typeof platosIds === 'string') {
+				platosIds = [platosIds];
+			}
+			const validacionPlatos = await validarPlatosPertenecenAlRestaurante(platosIds, existing.restaurantId.toString());
+			if (!validacionPlatos.valid) {
+				return res.status(400).json({
+					success: false,
+					message: validacionPlatos.error
+				});
+			}
+			// Recalcular precio y tipo si se actualizan platos
+			const { precio, tipo } = await calcularPrecioYTipoDePlatos(platosIds);
+			updateData.precio = precio;
+			updateData.tipo = tipo;
+			updateData.platos = platosIds;
+		}
+
 		if (req.file) updateData.foto = req.file.path;
 
 		const updated = await Menu.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
@@ -158,14 +293,21 @@ export const changeMenuStatus = async (req, res) => {
 // Obtener menú (items) activos por restaurante, aplicando reglas dinámicas si se solicita fecha
 export const getMenuByRestaurant = async (req, res) => {
 	try {
-		const { restaurantID } = req.params;
+		const restaurantId = req.params.restaurantId || req.params.restaurantID;
 		const { date } = req.query;
-		if (!restaurantID) return res.status(400).json({ success: false, message: 'ID del restaurante es requerido' });
+		if (!restaurantId) return res.status(400).json({ success: false, message: 'ID del restaurante es requerido' });
+
+		if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+			return res.status(400).json({
+				success: false,
+				message: 'restaurantId debe ser un ID válido'
+			});
+		}
 
 		// Actualizar disponibilidad de menús del restaurante antes de consultar
-		await actualizarDisponibilidadMenus(restaurantID);
+		await actualizarDisponibilidadMenus(restaurantId);
 
-		const filter = { restaurantID, isActive: true, disponible: true };
+		const filter = { restaurantId, isActive: true, disponible: true };
 		let menus = await Menu.find(filter)
 			.populate('ingredientes')
 			.populate('platos')

@@ -5,16 +5,17 @@
  */
 
 import Plato from './platos-model.js';
+import mongoose from 'mongoose';
 import { verificarStockIngredientes, actualizarDisponibilidadPlatos } from '../../helper/inventory-helpers.js';
 
 /**
  * Obtiene el menú (platos activos) de un restaurante específico
- * Endpoint: GET /menu/:restaurantID
+ * Endpoint: GET /menu/:restaurantId
  * Acceso: Público (sin autenticación requerida)
  * 
  * @async
  * @param {Object} req - Objeto de solicitud Express
- * @param {string} req.params.restaurantID - ID único del restaurante
+ * @param {string} req.params.restaurantId - ID único del restaurante
  * @param {number} [req.query.page=1] - Número de página para paginación
  * @param {number} [req.query.limit=10] - Cantidad de platos por página
  * @param {Object} res - Objeto de respuesta Express
@@ -32,12 +33,12 @@ import { verificarStockIngredientes, actualizarDisponibilidadPlatos } from '../.
 export const getMenuByRestaurant = async (req, res) => {
     try {
         // Extrae el ID del restaurante de los parámetros de la URL
-        const { restaurantID } = req.params;
+        const restaurantId = req.params.restaurantId || req.params.restaurantID;
         // Extrae parámetros de paginación de la query string (con valores por defecto)
         const { page = 1, limit = 10 } = req.query;
 
-        // Valida que el restaurantID no esté vacío
-        if (!restaurantID) {
+        // Valida que el restaurantId no esté vacío
+        if (!restaurantId) {
             return res.status(400).json({
                 success: false,
                 message: 'ID del restaurante es requerido'
@@ -45,13 +46,13 @@ export const getMenuByRestaurant = async (req, res) => {
         }
 
         // Actualizar disponibilidad de platos del restaurante antes de consultar
-        await actualizarDisponibilidadPlatos(restaurantID);
+        await actualizarDisponibilidadPlatos(restaurantId);
 
         // Configura opciones de paginación y ordenamiento
         const parsedPage = parseInt(page);
         const parsedLimit = parseInt(limit);
 
-        const filter = { restaurantID, isActive: true, disponible: true };
+        const filter = { restaurantId, isActive: true, disponible: true };
 
         const platos = await Plato.find(filter)
             .populate('ingredientes')
@@ -108,6 +109,40 @@ export const createPlato = async (req, res) => {
         // Copia los datos del plato desde el cuerpo de la solicitud
         const platoData = req.body;
 
+        // Validación: restaurantId es obligatorio
+        if (!platoData.restaurantId) {
+            return res.status(400).json({
+                success: false,
+                message: 'restaurantId es obligatorio'
+            });
+        }
+
+        // Validación: restaurantId debe ser un ObjectId válido
+        if (!mongoose.Types.ObjectId.isValid(platoData.restaurantId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'restaurantId debe ser un ID válido'
+            });
+        }
+
+        // Validación: ingredientes son obligatorios
+        if (!platoData.ingredientes || !Array.isArray(platoData.ingredientes) || platoData.ingredientes.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ingredientes son obligatorios y debe haber al menos uno'
+            });
+        }
+
+        // Validación: todos los ingredientes deben ser ObjectIds válidos
+        for (const ingredienteId of platoData.ingredientes) {
+            if (!mongoose.Types.ObjectId.isValid(ingredienteId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: `ID de ingrediente inválido: ${ingredienteId}`
+                });
+            }
+        }
+
         // Si se cargó una imagen, asigna la ruta al objeto de datos
         if (req.file) {
             platoData.foto = req.file.path;
@@ -119,7 +154,7 @@ export const createPlato = async (req, res) => {
         await plato.save();
 
         // Actualizar disponibilidad después de crear el plato
-        await actualizarDisponibilidadPlatos(platoData.restaurantID);
+        await actualizarDisponibilidadPlatos(platoData.restaurantId);
 
         // Obtener el plato actualizado con la disponibilidad correcta
         const platoActualizado = await Plato.findById(plato._id).populate('ingredientes');
@@ -146,17 +181,23 @@ export const getPlatos = async (req, res) => {
 
     try {
         // Extrae los parámetros de query con valores por defecto
-        const { page = 1, limit = 10, isActive = true, restaurantID, categoria } = req.query;
+        const { page = 1, limit = 10, isActive = true, restaurantId, categoria } = req.query;
 
         // Actualizar disponibilidad de platos antes de consultar
-        await actualizarDisponibilidadPlatos(restaurantID);
+        await actualizarDisponibilidadPlatos(restaurantId);
 
         // Inicia el objeto filtro con el estado activo
         const filter = { isActive };
 
-        // Si se proporciona restaurantID, lo añade al filtro
-        if (restaurantID) {
-            filter.restaurantID = restaurantID;
+        // Si se proporciona restaurantId, validar y lo añade al filtro
+        if (restaurantId) {
+            if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'restaurantId debe ser un ID válido'
+                });
+            }
+            filter.restaurantId = restaurantId;
         }
 
         // Si se proporciona categoría, lo añade al filtro
@@ -174,7 +215,7 @@ export const getPlatos = async (req, res) => {
         // Busca platos con el filtro, incluye datos del restaurante relacionado,
         // aplica límite, omite (skip) registros según la página, y ordena
         const platos = await Plato.find(filter)
-            .populate('restaurantID')                // Incluye datos del restaurante
+            .populate('restaurantId')                // Incluye datos del restaurante
             .populate('ingredientes')                // Incluye datos de ingredientes
             .limit(limit * 1)                        // Limita resultados por página
             .skip((page - 1) * limit)                // Salta los registros de páginas anteriores
@@ -232,7 +273,7 @@ export const getPlatoById = async (req, res) => {
 
         // Busca el plato por ID e incluye datos del restaurante relacionado
         const plato = await Plato.findById(id)
-            .populate('restaurantID')
+            .populate('restaurantId')
             .populate('ingredientes');
 
         // Valida si el plato existe
@@ -308,15 +349,57 @@ export const updatePlato = async (req, res) => {
         // Copia los datos a actualizar desde el cuerpo de la solicitud
         const updateData = { ...req.body };
 
+        // Requisito estricto: restaurantId es obligatorio en actualización
+        if (!updateData.restaurantId) {
+            return res.status(400).json({
+                success: false,
+                message: 'restaurantId es obligatorio para actualizar un plato'
+            });
+        }
+
+        // restaurantId debe ser un ObjectId válido
+        if (!mongoose.Types.ObjectId.isValid(updateData.restaurantId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'restaurantId debe ser un ID válido'
+            });
+        }
+
+        // Protección: NO permitir cambiar restaurantId
+        if (updateData.restaurantId && updateData.restaurantId !== currentPlato.restaurantId.toString()) {
+            return res.status(400).json({
+                success: false,
+                message: 'No se puede cambiar el restaurante de un plato existente'
+            });
+        }
+        // No incluir restaurantId en updateData
+        delete updateData.restaurantId;
+
+        // Requisito estricto: ingredientes son obligatorios en actualización
+        if (!updateData.ingredientes || !Array.isArray(updateData.ingredientes) || updateData.ingredientes.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ingredientes son obligatorios y debe haber al menos uno'
+            });
+        }
+
+        // Validar que todos los ingredientes sean ObjectIds válidos
+        for (const ingredienteId of updateData.ingredientes) {
+            if (!mongoose.Types.ObjectId.isValid(ingredienteId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: `ID de ingrediente inválido: ${ingredienteId}`
+                });
+            }
+        }
+
+        // Verificar disponibilidad
+        const tieneStock = await verificarStockIngredientes(updateData.ingredientes);
+        updateData.disponible = tieneStock;
+
         // Si se cargó una nueva imagen, se asigna la nueva ruta
         if (req.file) {
             updateData.foto = req.file.path;
-        }
-
-        // Si se actualizaron los ingredientes, verificar disponibilidad
-        if (updateData.ingredientes && updateData.ingredientes.length > 0) {
-            const tieneStock = await verificarStockIngredientes(updateData.ingredientes);
-            updateData.disponible = tieneStock;
         }
 
         // Actualiza el plato con los nuevos datos, retorna el documento actualizado
