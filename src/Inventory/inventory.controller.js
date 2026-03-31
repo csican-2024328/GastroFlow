@@ -192,7 +192,8 @@ export const eliminarInsumo = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: 'Insumo eliminado correctamente'
+            message: 'Insumo eliminado correctamente',
+            data: insumo
         });
 
     } catch (error) {

@@ -11,12 +11,23 @@ export const validateCreateOrder = [
         .isIn(['EN_MESA', 'A_DOMICILIO', 'PARA_LLEVAR'])
         .withMessage('Tipo de pedido no válido. Debe ser: EN_MESA, A_DOMICILIO o PARA_LLEVAR'),
 
-    check('restaurantID')
-        .not()
-        .isEmpty()
-        .withMessage('El ID del restaurante es obligatorio')
+    check('restaurantId')
+        .optional()
         .isMongoId()
-        .withMessage('ID de restaurante inválido'),
+        .withMessage('restaurantId inválido'),
+
+    check('restaurantID')
+        .optional()
+        .isMongoId()
+        .withMessage('restaurantID inválido'),
+
+    check('restaurantId').custom((value, { req }) => {
+        const resolved = value || req.body.restaurantID;
+        if (!resolved) {
+            throw new Error('El ID del restaurante es obligatorio');
+        }
+        return true;
+    }),
 
     check('mesaID')
         .custom((value, { req }) => {

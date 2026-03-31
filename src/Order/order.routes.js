@@ -7,6 +7,7 @@
 import { Router } from 'express';
 import {
     createOrder,
+    checkOrderStock,
     getOrders,
     getOrderById,
     getOrderByNumber,
@@ -30,6 +31,15 @@ import {
 } from '../../middlewares/order.validator.js';
 
 const router = Router();
+
+router.post(
+    '/check-stock',
+    autenticar,
+    autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateCreateOrder,
+    validarCampos,
+    checkOrderStock
+);
 
 router.post(
     '/create',

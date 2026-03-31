@@ -5,89 +5,38 @@ import Mesa from '../Mesas/mesa.model.js';
 import Coupon from '../Coupon/coupon.model.js';
 import Event from '../Event/event.model.js';
 import Invoice from '../Invoice/invoice.model.js';
-import Inventory from '../Inventory/inventory.model.js';
 import { notifyNewOrder, notifyOrderStatusChange } from '../../configs/socket.js';
+import {
+    buildOrderIngredientRequirements,
+    getStockShortages,
+    reserveInventoryAtomically,
+    releaseInventoryForOrder
+} from '../../helper/stock-engine.js';
 
 
 /**
  * Decrementa el inventario de ingredientes según los platos/menús de una orden
  * Por cada plato/menú en la orden, resta la cantidad del stock de cada ingrediente
  */
-const decrementInventoryForOrder = async (order) => {
-    try {
-        // Refresh del documento para asegurar que tenemos la versión más reciente
-        await order.populate({
-            path: 'items'
-        });
+const decrementInventoryForOrder = async (order, userId = null) => {
+    const restaurantId = order.restaurantID?.toString() || order.restaurantId?.toString() || null;
 
-        // Populate para obtener los platos y menús con sus ingredientes/platos
-        await order.populate([
-            { path: 'items.plato', select: 'nombre ingredientes' },
-            { path: 'items.menu', select: 'nombre platos' }
-        ]);
+    const buildResult = await buildOrderIngredientRequirements(order.items, restaurantId);
+    if (!buildResult.success) {
+        throw new Error(buildResult.message);
+    }
 
-        console.log('Order después de populate:', JSON.stringify(order.items.map(item => ({
-            tipo: item.tipo,
-            plato: item.plato?.nombre,
-            menu: item.menu?.nombre,
-            cantidad: item.cantidad
-        })), null, 2));
+    const reserveResult = await reserveInventoryAtomically({
+        requirementsMap: buildResult.requirements,
+        restaurantId,
+        orderId: order._id,
+        userId
+    });
 
-        // Recorrer cada item de la orden
-        for (const item of order.items) {
-            console.log(`Procesando item tipo: ${item.tipo}`);
-            
-            if (item.tipo === 'PLATO') {
-                if (item.plato && item.plato.ingredientes && item.plato.ingredientes.length > 0) {
-                    console.log(`Decrementando ingredientes del plato: ${item.plato.nombre}`);
-                    // Para cada ingrediente del plato
-                    for (const ingredienteID of item.plato.ingredientes) {
-                        console.log(`  - Decrementando ingrediente: ${ingredienteID}`);
-                        // Restar la cantidad de platos del stock
-                        await Inventory.findByIdAndUpdate(
-                            ingredienteID,
-                            { $inc: { stock: -item.cantidad } },
-                            { new: true }
-                        );
-                    }
-                } else {
-                    console.log(`No hay ingredientes para decrementar en plato`);
-                }
-            } else if (item.tipo === 'MENU') {
-                if (item.menu && item.menu.platos && item.menu.platos.length > 0) {
-                    console.log(`Menu tiene ${item.menu.platos.length} platos`);
-                    
-                    // Obtener todos los platos del menú con sus ingredientes
-                    const platosDelMenu = await Plato.find({
-                        _id: { $in: item.menu.platos }
-                    }).select('nombre ingredientes');
-                    
-                    console.log(`Platos obtenidos del menu: ${platosDelMenu.map(p => p.nombre).join(', ')}`);
-                    
-                    // Para cada plato del menú
-                    for (const plato of platosDelMenu) {
-                        if (plato.ingredientes && plato.ingredientes.length > 0) {
-                            console.log(`  - Decrementando ingredientes del plato del menú: ${plato.nombre}`);
-                            // Para cada ingrediente del plato
-                            for (const ingredienteID of plato.ingredientes) {
-                                console.log(`    - Decrementando ingrediente: ${ingredienteID}`);
-                                // Restar la cantidad de menús del stock
-                                await Inventory.findByIdAndUpdate(
-                                    ingredienteID,
-                                    { $inc: { stock: -item.cantidad } },
-                                    { new: true }
-                                );
-                            }
-                        }
-                    }
-                } else {
-                    console.log(`No hay platos para decrementar en menu`);
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error decrementando inventario:', error);
-        throw error;
+    if (!reserveResult.success) {
+        const err = new Error(reserveResult.message || 'Stock insuficiente');
+        err.faltantes = reserveResult.faltantes || [];
+        throw err;
     }
 };
 
@@ -95,60 +44,60 @@ const decrementInventoryForOrder = async (order) => {
  * Restaura el inventario de ingredientes cuando una orden se cancela
  * Por cada plato/menú en la orden, suma la cantidad del stock de cada ingrediente
  */
-const restoreInventoryForOrder = async (order) => {
+const restoreInventoryForOrder = async (order, userId = null) => {
+    const restaurantId = order.restaurantID?.toString() || order.restaurantId?.toString() || null;
+
+    const buildResult = await buildOrderIngredientRequirements(order.items, restaurantId);
+    if (!buildResult.success) {
+        throw new Error(buildResult.message);
+    }
+
+    await releaseInventoryForOrder({
+        requirementsMap: buildResult.requirements,
+        restaurantId,
+        orderId: order._id,
+        userId,
+        motivo: 'ORDER_CANCELADA'
+    });
+};
+
+export const checkOrderStock = async (req, res) => {
     try {
-        // Refresh del documento para asegurar que tenemos la versión más reciente
-        await order.populate({
-            path: 'items'
-        });
+        const { items } = req.body;
+        const restaurantId = req.body.restaurantId || req.body.restaurantID;
 
-        // Populate para obtener los platos y menús con sus ingredientes/platos
-        await order.populate([
-            { path: 'items.plato', select: 'nombre ingredientes' },
-            { path: 'items.menu', select: 'nombre platos' }
-        ]);
-
-        // Recorrer cada item de la orden
-        for (const item of order.items) {
-            if (item.tipo === 'PLATO') {
-                if (item.plato && item.plato.ingredientes && item.plato.ingredientes.length > 0) {
-                    // Para cada ingrediente del plato
-                    for (const ingredienteID of item.plato.ingredientes) {
-                        // Suma la cantidad de platos de vuelta al stock
-                        await Inventory.findByIdAndUpdate(
-                            ingredienteID,
-                            { $inc: { stock: item.cantidad } },
-                            { new: true }
-                        );
-                    }
-                }
-            } else if (item.tipo === 'MENU') {
-                if (item.menu && item.menu.platos && item.menu.platos.length > 0) {
-                    // Obtener todos los platos del menú con sus ingredientes
-                    const platosDelMenu = await Plato.find({
-                        _id: { $in: item.menu.platos }
-                    }).select('nombre ingredientes');
-                    
-                    // Para cada plato del menú
-                    for (const plato of platosDelMenu) {
-                        if (plato.ingredientes && plato.ingredientes.length > 0) {
-                            // Para cada ingrediente del plato
-                            for (const ingredienteID of plato.ingredientes) {
-                                // Suma la cantidad de menús de vuelta al stock
-                                await Inventory.findByIdAndUpdate(
-                                    ingredienteID,
-                                    { $inc: { stock: item.cantidad } },
-                                    { new: true }
-                                );
-                            }
-                        }
-                    }
-                }
-            }
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Items del pedido son requeridos y deben ser un array no vacío'
+            });
         }
+
+        const buildResult = await buildOrderIngredientRequirements(items, restaurantId);
+        if (!buildResult.success) {
+            return res.status(400).json({ success: false, message: buildResult.message });
+        }
+
+        const shortageResult = await getStockShortages(buildResult.requirements);
+
+        if (shortageResult.hasShortage) {
+            return res.status(409).json({
+                success: false,
+                message: 'Stock insuficiente para completar la orden',
+                faltantes: shortageResult.faltantes
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Stock suficiente para completar la orden'
+        });
     } catch (error) {
-        console.error('Error restaurando inventario:', error);
-        throw error;
+        return res.status(500).json({
+            success: false,
+            message: 'Error al verificar stock para la orden',
+            error: error.message
+        });
     }
 };
 
@@ -220,6 +169,7 @@ export const createOrder = async (req, res) => {
         const {
             tipoPedido,
             restaurantID,
+            restaurantId,
             mesaID,
             clienteNombre,
             clienteTelefono,
@@ -232,6 +182,15 @@ export const createOrder = async (req, res) => {
             couponCode,
             notas
         } = req.body;
+
+        const resolvedRestaurantId = restaurantId || restaurantID;
+
+        if (!resolvedRestaurantId) {
+            return res.status(400).json({
+                success: false,
+                message: 'restaurantId es requerido'
+            });
+        }
 
         // Validar tipoPedido
         if (!tipoPedido || !['EN_MESA', 'A_DOMICILIO', 'PARA_LLEVAR'].includes(tipoPedido)) {
@@ -310,13 +269,6 @@ export const createOrder = async (req, res) => {
                     });
                 }
 
-                if (!plato.disponible) {
-                    return res.status(400).json({
-                        success: false,
-                        message: `El plato "${plato.nombre}" no está disponible en este momento`
-                    });
-                }
-
                 itemData = { plato: plato._id };
                 nombre = plato.nombre;
                 precio = plato.precio;
@@ -336,13 +288,6 @@ export const createOrder = async (req, res) => {
                     return res.status(404).json({
                         success: false,
                         message: `Menú con ID ${item.menu} no encontrado o inactivo`
-                    });
-                }
-
-                if (!menu.disponible) {
-                    return res.status(400).json({
-                        success: false,
-                        message: `El menú "${menu.nombre}" no está disponible en este momento`
                     });
                 }
 
@@ -388,7 +333,7 @@ export const createOrder = async (req, res) => {
                 });
             }
 
-            if (coupon.restaurantID && coupon.restaurantID.toString() !== restaurantID) {
+            if (coupon.restaurantID && coupon.restaurantID.toString() !== resolvedRestaurantId) {
                 return res.status(400).json({
                     success: false,
                     message: 'Este cupón no aplica a este restaurante'
@@ -417,7 +362,7 @@ export const createOrder = async (req, res) => {
         // Buscar y aplicar eventos/promociones automáticamente
         let evento = null;
         let descuentoPorEvento = 0;
-        const { evento: eventoEncontrado, descuentoPorEvento: descuento_evento } = await buscarYAplicarEvento(restaurantID, orderItems);
+        const { evento: eventoEncontrado, descuentoPorEvento: descuento_evento } = await buscarYAplicarEvento(resolvedRestaurantId, orderItems);
         evento = eventoEncontrado;
         descuentoPorEvento = descuento_evento;
 
@@ -425,7 +370,7 @@ export const createOrder = async (req, res) => {
         const newOrder = new Order({
             numeroOrden,
             tipoPedido,
-            restaurantID,
+            restaurantID: resolvedRestaurantId,
             mesaID: tipoPedido === 'EN_MESA' ? mesaID : null,
             clienteNombre,
             clienteTelefono,
@@ -446,6 +391,21 @@ export const createOrder = async (req, res) => {
 
         await newOrder.save();
 
+        // Descuento de inventario en EN_PREPARACION (atómico y con rollback)
+        try {
+            const userId = req.usuario?.sub || req.usuario?.id || null;
+            await decrementInventoryForOrder(newOrder, userId);
+            newOrder.inventarioDecrementado = true;
+            await newOrder.save();
+        } catch (stockError) {
+            await Order.findByIdAndDelete(newOrder._id);
+            return res.status(409).json({
+                success: false,
+                message: stockError.message || 'No hay stock suficiente para completar la orden',
+                faltantes: stockError.faltantes || []
+            });
+        }
+
         if (coupon) {
             const usuarioID = req.usuario?.sub || req.usuario?.id || null;
             await coupon.registrarUso(usuarioID || 'ANONIMO');
@@ -464,7 +424,7 @@ export const createOrder = async (req, res) => {
         ]);
 
         // Notificar al admin del restaurante sobre nuevo pedido
-        notifyNewOrder(restaurantID, {
+        notifyNewOrder(resolvedRestaurantId, {
             _id: newOrder._id,
             numeroOrden: newOrder.numeroOrden,
             tipoPedido: newOrder.tipoPedido,
@@ -495,6 +455,7 @@ export const getOrders = async (req, res) => {
     try {
         const {
             restaurantID,
+            restaurantId,
             mesaID,
             estado,
             page = 1,
@@ -507,7 +468,7 @@ export const getOrders = async (req, res) => {
         // Construir filtro dinámico
         const filter = { isActive: true };
         
-        if (restaurantID) filter.restaurantID = restaurantID;
+        if (restaurantId || restaurantID) filter.restaurantID = restaurantId || restaurantID;
         if (mesaID) filter.mesaID = mesaID;
         if (estado) filter.estado = estado;
 
@@ -667,18 +628,13 @@ export const updateOrderStatus = async (req, res) => {
             } else {
                 order.horaEntrega = new Date();
             }
-            
-            // Decrementar inventario si no ha sido decrmentado aún
-            if (!order.inventarioDecrementado) {
-                await decrementInventoryForOrder(order);
-                order.inventarioDecrementado = true;
-            }
         } else if (estado === 'CANCELADO') {
             order.horaCancelacion = new Date();
             
             // Restaurar inventario si fue decrementado anteriormente
             if (order.inventarioDecrementado) {
-                await restoreInventoryForOrder(order);
+                const userId = req.usuario?.sub || req.usuario?.id || null;
+                await restoreInventoryForOrder(order, userId);
                 order.inventarioDecrementado = false;
             }
         }
@@ -756,13 +712,6 @@ export const updateOrder = async (req, res) => {
                     return res.status(404).json({
                         success: false,
                         message: `Plato con ID ${item.plato} no encontrado o inactivo`
-                    });
-                }
-
-                if (!plato.disponible) {
-                    return res.status(400).json({
-                        success: false,
-                        message: `El plato "${plato.nombre}" no está disponible en este momento`
                     });
                 }
 
@@ -867,12 +816,6 @@ export const payOrder = async (req, res) => {
             } else {
                 order.horaEntrega = new Date();
             }
-            
-            // Decrementar inventario si no ha sido decrmentado aún
-            if (!order.inventarioDecrementado) {
-                await decrementInventoryForOrder(order);
-                order.inventarioDecrementado = true;
-            }
         }
 
         await order.save();
@@ -950,7 +893,8 @@ export const cancelOrder = async (req, res) => {
         
         // Restaurar inventario si fue decrementado anteriormente
         if (order.inventarioDecrementado) {
-            await restoreInventoryForOrder(order);
+            const userId = req.usuario?.sub || req.usuario?.id || null;
+            await restoreInventoryForOrder(order, userId);
             order.inventarioDecrementado = false;
         }
         

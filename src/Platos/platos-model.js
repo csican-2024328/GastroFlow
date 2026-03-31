@@ -67,7 +67,7 @@ const platosSchema = mongoose.Schema(
 
 platosSchema.index({ isActive: 1});
 platosSchema.index({ categoria: 1});
-platosSchema.index({ restaurantID: 1});
+platosSchema.index({ restaurantId: 1});
 platosSchema.index({ isActive: 1, categoria: 1});
 
 export default mongoose.model('Plato', platosSchema);

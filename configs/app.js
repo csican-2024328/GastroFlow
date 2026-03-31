@@ -28,6 +28,7 @@ import notificationsRoutes from '../src/Notifications/notifications.routes.js';
 import invoiceRoutes from '../src/Invoice/invoice.routes.js';
 import reviewRoutes from '../src/Review/review.routes.js';
 import staffRoutes from '../src/Staff/staff.routes.js';
+import inventoryAuditoriaRoutes from '../src/InventoryMovement/inventoryMovement.routes.js';
 import { errorMiddleware } from '../middlewares/error.middleware.js';
 import { initializeEmailService, verificarConexionSMTP } from '../helper/email-service.js';
 import { initSocket } from './socket.js';
@@ -59,6 +60,7 @@ const routes = (app) => {
   app.use(`${BASE_PATH}/invoices`, invoiceRoutes);
   app.use(`${BASE_PATH}/reviews`, reviewRoutes);
   app.use(`${BASE_PATH}/staff`, staffRoutes);
+  app.use(`${BASE_PATH}/inventory-auditoria`, inventoryAuditoriaRoutes);
 
 
   app.get(`${BASE_PATH}/health`, (req, res) => {
