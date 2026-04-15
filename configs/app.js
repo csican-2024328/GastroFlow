@@ -32,6 +32,7 @@ import inventoryAuditoriaRoutes from '../src/InventoryMovement/inventoryMovement
 import { errorMiddleware } from '../middlewares/error.middleware.js';
 import { initializeEmailService, verificarConexionSMTP } from '../helper/email-service.js';
 import { initSocket } from './socket.js';
+import { setupSwagger } from './swagger.js';
 
 const BASE_PATH = '/api/v1';
 
@@ -70,7 +71,6 @@ const routes = (app) => {
       service: 'GastroFlow',
     });
   });
-  app.use(notFound);
 };
 
 export const initServer = async () => {
@@ -100,6 +100,11 @@ export const initServer = async () => {
 
     middlewares(app);
     routes(app);
+
+    // Swagger UI disponible en /swagger
+    setupSwagger(app);
+
+    app.use(notFound);
     app.use(errorMiddleware);
 
     app.use(errorHandler);

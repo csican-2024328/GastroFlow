@@ -16,6 +16,14 @@ GastroFlow es una plataforma completa de gestión para restaurantes que permite 
 
 ## ⚙️ Configuración Técnica
 
+### 📚 Documentación API (Swagger UI)
+
+Con el servidor corriendo, la documentación interactiva está disponible en:
+
+- `http://localhost:3006/swagger`
+
+Si usas otro puerto, reemplaza `3006` por el valor de `PORT` en tu `.env`.
+
 ### ⚠️ IMPORTANTE
 Crear archivo `.env` con las credenciales necesarias (no se sube al repositorio por seguridad)
 

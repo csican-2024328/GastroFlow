@@ -139,8 +139,9 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
 export const resetPassword = asyncHandler(async (req, res) => {
   try {
-    const { token, newPassword } = req.body;
-    const result = await resetPasswordHelper(token, newPassword);
+    const { token, password, newPassword } = req.body;
+    const resolvedPassword = password || newPassword;
+    const result = await resetPasswordHelper(token, resolvedPassword);
 
     res.status(200).json(result);
   } catch (error) {
