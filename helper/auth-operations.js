@@ -369,6 +369,20 @@ export const assignRoleHelper = async (
     }
 
     const requesterRole = requestingUser.UserRoles?.[0]?.Role?.Name || 'CLIENT';
+    const targetRole = targetUser.UserRoles?.[0]?.Role?.Name || 'CLIENT';
+
+    // Regla de seguridad: un PLATFORM_ADMIN solo puede cambiar SU PROPIO rol
+    // cuando el usuario destino ya es PLATFORM_ADMIN.
+    if (
+      targetRole === 'PLATFORM_ADMIN' &&
+      requestingUserId !== targetUserId
+    ) {
+      const err = new Error(
+        'No puedes cambiar el rol de otro usuario PLATFORM_ADMIN. Solo ese admin puede cambiar su propio rol.'
+      );
+      err.status = 403;
+      throw err;
+    }
 
     // Validaciones de permisos
     // Solo PLATFORM_ADMIN puede asignar PLATFORM_ADMIN

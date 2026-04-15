@@ -17,7 +17,7 @@ import {
   validateAssignRole,
   validarCampos,
 } from '../../middlewares/validator.middleware.js';
-import { updateProfile } from '../User/user.controller.js';
+import { updateProfile } from '../User/user.admin.controller.js';
 
 const router = Router();
 
