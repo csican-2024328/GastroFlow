@@ -71,6 +71,13 @@ export const validateCreateOrder = [
         .withMessage('El nombre del cliente debe tener entre 2 y 100 caracteres')
         .trim(),
 
+    check('clienteId')
+        .optional()
+        .isString()
+        .withMessage('clienteId inválido')
+        .isLength({ min: 3, max: 32 })
+        .withMessage('clienteId inválido'),
+
     check('clienteTelefono')
         .optional()
         .isLength({ max: 20 })
@@ -171,6 +178,13 @@ export const validateUpdateOrder = [
         .isLength({ min: 2, max: 100 })
         .withMessage('El nombre del cliente debe tener entre 2 y 100 caracteres')
         .trim(),
+
+    check('clienteId')
+        .optional()
+        .isString()
+        .withMessage('clienteId inválido')
+        .isLength({ min: 3, max: 32 })
+        .withMessage('clienteId inválido'),
 
     check('clienteTelefono')
         .optional()

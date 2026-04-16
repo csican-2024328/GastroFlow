@@ -19,7 +19,7 @@ import {
 } from './order.controller.js';
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 import { validarCampos } from '../../middlewares/validator.middleware.js';
-import { validateStockAvailability } from '../../middlewares/stock.middleware.js';
+import { validateStockAvailability, validateUpdateOrderStock } from '../../middlewares/stock.middleware.js';
 import {
     validateCreateOrder,
     validateUpdateOrder,
@@ -105,6 +105,7 @@ router.put(
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
     validateUpdateOrder,
     validarCampos,
+    validateUpdateOrderStock,
     updateOrder
 );
 

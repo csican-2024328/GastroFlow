@@ -14,13 +14,22 @@ export const createInvoice = async (req, res) => {
             orderID,
             eventID,
             restaurantID,
-            subtotal
+            subtotal,
+            impuesto = 0,
+            descuento = 0,
+            propina = 0,
+            cargosExtra = 0
         } = req.body;
 
         let resolvedRestaurantID = restaurantID || null;
         let resolvedSubtotal = subtotal;
-        let resolvedPropina = 0;
-        let resolvedCargosExtra = 0;
+        let resolvedImpuesto = impuesto || 0;
+        let resolvedDescuento = descuento || 0;
+        let resolvedPropina = propina || 0;
+        let resolvedCargosExtra = cargosExtra || 0;
+        let resolvedMetodoPago = 'PENDIENTE';
+        let resolvedEstado = 'PENDIENTE';
+        let resolvedUserID = req.usuario.sub;
 
         // Validar que la orden existe si se proporciona
         if (orderID) {
@@ -43,8 +52,13 @@ export const createInvoice = async (req, res) => {
             // Cuando se factura por orden, tomar restaurante, subtotal, propina y cargosExtra de la orden
             resolvedRestaurantID = order.restaurantID;
             resolvedSubtotal = order.subtotal;
+            resolvedImpuesto = order.impuesto || 0;
+            resolvedDescuento = order.descuento || 0;
             resolvedPropina = order.propina || 0;
             resolvedCargosExtra = order.cargosExtra || 0;
+            resolvedMetodoPago = order.metodoPago || 'PENDIENTE';
+            resolvedEstado = order.metodoPago && order.metodoPago !== 'PENDIENTE' ? 'PAGADA' : 'PENDIENTE';
+            resolvedUserID = order.clienteId || req.usuario.sub;
         }
 
         // Validar que el evento existe si se proporciona
@@ -88,13 +102,14 @@ export const createInvoice = async (req, res) => {
             orderID: orderID || null,
             eventID: eventID || null,
             restaurantID: resolvedRestaurantID,
-            userID: req.usuario.sub, // ID del usuario autenticado
+            userID: resolvedUserID,
             subtotal: resolvedSubtotal,
+            impuesto: resolvedImpuesto,
+            descuento: resolvedDescuento,
             propina: resolvedPropina,
             cargosExtra: resolvedCargosExtra,
-            total: resolvedSubtotal + resolvedPropina + resolvedCargosExtra,
-            metodoPago: 'OTRO', // Inicialmente OTRO hasta que se registre el método de pago real
-            estado: 'PAGADA'
+            metodoPago: resolvedMetodoPago,
+            estado: resolvedEstado
         });
 
         await nuevaFactura.save();
@@ -125,6 +140,10 @@ export const getInvoices = async (req, res) => {
         const { restaurantID, estado, metodoPago, fechaInicio, fechaFin, page = 1, limit = 10 } = req.query;
 
         let filtro = { isActive: true };
+
+        if (req.usuario.role === 'CLIENT') {
+            filtro.userID = req.usuario.sub;
+        }
 
         if (restaurantID) filtro.restaurantID = restaurantID;
         if (estado) filtro.estado = estado;
@@ -186,6 +205,13 @@ export const getInvoiceById = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 message: 'Factura no encontrada'
+            });
+        }
+
+        if (req.usuario.role === 'CLIENT' && factura.userID !== req.usuario.sub) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tienes permiso para ver esta factura'
             });
         }
 

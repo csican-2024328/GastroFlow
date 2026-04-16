@@ -26,6 +26,16 @@ const invoiceSchema = mongoose.Schema(
             required: [true, 'El subtotal es requerido'],
             min: [0, 'El subtotal no puede ser negativo']
         },
+        impuesto: {
+            type: Number,
+            default: 0,
+            min: [0, 'El impuesto no puede ser negativo']
+        },
+        descuento: {
+            type: Number,
+            default: 0,
+            min: [0, 'El descuento no puede ser negativo']
+        },
         propina: {
             type: Number,
             default: 0,
@@ -52,10 +62,10 @@ const invoiceSchema = mongoose.Schema(
         metodoPago: {
             type: String,
             enum: {
-                values: ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'OTRO'],
+                values: ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'OTRO', 'PENDIENTE'],
                 message: 'Método de pago no válido'
             },
-            default: 'OTRO'
+            default: 'PENDIENTE'
         },
         fechaEmision: {
             type: Date,
@@ -76,5 +86,14 @@ const invoiceSchema = mongoose.Schema(
 invoiceSchema.index({ restaurantID: 1, estado: 1 });
 invoiceSchema.index({ userID: 1 });
 invoiceSchema.index({ fechaEmision: -1 });
+
+invoiceSchema.pre('save', function() {
+    this.total =
+        Number(this.subtotal || 0) +
+        Number(this.impuesto || 0) -
+        Number(this.descuento || 0) +
+        Number(this.propina || 0) +
+        Number(this.cargosExtra || 0);
+});
 
 export default mongoose.model('Invoice', invoiceSchema);

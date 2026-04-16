@@ -20,7 +20,7 @@ const router = Router();
 router.post(
     '/create',
     autenticar,
-    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN', 'USER'), // Dependiendo de quién pueda generar la factura
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN', 'CLIENT'),
     validateCreateInvoice,
     validarCampos,
     createInvoice
@@ -30,7 +30,7 @@ router.post(
 router.get(
     '/get',
     autenticar,
-    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN', 'CLIENT'),
     getInvoices
 );
 
@@ -38,6 +38,7 @@ router.get(
 router.get(
     '/:id',
     autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN', 'CLIENT'),
     validateInvoiceId,
     validarCampos,
     getInvoiceById

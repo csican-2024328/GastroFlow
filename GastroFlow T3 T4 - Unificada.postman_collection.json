@@ -1,0 +1,1506 @@
+{
+  "info": {
+    "_postman_id": "d3b7d7aa-2b7f-4d78-a7fa-74b9d3c0a6d1",
+    "name": "GastroFlow T3 + T4 - Unificada",
+    "description": "Coleccion unificada para probar setup base, ordenes, integridad de inventario y finanzas con tokens de admin y cliente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Auth",
+      "item": [
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login admin OK', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.token) pm.collectionVariables.set('adminToken', json.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emailOrUsername\": \"{{adminLogin}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login client OK', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.token) pm.collectionVariables.set('clientToken', json.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emailOrUsername\": \"{{clientLogin}}\",\n  \"password\": \"{{clientPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Setup Base",
+      "item": [
+        {
+          "name": "Create Restaurant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Restaurant creada', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data._id) pm.collectionVariables.set('restaurantId', json.data._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{restaurantName}}\",\n  \"email\": \"{{restaurantEmail}}\",\n  \"phone\": \"{{restaurantPhone}}\",\n  \"address\": \"{{restaurantAddress}}\",\n  \"city\": \"{{restaurantCity}}\",\n  \"openingHours\": \"{{restaurantOpeningHours}}\",\n  \"aforoMaximo\": {{restaurantAforoMaximo}},\n  \"category\": \"{{restaurantCategory}}\",\n  \"description\": \"{{restaurantDescription}}\",\n  \"averagePrice\": {{restaurantAveragePrice}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurants/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurants",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Restaurants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurants/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurants",
+                "get"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Restaurant By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurants/{{restaurantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurants",
+                "{{restaurantId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Mesa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mesa creada', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data._id) pm.collectionVariables.set('mesaId', json.data._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"numero\": {{mesaNumero}},\n  \"capacidad\": {{mesaCapacidad}},\n  \"ubicacion\": \"{{mesaUbicacion}}\",\n  \"horariosDisponibilidad\": [\"{{mesaHorario}}\"],\n  \"es_unible\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/mesas/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mesas",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Mesas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/mesas/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mesas",
+                "get"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Mesa By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/mesas/{{mesaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mesas",
+                "{{mesaId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Inventory",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Inventario creado', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data._id) pm.collectionVariables.set('inventoryId', json.data._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{inventoryName}}\",\n  \"stock\": {{inventoryStock}},\n  \"unidadMedida\": \"{{inventoryUnidadMedida}}\",\n  \"restaurantId\": \"{{restaurantId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inventory/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Inventory",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inventory/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "get"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Inventory By Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inventory/{{inventoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "{{inventoryId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Plato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Plato creado', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data._id) pm.collectionVariables.set('platoId', json.data._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{platoNombre}}\",\n  \"descripcion\": \"{{platoDescripcion}}\",\n  \"precio\": {{platoPrecio}},\n  \"categoria\": \"{{platoCategoria}}\",\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"ingredientes\": [\"{{inventoryId}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Platos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "get"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Plato By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{platoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{platoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Menu",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Menu creado', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data._id) pm.collectionVariables.set('menuId', json.data._id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{menuNombre}}\",\n  \"descripcion\": \"{{menuDescripcion}}\",\n  \"precio\": {{menuPrecio}},\n  \"tipo\": \"{{menuTipo}}\",\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"ingredientes\": [\"{{inventoryId}}\"],\n  \"platos\": [\"{{platoId}}\"],\n  \"schedule\": [\n    {\"dayNumber\": 1, \"startTime\": \"08:00\", \"endTime\": \"22:00\"}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/menu/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "menu",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Menus",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/menu/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "menu",
+                "get"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Menu By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/menu/{{menuId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "menu",
+                "{{menuId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - T3 Ordenes",
+      "item": [
+        {
+          "name": "Check Stock Plato",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{clientToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"items\": [\n    {\"tipo\": \"PLATO\", \"plato\": \"{{platoId}}\", \"cantidad\": {{orderCantidad}}}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/check-stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "check-stock"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check Stock Menu",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{clientToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"items\": [\n    {\"tipo\": \"MENU\", \"menu\": \"{{menuId}}\", \"cantidad\": {{orderCantidad}}}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/check-stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "check-stock"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Order Plato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Orden de plato creada', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data._id) pm.collectionVariables.set('orderId', json.data._id);",
+                  "if (json && json.data && json.data.numeroOrden) pm.collectionVariables.set('orderNumber', json.data.numeroOrden);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{clientToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"tipoPedido\": \"EN_MESA\",\n  \"mesaID\": \"{{mesaId}}\",\n  \"clienteNombre\": \"{{orderClienteNombre}}\",\n  \"clienteTelefono\": \"{{orderClienteTelefono}}\",\n  \"clienteId\": \"{{clientId}}\",\n  \"items\": [\n    {\"tipo\": \"PLATO\", \"plato\": \"{{platoId}}\", \"cantidad\": {{orderCantidad}}, \"notas\": \"\"}\n  ],\n  \"impuesto\": {{orderImpuesto}},\n  \"descuento\": {{orderDescuento}},\n  \"notas\": \"{{orderNotas}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteNombre\": \"{{orderClienteNombreEditado}}\",\n  \"clienteTelefono\": \"{{orderClienteTelefono}}\",\n  \"impuesto\": {{orderImpuesto}},\n  \"descuento\": {{orderDescuento}},\n  \"notas\": \"{{orderNotasEditadas}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order By Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{clientToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order By Number",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{clientToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/numero/{{orderNumber}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "numero",
+                "{{orderNumber}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Order Menu",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Orden de menu creada', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data._id) pm.collectionVariables.set('menuOrderId', json.data._id);",
+                  "if (json && json.data && json.data.numeroOrden) pm.collectionVariables.set('menuOrderNumber', json.data.numeroOrden);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{clientToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"restaurantID\": \"{{restaurantId}}\",\n  \"tipoPedido\": \"EN_MESA\",\n  \"mesaID\": \"{{mesaId}}\",\n  \"clienteNombre\": \"{{orderClienteNombre}}\",\n  \"clienteTelefono\": \"{{orderClienteTelefono}}\",\n  \"clienteId\": \"{{clientId}}\",\n  \"items\": [\n    {\"tipo\": \"MENU\", \"menu\": \"{{menuId}}\", \"cantidad\": {{orderCantidad}}, \"notas\": \"\"}\n  ],\n  \"impuesto\": {{orderImpuesto}},\n  \"descuento\": {{orderDescuento}},\n  \"notas\": \"{{orderNotas}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Menu Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"{{cancelReason}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{menuOrderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{menuOrderId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Cancelled Order Permanently",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{menuOrderId}}/permanent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{menuOrderId}}",
+                "permanent"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Order Status to LISTO",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"LISTO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{orderId}}",
+                "estado"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pay Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metodoPago\": \"{{metodoPago}}\",\n  \"propina\": {{propina}},\n  \"cargosExtra\": {{cargosExtra}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}/pagar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{orderId}}",
+                "pagar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Orders",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "get"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - T4 Finanzas",
+      "item": [
+        {
+          "name": "Create Invoice from Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Factura creada', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data._id) pm.collectionVariables.set('invoiceId', json.data._id);",
+                  "pm.test('Factura inicia PENDIENTE', function () { pm.expect(json.data.estado).to.eql('PENDIENTE'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{clientToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderID\": \"{{orderId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Invoice By Id Pending",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{clientToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoiceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                "{{invoiceId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Invoices as Client",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{clientToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/get?restaurantID={{restaurantId}}&page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                "get"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "{{restaurantId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Invoices as Admin",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/get?restaurantID={{restaurantId}}&page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                "get"
+              ],
+              "query": [
+                {
+                  "key": "restaurantID",
+                  "value": "{{restaurantId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Invoice By Id Paid",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{clientToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoiceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                "{{invoiceId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Invoice Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"{{invoiceStatusUpdate}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoiceId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                "{{invoiceId}}",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Invoice",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoiceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                "{{invoiceId}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3006"
+    },
+    {
+      "key": "adminLogin",
+      "value": "admin"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin@1234!"
+    },
+    {
+      "key": "clientLogin",
+      "value": "billyrey3645@gmail.com"
+    },
+    {
+      "key": "clientPassword",
+      "value": "Temp@1234!"
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "clientToken",
+      "value": ""
+    },
+    {
+      "key": "clientId",
+      "value": "usr_cdQh1BUN6t5M"
+    },
+    {
+      "key": "restaurantId",
+      "value": ""
+    },
+    {
+      "key": "mesaId",
+      "value": ""
+    },
+    {
+      "key": "inventoryId",
+      "value": ""
+    },
+    {
+      "key": "platoId",
+      "value": ""
+    },
+    {
+      "key": "menuId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "orderNumber",
+      "value": ""
+    },
+    {
+      "key": "menuOrderId",
+      "value": ""
+    },
+    {
+      "key": "menuOrderNumber",
+      "value": ""
+    },
+    {
+      "key": "invoiceId",
+      "value": ""
+    },
+    {
+      "key": "restaurantName",
+      "value": "Sucursal Unificada"
+    },
+    {
+      "key": "restaurantEmail",
+      "value": "unificada@gastroflow.local"
+    },
+    {
+      "key": "restaurantPhone",
+      "value": "55550000"
+    },
+    {
+      "key": "restaurantAddress",
+      "value": "Zona Demo, Calle Principal 123"
+    },
+    {
+      "key": "restaurantCity",
+      "value": "Guatemala"
+    },
+    {
+      "key": "restaurantOpeningHours",
+      "value": "08:00-22:00"
+    },
+    {
+      "key": "restaurantAforoMaximo",
+      "value": "80"
+    },
+    {
+      "key": "restaurantCategory",
+      "value": "Casual"
+    },
+    {
+      "key": "restaurantDescription",
+      "value": "Coleccion unificada T3 y T4"
+    },
+    {
+      "key": "restaurantAveragePrice",
+      "value": "45"
+    },
+    {
+      "key": "mesaNumero",
+      "value": "101"
+    },
+    {
+      "key": "mesaCapacidad",
+      "value": "4"
+    },
+    {
+      "key": "mesaUbicacion",
+      "value": "Salon principal"
+    },
+    {
+      "key": "mesaHorario",
+      "value": "08:00-22:00"
+    },
+    {
+      "key": "inventoryName",
+      "value": "insumo_demo_unificado"
+    },
+    {
+      "key": "inventoryStock",
+      "value": "100"
+    },
+    {
+      "key": "inventoryUnidadMedida",
+      "value": "unidad"
+    },
+    {
+      "key": "platoNombre",
+      "value": "PLATO_UNIFICADO"
+    },
+    {
+      "key": "platoDescripcion",
+      "value": "Plato base para pruebas"
+    },
+    {
+      "key": "platoPrecio",
+      "value": "35"
+    },
+    {
+      "key": "platoCategoria",
+      "value": "FUERTE"
+    },
+    {
+      "key": "menuNombre",
+      "value": "MENU_UNIFICADO"
+    },
+    {
+      "key": "menuDescripcion",
+      "value": "Menu base para pruebas"
+    },
+    {
+      "key": "menuPrecio",
+      "value": "45"
+    },
+    {
+      "key": "menuTipo",
+      "value": "FUERTE"
+    },
+    {
+      "key": "orderClienteNombre",
+      "value": "Cliente Unificado"
+    },
+    {
+      "key": "orderClienteNombreEditado",
+      "value": "Cliente Unificado Editado"
+    },
+    {
+      "key": "orderClienteTelefono",
+      "value": "55551111"
+    },
+    {
+      "key": "orderNotas",
+      "value": "Orden generada por la coleccion unificada"
+    },
+    {
+      "key": "orderNotasEditadas",
+      "value": "Orden editada desde la coleccion unificada"
+    },
+    {
+      "key": "orderCantidad",
+      "value": "1"
+    },
+    {
+      "key": "orderImpuesto",
+      "value": "5"
+    },
+    {
+      "key": "orderDescuento",
+      "value": "0"
+    },
+    {
+      "key": "cancelReason",
+      "value": "Prueba de cancelacion"
+    },
+    {
+      "key": "metodoPago",
+      "value": "EFECTIVO"
+    },
+    {
+      "key": "propina",
+      "value": "2"
+    },
+    {
+      "key": "cargosExtra",
+      "value": "1"
+    },
+    {
+      "key": "invoiceStatusUpdate",
+      "value": "CANCELADA"
+    }
+  ]
+}

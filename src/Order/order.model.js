@@ -95,6 +95,12 @@ const orderSchema = mongoose.Schema(
             trim: true,
             maxLength: [100, 'El nombre del cliente no puede exceder 100 caracteres']
         },
+        clienteId: {
+            type: String,
+            default: null,
+            trim: true,
+            index: true
+        },
         clienteTelefono: {
             type: String,
             trim: true,

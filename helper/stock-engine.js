@@ -95,15 +95,27 @@ export const buildOrderIngredientRequirements = async (items, restaurantId) => {
   return { success: true, requirements };
 };
 
-export const getStockShortages = async (requirementsMap) => {
+export const getStockShortages = async (requirementsMap, restaurantId = null) => {
   const ingredientIds = [...requirementsMap.keys()];
   const inventories = await Inventory.find({ _id: { $in: ingredientIds }, activo: true }).select('nombre stock restaurantId');
   const inventoryMap = new Map(inventories.map((inv) => [inv._id.toString(), inv]));
 
   const faltantes = [];
+  const restaurantMismatches = [];
   for (const [ingredientId, requiredQty] of requirementsMap.entries()) {
     const inv = inventoryMap.get(ingredientId);
     const disponible = inv?.stock || 0;
+    const inventoryRestaurantId = inv?.restaurantId?.toString?.() || null;
+    if (restaurantId && inv && inventoryRestaurantId && inventoryRestaurantId !== restaurantId) {
+      restaurantMismatches.push({
+        ingredienteId: ingredientId,
+        nombre: inv?.nombre || 'Ingrediente no encontrado',
+        restaurantIdEsperado: restaurantId,
+        restaurantIdReal: inventoryRestaurantId
+      });
+      continue;
+    }
+
     if (!inv || disponible < requiredQty) {
       faltantes.push({
         ingredienteId: ingredientId,
@@ -117,8 +129,9 @@ export const getStockShortages = async (requirementsMap) => {
   }
 
   return {
-    hasShortage: faltantes.length > 0,
+    hasShortage: faltantes.length > 0 || restaurantMismatches.length > 0,
     faltantes,
+    restaurantMismatches,
     inventoryMap
   };
 };
@@ -133,6 +146,10 @@ export const reserveInventoryAtomically = async ({ requirementsMap, restaurantId
 
       if (!before || !before.activo || before.stock < cantidadRequerida) {
         throw new Error('STOCK_INSUFICIENTE');
+      }
+
+      if (restaurantId && before.restaurantId?.toString?.() !== restaurantId) {
+        throw new Error('RESTAURANT_MISMATCH');
       }
 
       const updated = await Inventory.findOneAndUpdate(
@@ -221,6 +238,11 @@ export const releaseInventoryForOrder = async ({ requirementsMap, restaurantId, 
 
   for (const [inventoryId, cantidad] of requirementsMap.entries()) {
     const before = await Inventory.findById(inventoryId).select('stock restaurantId');
+
+    if (restaurantId && before && before.restaurantId?.toString?.() !== restaurantId) {
+      throw new Error('RESTAURANT_MISMATCH');
+    }
+
     const updated = await Inventory.findByIdAndUpdate(
       inventoryId,
       { $inc: { stock: cantidad } },

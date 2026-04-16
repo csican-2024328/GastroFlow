@@ -14,22 +14,101 @@ import {
 } from '../../helper/stock-engine.js';
 
 
-/**
- * Decrementa el inventario de ingredientes según los platos/menús de una orden
- * Por cada plato/menú en la orden, resta la cantidad del stock de cada ingrediente
- */
-const decrementInventoryForOrder = async (order, userId = null) => {
-    const restaurantId = order.restaurantID?.toString() || order.restaurantId?.toString() || null;
+const buildOrderItemsFromPayload = async (items, restaurantId) => {
+    const orderItems = [];
 
-    const buildResult = await buildOrderIngredientRequirements(order.items, restaurantId);
-    if (!buildResult.success) {
-        throw new Error(buildResult.message);
+    for (const item of items) {
+        if (!item.tipo || !['PLATO', 'MENU'].includes(item.tipo)) {
+            throw new Error('El tipo de item debe ser PLATO o MENU');
+        }
+
+        const quantity = Number(item.cantidad || 1);
+        let itemData = null;
+        let nombre = '';
+        let precioUnitario = 0;
+
+        if (item.tipo === 'PLATO') {
+            if (!item.plato) {
+                throw new Error('El ID del plato es obligatorio cuando tipo es PLATO');
+            }
+
+            const plato = await Plato.findById(item.plato);
+            if (!plato || !plato.isActive) {
+                throw new Error(`Plato con ID ${item.plato} no encontrado o inactivo`);
+            }
+
+            if (restaurantId && plato.restaurantId?.toString() !== restaurantId) {
+                throw new Error(`El plato "${plato.nombre}" no pertenece al restaurante seleccionado`);
+            }
+
+            itemData = { plato: plato._id };
+            nombre = plato.nombre;
+            precioUnitario = plato.precio;
+        } else {
+            if (!item.menu) {
+                throw new Error('El ID del menú es obligatorio cuando tipo es MENU');
+            }
+
+            const menu = await Menu.findById(item.menu);
+            if (!menu || !menu.isActive) {
+                throw new Error(`Menú con ID ${item.menu} no encontrado o inactivo`);
+            }
+
+            if (restaurantId && menu.restaurantId?.toString() !== restaurantId) {
+                throw new Error(`El menú "${menu.nombre}" no pertenece al restaurante seleccionado`);
+            }
+
+            itemData = { menu: menu._id };
+            nombre = menu.nombre;
+            precioUnitario = menu.precio;
+        }
+
+        orderItems.push({
+            tipo: item.tipo,
+            ...itemData,
+            nombre,
+            cantidad: quantity,
+            precioUnitario,
+            subtotal: precioUnitario * quantity,
+            notas: item.notas || ''
+        });
+    }
+
+    return orderItems;
+};
+
+const requirementsToDelta = (currentRequirements, nextRequirements) => {
+    const increase = new Map();
+    const release = new Map();
+    const ingredientIds = new Set([
+        ...currentRequirements.keys(),
+        ...nextRequirements.keys()
+    ]);
+
+    for (const ingredientId of ingredientIds) {
+        const currentQty = currentRequirements.get(ingredientId) || 0;
+        const nextQty = nextRequirements.get(ingredientId) || 0;
+        const diff = nextQty - currentQty;
+
+        if (diff > 0) {
+            increase.set(ingredientId, diff);
+        } else if (diff < 0) {
+            release.set(ingredientId, Math.abs(diff));
+        }
+    }
+
+    return { increase, release };
+};
+
+const reserveInventoryForOrder = async ({ requirementsMap, restaurantId, orderId, userId }) => {
+    if (!requirementsMap || requirementsMap.size === 0) {
+        return;
     }
 
     const reserveResult = await reserveInventoryAtomically({
-        requirementsMap: buildResult.requirements,
+        requirementsMap,
         restaurantId,
-        orderId: order._id,
+        orderId,
         userId
     });
 
@@ -40,24 +119,17 @@ const decrementInventoryForOrder = async (order, userId = null) => {
     }
 };
 
-/**
- * Restaura el inventario de ingredientes cuando una orden se cancela
- * Por cada plato/menú en la orden, suma la cantidad del stock de cada ingrediente
- */
-const restoreInventoryForOrder = async (order, userId = null) => {
-    const restaurantId = order.restaurantID?.toString() || order.restaurantId?.toString() || null;
-
-    const buildResult = await buildOrderIngredientRequirements(order.items, restaurantId);
-    if (!buildResult.success) {
-        throw new Error(buildResult.message);
+const releaseInventoryForExistingOrder = async ({ requirementsMap, restaurantId, orderId, userId, motivo }) => {
+    if (!requirementsMap || requirementsMap.size === 0) {
+        return;
     }
 
     await releaseInventoryForOrder({
-        requirementsMap: buildResult.requirements,
+        requirementsMap,
         restaurantId,
-        orderId: order._id,
+        orderId,
         userId,
-        motivo: 'ORDER_CANCELADA'
+        motivo
     });
 };
 
@@ -78,7 +150,15 @@ export const checkOrderStock = async (req, res) => {
             return res.status(400).json({ success: false, message: buildResult.message });
         }
 
-        const shortageResult = await getStockShortages(buildResult.requirements);
+        const shortageResult = await getStockShortages(buildResult.requirements, restaurantId);
+
+        if (shortageResult.restaurantMismatches?.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'El pedido contiene ingredientes de otro restaurante',
+                mismatches: shortageResult.restaurantMismatches
+            });
+        }
 
         if (shortageResult.hasShortage) {
             return res.status(409).json({
@@ -180,7 +260,8 @@ export const createOrder = async (req, res) => {
             impuesto = 0,
             descuento = 0,
             couponCode,
-            notas
+            notas,
+            clienteId
         } = req.body;
 
         const resolvedRestaurantId = restaurantId || restaurantID;
@@ -236,76 +317,8 @@ export const createOrder = async (req, res) => {
             }
         }
 
-        // Validar y obtener información de cada item (plato o menú)
-        const orderItems = [];
-        for (const item of items) {
-            // Validar que el tipo sea válido
-            if (!item.tipo || !['PLATO', 'MENU'].includes(item.tipo)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'El tipo de item debe ser PLATO o MENU'
-                });
-            }
-
-            let itemData = null;
-            let nombre = '';
-            let precio = 0;
-
-            if (item.tipo === 'PLATO') {
-                // Validar plato
-                if (!item.plato) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'El ID del plato es requerido cuando tipo es PLATO'
-                    });
-                }
-
-                const plato = await Plato.findById(item.plato);
-                
-                if (!plato || !plato.isActive) {
-                    return res.status(404).json({
-                        success: false,
-                        message: `Plato con ID ${item.plato} no encontrado o inactivo`
-                    });
-                }
-
-                itemData = { plato: plato._id };
-                nombre = plato.nombre;
-                precio = plato.precio;
-
-            } else if (item.tipo === 'MENU') {
-                // Validar menú
-                if (!item.menu) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'El ID del menú es requerido cuando tipo es MENU'
-                    });
-                }
-
-                const menu = await Menu.findById(item.menu);
-                
-                if (!menu || !menu.isActive) {
-                    return res.status(404).json({
-                        success: false,
-                        message: `Menú con ID ${item.menu} no encontrado o inactivo`
-                    });
-                }
-
-                itemData = { menu: menu._id };
-                nombre = menu.nombre;
-                precio = menu.precio;
-            }
-
-            orderItems.push({
-                tipo: item.tipo,
-                ...itemData,
-                nombre,
-                cantidad: item.cantidad || 1,
-                precioUnitario: precio,
-                subtotal: precio * (item.cantidad || 1),
-                notas: item.notas || ''
-            });
-        }
+        const orderItems = await buildOrderItemsFromPayload(items, resolvedRestaurantId);
+        const stockRequirements = req.stockRequirements || (await buildOrderIngredientRequirements(items, resolvedRestaurantId)).requirements;
 
         // Generar número de orden único
         let numeroOrden = generateOrderNumber();
@@ -372,6 +385,7 @@ export const createOrder = async (req, res) => {
             tipoPedido,
             restaurantID: resolvedRestaurantId,
             mesaID: tipoPedido === 'EN_MESA' ? mesaID : null,
+            clienteId: clienteId || (req.usuario?.role === 'CLIENT' ? req.usuario?.sub : null),
             clienteNombre,
             clienteTelefono,
             clienteDireccion: tipoPedido === 'A_DOMICILIO' ? clienteDireccion : null,
@@ -391,10 +405,15 @@ export const createOrder = async (req, res) => {
 
         await newOrder.save();
 
-        // Descuento de inventario en EN_PREPARACION (atómico y con rollback)
+        // Descuento de inventario usando el stock ya validado por middleware
         try {
             const userId = req.usuario?.sub || req.usuario?.id || null;
-            await decrementInventoryForOrder(newOrder, userId);
+            await reserveInventoryForOrder({
+                requirementsMap: stockRequirements,
+                restaurantId: resolvedRestaurantId,
+                orderId: newOrder._id,
+                userId
+            });
             newOrder.inventarioDecrementado = true;
             await newOrder.save();
         } catch (stockError) {
@@ -634,7 +653,19 @@ export const updateOrderStatus = async (req, res) => {
             // Restaurar inventario si fue decrementado anteriormente
             if (order.inventarioDecrementado) {
                 const userId = req.usuario?.sub || req.usuario?.id || null;
-                await restoreInventoryForOrder(order, userId);
+                const restaurantId = order.restaurantID?.toString() || order.restaurantId?.toString() || null;
+                const buildResult = await buildOrderIngredientRequirements(order.items, restaurantId);
+                if (!buildResult.success) {
+                    throw new Error(buildResult.message);
+                }
+
+                await releaseInventoryForExistingOrder({
+                    requirementsMap: buildResult.requirements,
+                    restaurantId,
+                    orderId: order._id,
+                    userId,
+                    motivo: 'ORDER_CANCELADA'
+                });
                 order.inventarioDecrementado = false;
             }
         }
@@ -646,15 +677,16 @@ export const updateOrderStatus = async (req, res) => {
             { path: 'mesaID', select: 'numero ubicacion' }
         ]);
 
-        // Notificar al cliente sobre cambio de estado
-        const clientID = req.usuario?.sub || 'GUEST';
-        notifyOrderStatusChange(clientID, {
-            _id: order._id,
-            numeroOrden: order.numeroOrden,
-            estado: order.estado,
-            tipoPedido: order.tipoPedido,
-            total: order.total
-        });
+        // Notificar al cliente dueño de la orden sobre cambio de estado
+        if (order.clienteId) {
+            notifyOrderStatusChange(order.clienteId.toString(), {
+                _id: order._id,
+                numeroOrden: order.numeroOrden,
+                estado: order.estado,
+                tipoPedido: order.tipoPedido,
+                total: order.total
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -703,28 +735,68 @@ export const updateOrder = async (req, res) => {
             });
         }
 
+        const restaurantId = order.restaurantID?.toString() || order.restaurantId?.toString() || null;
+
         if (items && items.length > 0) {
-            const orderItems = [];
-            for (const item of items) {
-                const plato = await Plato.findById(item.plato);
-                
-                if (!plato || !plato.isActive) {
-                    return res.status(404).json({
+            const currentBuild = await buildOrderIngredientRequirements(order.items, restaurantId);
+            if (!currentBuild.success) {
+                return res.status(400).json({
+                    success: false,
+                    message: currentBuild.message
+                });
+            }
+
+            const nextBuild = req.stockRequirements || await buildOrderIngredientRequirements(items, restaurantId);
+            if (!nextBuild.success) {
+                return res.status(400).json({
+                    success: false,
+                    message: nextBuild.message
+                });
+            }
+
+            const { increase, release } = requirementsToDelta(currentBuild.requirements, nextBuild.requirements);
+
+            if (increase.size > 0) {
+                const shortageResult = await getStockShortages(increase, restaurantId);
+
+                if (shortageResult.restaurantMismatches?.length > 0) {
+                    return res.status(400).json({
                         success: false,
-                        message: `Plato con ID ${item.plato} no encontrado o inactivo`
+                        message: 'El pedido contiene ingredientes de otro restaurante',
+                        mismatches: shortageResult.restaurantMismatches
                     });
                 }
 
-                orderItems.push({
-                    plato: plato._id,
-                    nombre: plato.nombre,
-                    cantidad: item.cantidad,
-                    precioUnitario: plato.precio,
-                    subtotal: plato.precio * item.cantidad,
-                    notas: item.notas || ''
+                if (shortageResult.hasShortage) {
+                    return res.status(409).json({
+                        success: false,
+                        message: 'Stock insuficiente para completar la actualización del pedido',
+                        faltantes: shortageResult.faltantes
+                    });
+                }
+
+                const userId = req.usuario?.sub || req.usuario?.id || null;
+                await reserveInventoryForOrder({
+                    requirementsMap: increase,
+                    restaurantId,
+                    orderId: order._id,
+                    userId
                 });
             }
-            order.items = orderItems;
+
+            if (release.size > 0) {
+                const userId = req.usuario?.sub || req.usuario?.id || null;
+                await releaseInventoryForExistingOrder({
+                    requirementsMap: release,
+                    restaurantId,
+                    orderId: order._id,
+                    userId,
+                    motivo: 'ORDER_UPDATE'
+                });
+            }
+
+            order.items = await buildOrderItemsFromPayload(items, restaurantId);
+            order.inventarioDecrementado = true;
         }
 
         // Actualizar campos según tipo de pedido
@@ -749,7 +821,8 @@ export const updateOrder = async (req, res) => {
         await order.populate([
             { path: 'restaurantID', select: 'nombre' },
             { path: 'mesaID', select: 'numero ubicacion' },
-            { path: 'items.plato', select: 'nombre precio categoria' }
+            { path: 'items.plato', select: 'nombre precio categoria' },
+            { path: 'items.menu', select: 'nombre precio tipo' }
         ]);
 
         res.status(200).json({
@@ -894,7 +967,19 @@ export const cancelOrder = async (req, res) => {
         // Restaurar inventario si fue decrementado anteriormente
         if (order.inventarioDecrementado) {
             const userId = req.usuario?.sub || req.usuario?.id || null;
-            await restoreInventoryForOrder(order, userId);
+            const restaurantId = order.restaurantID?.toString() || order.restaurantId?.toString() || null;
+            const buildResult = await buildOrderIngredientRequirements(order.items, restaurantId);
+            if (!buildResult.success) {
+                throw new Error(buildResult.message);
+            }
+
+            await releaseInventoryForExistingOrder({
+                requirementsMap: buildResult.requirements,
+                restaurantId,
+                orderId: order._id,
+                userId,
+                motivo: 'ORDER_CANCELADA'
+            });
             order.inventarioDecrementado = false;
         }
         
