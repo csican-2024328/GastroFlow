@@ -21,6 +21,28 @@ export const validateCreateMenu = [
     .withMessage('Cada ingrediente debe ser un ID de MongoDB válido'),
   body('platos')
     .optional()
+    .customSanitizer((value) => {
+      if (Array.isArray(value)) return value;
+
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (!trimmed) return [];
+
+        if (trimmed.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            return Array.isArray(parsed) ? parsed : [trimmed];
+          } catch {
+            return [trimmed];
+          }
+        }
+
+        return [trimmed];
+      }
+
+      return value;
+    })
     .isArray()
     .withMessage('Los platos deben ser un arreglo'),
   body('platos.*')
@@ -59,6 +81,28 @@ export const validateUpdateMenu = [
     .withMessage('Cada ingrediente debe ser un ID de MongoDB válido'),
   body('platos')
     .optional()
+    .customSanitizer((value) => {
+      if (Array.isArray(value)) return value;
+
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (!trimmed) return [];
+
+        if (trimmed.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            return Array.isArray(parsed) ? parsed : [trimmed];
+          } catch {
+            return [trimmed];
+          }
+        }
+
+        return [trimmed];
+      }
+
+      return value;
+    })
     .isArray()
     .withMessage('Los platos deben ser un arreglo'),
   body('platos.*')

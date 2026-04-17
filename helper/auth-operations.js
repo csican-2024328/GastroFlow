@@ -74,20 +74,35 @@ export const registerUserHelper = async (userData) => {
       tokenExpiry
     );
 
-    // Enviar email de verificación en background, sin bloquear el registro
-    Promise.resolve()
-      .then(() => enviarEmailVerificacion(email, name, verificationToken))
-      .catch((err) => {
-        console.error('❌ Error enviando email de verificación en background:', err.message);
-      });
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    let emailSent = true;
+    let emailError = null;
 
-    return {
+    try {
+      await enviarEmailVerificacion(email, name, verificationToken);
+    } catch (err) {
+      emailSent = false;
+      emailError = err.message;
+      console.error('❌ Error enviando email de verificación en background:', err.message);
+    }
+
+    const response = {
       success: true,
       user: buildUserResponse(newUser),
       message:
         'Usuario registrado exitosamente. Por favor, verifica tu email para activar la cuenta.',
       emailVerificationRequired: true,
+      emailSent,
     };
+
+    if (!emailSent && isDevelopment) {
+      response.message =
+        'Usuario registrado, pero el correo de verificación no se pudo enviar. Usa el token de desarrollo para verificar manualmente.';
+      response.verificationToken = verificationToken;
+      response.smtpError = emailError;
+    }
+
+    return response;
   } catch (error) {
     console.error('Error en registro:', error);
     throw error;
