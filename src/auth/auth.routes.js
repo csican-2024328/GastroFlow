@@ -75,7 +75,11 @@ router.put('/profile', updateProfile);
 
 router.delete('/profile', validateJWT, authController.deleteProfile);
 
-router.post('/profile/by-id', requestLimit, authController.getProfileById);
+router.post('/profile/by-id', validateJWT, requestLimit, authController.getProfileById);
+
+router.post('/refresh-token', validateJWT, authController.refreshToken);
+
+router.post('/logout', validateJWT, authController.logout);
 
 router.put(
   '/assign-role',

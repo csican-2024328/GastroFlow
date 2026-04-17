@@ -524,6 +524,106 @@ export const getOrders = async (req, res) => {
     }
 };
 
+export const getMyOrders = async (req, res) => {
+    try {
+        const userId = req.usuario?.sub;
+        const {
+            estado,
+            page = 1,
+            limit = 10
+        } = req.query;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'Usuario no autenticado'
+            });
+        }
+
+        const parsedPage = Math.max(parseInt(page, 10) || 1, 1);
+        const parsedLimit = Math.max(parseInt(limit, 10) || 10, 1);
+
+        // Historial completo del cliente, incluyendo pedidos A_DOMICILIO
+        const filter = {
+            isActive: true,
+            clienteId: userId
+        };
+
+        if (estado) {
+            filter.estado = estado;
+        }
+
+        const [orders, total] = await Promise.all([
+            Order.find(filter)
+                .populate('restaurantID', 'nombre')
+                .populate('mesaID', 'numero ubicacion')
+                .populate('items.plato', 'nombre precio categoria')
+                .populate('items.menu', 'nombre precio tipo')
+                .limit(parsedLimit)
+                .skip((parsedPage - 1) * parsedLimit)
+                .sort({ createdAt: -1 }),
+            Order.countDocuments(filter)
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Historial de pedidos obtenido exitosamente',
+            data: orders,
+            pagination: {
+                total,
+                pages: Math.ceil(total / parsedLimit),
+                currentPage: parsedPage,
+                limit: parsedLimit
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Error al obtener historial de pedidos',
+            error: error.message
+        });
+    }
+};
+
+export const getMyOrderById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.usuario?.sub;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'Usuario no autenticado'
+            });
+        }
+
+        const order = await Order.findOne({ _id: id, isActive: true, clienteId: userId })
+            .populate('restaurantID', 'nombre email phone')
+            .populate('mesaID', 'numero ubicacion capacidad')
+            .populate('items.plato', 'nombre descripcion precio categoria')
+            .populate('items.menu', 'nombre descripcion precio tipo');
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Pedido no encontrado'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Pedido obtenido exitosamente',
+            data: order
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Error al obtener el pedido',
+            error: error.message
+        });
+    }
+};
+
 
 export const getOrderById = async (req, res) => {
     try {
@@ -539,6 +639,13 @@ export const getOrderById = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 message: 'Pedido no encontrado'
+            });
+        }
+
+        if (req.usuario?.role === 'CLIENT' && order.clienteId?.toString() !== req.usuario?.sub) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tienes permiso para ver este pedido'
             });
         }
 

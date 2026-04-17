@@ -1,6 +1,12 @@
 import Review from './review.model.js';
 import Restaurant from '../Restaurant/Restaurant.model.js';
 
+const canAccessReview = (req, review) => {
+  if (!review) return false;
+  if (req.usuario?.role === 'PLATFORM_ADMIN') return true;
+  return review.userID?.toString() === req.usuario?.sub;
+};
+
 export const createReview = async (req, res) => {
   try {
     const { restaurantID, rating, comment } = req.body;
@@ -44,5 +50,55 @@ export const deleteReview = async (req, res) => {
     res.status(200).json({ success: true, message: 'Reseña eliminada', data: review });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error eliminando reseña', error: error.message });
+  }
+};
+
+export const getReviewById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const review = await Review.findById(id).populate('restaurantID', 'name');
+
+    if (!review || !review.isActive) {
+      return res.status(404).json({ success: false, message: 'Reseña no encontrada' });
+    }
+
+    if (!canAccessReview(req, review)) {
+      return res.status(403).json({ success: false, message: 'No tienes permiso para ver esta reseña' });
+    }
+
+    return res.status(200).json({ success: true, data: review });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Error obteniendo reseña', error: error.message });
+  }
+};
+
+export const updateReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rating, comment } = req.body;
+
+    const review = await Review.findById(id);
+
+    if (!review || !review.isActive) {
+      return res.status(404).json({ success: false, message: 'Reseña no encontrada' });
+    }
+
+    if (!canAccessReview(req, review)) {
+      return res.status(403).json({ success: false, message: 'No tienes permiso para editar esta reseña' });
+    }
+
+    if (rating !== undefined) {
+      review.rating = rating;
+    }
+
+    if (comment !== undefined) {
+      review.comment = comment;
+    }
+
+    await review.save();
+
+    return res.status(200).json({ success: true, message: 'Reseña actualizada', data: review });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Error actualizando reseña', error: error.message });
   }
 };

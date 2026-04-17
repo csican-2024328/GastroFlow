@@ -285,7 +285,7 @@ export const getReservations = async (req, res) => {
         const parsedPage = Math.max(parseInt(page, 10) || 1, 1);
         const parsedLimit = Math.max(parseInt(limit, 10) || 10, 1);
 
-        const filter = { isActive: true };
+        const filter = {};
 
         if (estado) filter.estado = estado;
 
@@ -300,6 +300,7 @@ export const getReservations = async (req, res) => {
             if (restaurantID) filter.restaurantID = restaurantID;
             if (mesaID) filter.mesaID = mesaID;
         } else if (isRestaurantAdminRole(req)) {
+            filter.isActive = true;
             const managedRestaurantIds = await getManagedRestaurantIds(req.usuario.sub);
 
             if (managedRestaurantIds.length === 0) {
@@ -331,6 +332,7 @@ export const getReservations = async (req, res) => {
 
             if (mesaID) filter.mesaID = mesaID;
         } else if (isPlatformAdminRole(req)) {
+            filter.isActive = true;
             if (restaurantID) filter.restaurantID = restaurantID;
             if (mesaID) filter.mesaID = mesaID;
             if (req.query.clienteId) filter.clienteId = req.query.clienteId;

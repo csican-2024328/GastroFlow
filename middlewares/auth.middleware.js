@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { isTokenJtiRevoked } from '../helper/session-token-store.js';
 
 export const autenticar = (req, res, next) => {
     try {
@@ -19,6 +20,14 @@ export const autenticar = (req, res, next) => {
                 audience: process.env.JWT_AUDIENCE
             }
         );
+
+        if (isTokenJtiRevoked(decoded.jti)) {
+            return res.status(401).json({
+                success: false,
+                message: 'Token revocado. Por favor inicia sesión nuevamente.'
+            });
+        }
+
         req.usuario = decoded;
         next();
     } catch (error) {
@@ -77,7 +86,10 @@ export const autenticarOpcional = (req, res, next) => {
                     audience: process.env.JWT_AUDIENCE
                 }
             );
-            req.usuario = decoded;
+
+            if (!isTokenJtiRevoked(decoded.jti)) {
+                req.usuario = decoded;
+            }
         }
 
         next();

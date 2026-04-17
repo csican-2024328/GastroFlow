@@ -1,7 +1,31 @@
 import express from 'express';
 import { getIO } from '../../configs/socket.js';
+import { autenticar } from '../../middlewares/auth.middleware.js';
+import { param } from 'express-validator';
+import { validarCampos } from '../../middlewares/validator.middleware.js';
+import {
+    getMyNotifications,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    seedTestNotification,
+} from './notifications.controller.js';
+import Notification from './notification.model.js';
 
 const router = express.Router();
+
+router.get('/', autenticar, getMyNotifications);
+
+router.patch('/read-all', autenticar, markAllNotificationsAsRead);
+
+router.patch(
+    '/:id/read',
+    autenticar,
+    param('id').isMongoId().withMessage('ID de notificación inválido'),
+    validarCampos,
+    markNotificationAsRead
+);
+
+router.post('/seed-test', autenticar, seedTestNotification);
 
 // Test endpoint para verificar que socket.io está funcionando
 router.get('/test', (req, res) => {
@@ -63,6 +87,16 @@ router.post('/emit-test', async (req, res) => {
             io.emit(event, payload);
         } else {
             io.to(room).emit(event, payload);
+        }
+
+        // Persistencia real para bandeja del cliente
+        if (targetType === 'client') {
+            await Notification.create({
+                userId: String(targetId),
+                type,
+                message,
+                data,
+            });
         }
 
         return res.status(201).json({

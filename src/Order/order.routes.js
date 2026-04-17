@@ -9,6 +9,8 @@ import {
     createOrder,
     checkOrderStock,
     getOrders,
+    getMyOrders,
+    getMyOrderById,
     getOrderById,
     getOrderByNumber,
     updateOrder,
@@ -66,6 +68,22 @@ router.get(
     autenticar,
     autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
     getOrders
+);
+
+router.get(
+    '/mine',
+    autenticar,
+    autorizarRole('CLIENT'),
+    getMyOrders
+);
+
+router.get(
+    '/mine/:id',
+    autenticar,
+    autorizarRole('CLIENT'),
+    validateOrderId,
+    validarCampos,
+    getMyOrderById
 );
 
 /**

@@ -1,5 +1,6 @@
 import { verifyJWT } from '../helper/generate-jwt.js';
 import { findUserById } from '../helper/user-db.js';
+import { isTokenJtiRevoked } from '../helper/session-token-store.js';
 
 export const validateJWT = async (req, res, next) => {
   try {
@@ -20,6 +21,13 @@ export const validateJWT = async (req, res, next) => {
 
     const decoded = await verifyJWT(token);
 
+    if (isTokenJtiRevoked(decoded.jti)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token revocado. Inicia sesion nuevamente.',
+      });
+    }
+
     const user = await findUserById(decoded.sub);
 
     if (!user) {
@@ -38,6 +46,8 @@ export const validateJWT = async (req, res, next) => {
 
     req.user = user;
     req.userId = user.Id.toString();
+    req.jwtPayload = decoded;
+    req.token = token;
 
     next();
   } catch (err) {

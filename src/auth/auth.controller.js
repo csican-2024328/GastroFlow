@@ -10,6 +10,8 @@ import {
 import { getUserProfileHelper } from '../../helper/profile-operations.js';
 import { findUserById, softDeleteUser } from '../../helper/user-db.js';
 import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
+import { generateJWT } from '../../helper/generate-jwt.js';
+import { revokeTokenByJti } from '../../helper/session-token-store.js';
 
 export const register = asyncHandler(async (req, res) => {
   try {
@@ -238,6 +240,38 @@ export const deleteProfile = asyncHandler(async (req, res) => {
     success: true,
     message: 'Usuario eliminado lógicamente',
     motivo: motivo || null,
+  });
+});
+
+export const refreshToken = asyncHandler(async (req, res) => {
+  const user = req.user;
+  const role = user?.UserRoles?.[0]?.Role?.Name || 'CLIENT';
+
+  const token = await generateJWT(user.Id.toString(), { role });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Token refrescado exitosamente',
+    token,
+  });
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  const jti = req.jwtPayload?.jti;
+  const exp = req.jwtPayload?.exp;
+
+  if (!jti || !exp) {
+    return res.status(400).json({
+      success: false,
+      message: 'Token invalido para cerrar sesion',
+    });
+  }
+
+  revokeTokenByJti(jti, exp);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Sesion cerrada exitosamente',
   });
 });
 

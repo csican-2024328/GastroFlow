@@ -30,7 +30,12 @@ export const generateJWT = (userId, extraClaims = {}, options = {}) => {
 
 export const verifyJWT = (token) => {
   return new Promise((resolve, reject) => {
-    jwt.verify(token, config.jwt.secret, (err, decoded) => {
+    const verifyOptions = {
+      issuer: config.jwt.issuer,
+      audience: config.jwt.audience,
+    };
+
+    jwt.verify(token, config.jwt.secret, verifyOptions, (err, decoded) => {
       if (err) {
         console.error('Error verifying JWT:', err);
         reject(err);

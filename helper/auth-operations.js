@@ -18,7 +18,11 @@ import {
 } from '../utils/auth-helpers.js';
 import { verifyPassword } from '../utils/password-utils.js';
 import { buildUserResponse } from '../utils/user-helpers.js';
-import { enviarEmailVerificacion, enviarEmailResetPassword } from './email-service.js';
+import {
+  enviarEmailVerificacion,
+  enviarEmailResetPassword,
+  enviarEmailContraseñaCambiada,
+} from './email-service.js';
 import { generateJWT } from './generate-jwt.js';
 
 const getExpirationTime = (timeString) => {
