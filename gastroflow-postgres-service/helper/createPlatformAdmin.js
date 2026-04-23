@@ -9,24 +9,44 @@ import {
 } from '../src/User/User.model.js';
 import { hashPassword } from '../utils/password-utils.js';
 
+const PLATFORM_ADMIN_ROLE = 'PLATFORM_ADMIN';
+const DEFAULT_ROLES = [PLATFORM_ADMIN_ROLE, 'RESTAURANT_ADMIN', 'CLIENT'];
+const DEFAULT_ADMIN_USERNAME = 'admin';
+const DEFAULT_ADMIN_EMAIL = 'admin@gastroflow.local';
+const DEFAULT_ADMIN_PASSWORD = 'Admin@1234!';
+
+const seedBaseRoles = async (transaction) => {
+    for (const roleName of DEFAULT_ROLES) {
+        await Role.findOrCreate({
+            where: { Name: roleName },
+            defaults: { Name: roleName },
+            transaction,
+        });
+    }
+};
+
 export const createPlatformAdmin = async () => {
     const transaction = await sequelize.transaction();
 
     try {
-        const adminExists = await User.findOne({
+        await seedBaseRoles(transaction);
+
+        const adminRole = await Role.findOne({
+            where: { Name: PLATFORM_ADMIN_ROLE },
+            transaction,
+        });
+
+        if (!adminRole) {
+            throw new Error('No existe el rol PLATFORM_ADMIN en la base de datos');
+        }
+
+        const adminExists = await UserRole.findOne({
+            where: { RoleId: adminRole.Id },
             include: [
                 {
-                    model: UserRole,
-                    as: 'UserRoles',
+                    model: User,
+                    as: 'User',
                     required: true,
-                    include: [
-                        {
-                            model: Role,
-                            as: 'Role',
-                            required: true,
-                            where: { Name: 'PLATFORM_ADMIN' },
-                        },
-                    ],
                 },
             ],
             transaction,
@@ -38,23 +58,14 @@ export const createPlatformAdmin = async () => {
             return;
         }
 
-        const adminRole = await Role.findOne({
-            where: { Name: 'PLATFORM_ADMIN' },
-            transaction,
-        });
-
-        if (!adminRole) {
-            throw new Error('No existe el rol PLATFORM_ADMIN en la base de datos');
-        }
-
-        const hashedPassword = await hashPassword('Admin@1234!');
+        const hashedPassword = await hashPassword(DEFAULT_ADMIN_PASSWORD);
 
         const admin = await User.create(
             {
                 Name: 'Administrador',
                 Surname: 'Admin',
-                Username: 'platform.admin',
-                Email: 'admin@gastroflow.com',
+                Username: DEFAULT_ADMIN_USERNAME,
+                Email: DEFAULT_ADMIN_EMAIL,
                 Password: hashedPassword,
                 Status: true,
             },
@@ -65,7 +76,7 @@ export const createPlatformAdmin = async () => {
             {
                 UserId: admin.Id,
                 ProfilePicture: '',
-                Phone: '12345678',
+                Phone: '22345678',
             },
             { transaction }
         );

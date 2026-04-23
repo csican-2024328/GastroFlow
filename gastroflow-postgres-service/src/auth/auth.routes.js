@@ -21,6 +21,18 @@ import { updateProfile } from '../User/user.admin.controller.js';
 
 const router = Router();
 
+const normalizeResetPasswordPayload = (req, res, next) => {
+  if (!req.body.password && req.body.newPassword) {
+    req.body.password = req.body.newPassword;
+  }
+
+  if (!req.body.passwordConfirm) {
+    req.body.passwordConfirm = req.body.confirmPassword || req.body.password;
+  }
+
+  next();
+};
+
 router.post(
   '/register',
   authRateLimit,
@@ -64,6 +76,7 @@ router.post(
 router.post(
   '/reset-password',
   authRateLimit,
+  normalizeResetPasswordPayload,
   validateResetPassword,
   validarCampos,
   authController.resetPassword

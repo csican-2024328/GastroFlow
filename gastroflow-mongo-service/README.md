@@ -38,14 +38,6 @@ PORT = 3006
 # MongoDB (Restaurantes, Mesas, Platos) - Local sin autenticación
 MONGODB_URI=mongodb://localhost:27017/GastroFlow
  
-# Database PostgreSQL (Usuarios, Autenticación)
-DB_HOST=localhost
-DB_PORT=5435
-DB_NAME=GastroFlow
-DB_USERNAME=root
-DB_PASSWORD=admin
-DB_SQL_LOGGING=false
- 
 JWT_SECRET=MyVerySecretKeyForJWTTokenAuthenticationWith256Bits!
 JWT_EXPIRES_IN=30m
 JWT_REFRESH_EXPIRES_IN=7d
@@ -55,9 +47,9 @@ JWT_AUDIENCE=AuthService
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_ENABLE_SSL=true
-SMTP_USERNAME=kinalsports@gmail.com
-SMTP_PASSWORD=yrsd prvf kwat toee
-EMAIL_FROM=kinalsports@gmail.com
+SMTP_USERNAME=narutoshippude745@gmail.com
+SMTP_PASSWORD=rhcs dgno ywts egrt
+EMAIL_FROM=narutoshippude745@gmail.com
 EMAIL_FROM_NAME=AuthDotnet App
  
 # Verification Tokens (en horas)

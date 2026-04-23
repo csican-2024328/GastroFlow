@@ -9,7 +9,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const ROUTE_SOURCES = [
-  { mountPath: '/api/v1/auth', file: '../src/auth/auth.routes.js', tag: 'Auth' },
   {
     mountPath: '/api/v1/restaurants',
     file: '../src/Restaurant/Restaurant.routes.js',
@@ -726,11 +725,18 @@ const buildPathOperations = () => {
 const buildOpenApiSpec = () => {
   const serverUrl = process.env.SWAGGER_SERVER_URL || `http://localhost:${process.env.PORT || 3006}`;
   const paths = buildPathOperations();
+  const tags = Array.from(
+    new Set(
+      Object.values(paths).flatMap((pathOperations) =>
+        Object.values(pathOperations).flatMap((operation) => operation.tags || [])
+      )
+    )
+  ).map((name) => ({ name }));
 
   return {
     openapi: '3.0.3',
     info: {
-      title: 'GastroFlow API',
+      title: 'GastroFlow API - Mongo',
       version: '1.0.0',
       description: 'Documentacion generada automaticamente para todos los controladores.',
     },
@@ -740,7 +746,7 @@ const buildOpenApiSpec = () => {
         description: 'Servidor local',
       },
     ],
-    tags: ROUTE_SOURCES.map(({ tag }) => ({ name: tag })),
+    tags,
     paths,
     components: {
       securitySchemes: {
@@ -754,17 +760,147 @@ const buildOpenApiSpec = () => {
   };
 };
 
+const SWAGGER_DOC_TARGETS = {
+  mongo: process.env.SWAGGER_MONGO_DOC_URL || 'http://localhost:3006/api-docs-json',
+  postgres:
+    process.env.SWAGGER_POSTGRES_DOC_URL || 'http://localhost:3007/api-docs-json',
+};
+
+const SWAGGER_TOPBAR_URLS = [
+  {
+    url: '/swagger/specs/mongo',
+    name: 'Mongo',
+  },
+  {
+    url: '/swagger/specs/postgres',
+    name: 'Postgres',
+  },
+];
+
+const defaultTopbarNameByPort = {
+  3006: 'Mongo',
+  3007: 'Postgres',
+};
+
+const SWAGGER_ALLOWED_ORIGINS = new Set([
+  'http://localhost:3006',
+  'http://localhost:3007',
+]);
+
+const applySwaggerCors = (req, res) => {
+  const origin = req.headers.origin;
+  if (origin && SWAGGER_ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+};
+
+const proxySwaggerSpec = async (targetUrl, req, res) => {
+  applySwaggerCors(req, res);
+
+  const response = await fetch(targetUrl, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+
+  const responseBody = await response.text();
+  const contentType = response.headers.get('content-type') || 'application/json; charset=utf-8';
+
+  res.status(response.status);
+  res.setHeader('Content-Type', contentType);
+  return res.send(responseBody);
+};
+
+const renderSwaggerInitializer = (primaryName) => {
+  const urls = JSON.stringify(SWAGGER_TOPBAR_URLS);
+  const safePrimaryName = JSON.stringify(primaryName);
+
+  return `window.onload = function() {
+  window.ui = SwaggerUIBundle({
+    urls: ${urls},
+    "urls.primaryName": ${safePrimaryName},
+    dom_id: '#swagger-ui',
+    deepLinking: true,
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    presets: [
+      SwaggerUIBundle.presets.apis,
+      SwaggerUIStandalonePreset
+    ],
+    plugins: [
+      SwaggerUIBundle.plugins.DownloadUrl
+    ],
+    layout: "StandaloneLayout"
+  });
+};`;
+};
+
 export const setupSwagger = (app) => {
-  app.use('/swagger', swaggerUi.serve, (req, res, next) => {
-    const spec = buildOpenApiSpec();
-    return swaggerUi.setup(spec, {
+  app.options('/api-docs-json', (req, res) => {
+    applySwaggerCors(req, res);
+    return res.sendStatus(204);
+  });
+
+  app.get('/api-docs-json', (req, res) => {
+    applySwaggerCors(req, res);
+    return res.status(200).json(buildOpenApiSpec());
+  });
+
+  app.get('/swagger/specs/mongo', async (req, res) => {
+    try {
+      return await proxySwaggerSpec(SWAGGER_DOC_TARGETS.mongo, req, res);
+    } catch (error) {
+      return res.status(502).json({
+        error: 'No se pudo cargar la especificacion Mongo',
+        details: error.message,
+      });
+    }
+  });
+
+  app.get('/swagger/specs/postgres', async (req, res) => {
+    try {
+      return await proxySwaggerSpec(SWAGGER_DOC_TARGETS.postgres, req, res);
+    } catch (error) {
+      return res.status(502).json({
+        error: 'No se pudo cargar la especificacion Postgres',
+        details: error.message,
+      });
+    }
+  });
+
+  app.get('/swagger/swagger-initializer.js', (req, res) => {
+    const currentPort = Number(process.env.PORT || 3006);
+    const defaultTopbarName =
+      defaultTopbarNameByPort[currentPort] || SWAGGER_TOPBAR_URLS[0].name;
+
+    res.type('application/javascript');
+    return res.send(renderSwaggerInitializer(defaultTopbarName));
+  });
+
+  const swaggerUiHandler = (req, res, next) => {
+    const currentPort = Number(process.env.PORT || 3006);
+    const defaultTopbarName =
+      defaultTopbarNameByPort[currentPort] || SWAGGER_TOPBAR_URLS[0].name;
+
+    return swaggerUi.setup(null, {
       explorer: true,
       swaggerOptions: {
+        urls: SWAGGER_TOPBAR_URLS,
+        'urls.primaryName': defaultTopbarName,
         persistAuthorization: true,
         displayRequestDuration: true,
       },
     })(req, res, next);
-  });
+  };
+
+  app.get('/swagger', swaggerUiHandler);
+  app.get('/swagger/', swaggerUiHandler);
+  app.use('/swagger', swaggerUi.serve);
 };
 
 export const getSwaggerSpec = () => buildOpenApiSpec();

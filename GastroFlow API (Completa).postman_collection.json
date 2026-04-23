@@ -314,15 +314,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/register",
+              "raw": "http://localhost:3007/api/v1/auth/register",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "register"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -350,15 +350,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/login",
+              "raw": "http://localhost:3007/api/v1/auth/login",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "login"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -386,15 +386,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/verify-email",
+              "raw": "http://localhost:3007/api/v1/auth/verify-email",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "verify-email"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -422,15 +422,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/resend-verification",
+              "raw": "http://localhost:3007/api/v1/auth/resend-verification",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "resend-verification"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -458,15 +458,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/forgot-password",
+              "raw": "http://localhost:3007/api/v1/auth/forgot-password",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "forgot-password"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -494,15 +494,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/reset-password",
+              "raw": "http://localhost:3007/api/v1/auth/reset-password",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "reset-password"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -523,15 +523,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/profile",
+              "raw": "http://localhost:3007/api/v1/auth/profile",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "profile"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -566,16 +566,16 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/profile/by-id",
+              "raw": "http://localhost:3007/api/v1/auth/profile/by-id",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "profile",
                 "by-id"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -598,15 +598,15 @@
               "raw": "{\n  \"emailOrUsername\": \"bpineda-2024427@kinal.edu.gt\",\n  \"password\": \"Password123!\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/login",
+              "raw": "http://localhost:3007/api/v1/auth/login",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "login"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -3063,15 +3063,15 @@
               "raw": "{\n  \"name\": \"Carlos\",\n  \"surname\": \"Ramirez\",\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"role\": \"Mesero\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/staff/create",
+              "raw": "http://localhost:3007/api/v1/staff/create",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "staff",
                 "create"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -3087,12 +3087,11 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/staff/get?restaurantId={{restaurantId}}",
+              "raw": "http://localhost:3007/api/v1/staff/get?restaurantId={{restaurantId}}",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "staff",
                 "get"
               ],
@@ -3101,7 +3100,8 @@
                   "key": "restaurantId",
                   "value": "{{restaurantId}}"
                 }
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -3117,15 +3117,15 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/staff/{{staffId}}",
+              "raw": "http://localhost:3007/api/v1/staff/{{staffId}}",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "staff",
                 "{{staffId}}"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -3164,15 +3164,15 @@
               "raw": "{\n  \"motivo\": \"Ya no deseo usar el servicio\",\n  \"confirmacion\": true\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/profile",
+              "raw": "http://localhost:3007/api/v1/auth/profile",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "profile"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []

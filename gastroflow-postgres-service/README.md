@@ -33,10 +33,7 @@ Copia este contenido en un archivo `.env` en la raíz del proyecto:
 
 ```env
 NODE_ENV = development
-PORT = 3006
- 
-# MongoDB (Restaurantes, Mesas, Platos) - Local sin autenticación
-MONGODB_URI=mongodb://localhost:27017/GastroFlow
+PORT = 3007
  
 # Database PostgreSQL (Usuarios, Autenticación)
 DB_HOST=localhost
