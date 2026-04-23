@@ -6,7 +6,7 @@ services:
     container_name: gastroflow-postgres-db
     restart: always
     environment:
-      POSTGRES_DB: GastroFlowPostgres
+      POSTGRES_DB: GastroFlow
       POSTGRES_USER: root
       POSTGRES_PASSWORD: admin
     ports:

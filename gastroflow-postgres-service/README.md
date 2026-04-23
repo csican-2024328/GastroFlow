@@ -55,9 +55,9 @@ JWT_AUDIENCE=AuthService
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_ENABLE_SSL=true
-SMTP_USERNAME=kinalsports@gmail.com
-SMTP_PASSWORD=yrsd prvf kwat toee
-EMAIL_FROM=kinalsports@gmail.com
+SMTP_USERNAME=narutoshippude745@gmail.com
+SMTP_PASSWORD=rhcs dgno ywts egrt
+EMAIL_FROM=narutoshippude745@gmail.com
 EMAIL_FROM_NAME=AuthDotnet App
  
 # Verification Tokens (en horas)
