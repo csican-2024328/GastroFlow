@@ -1,27 +1,21 @@
 import { useState } from 'react';
 import { LoginForm } from '../components/LoginForm.jsx';
 import { ForgotPasswordForm } from '../components/ForgotPasswordForm.jsx';
+import { AuthCard, AuthContainer } from '../../../shared/components/auth/index.js';
 
 export const AuthPage = () => {
   const [isForgot, setIsForgot] = useState(false);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-xl bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-10">
-        <div className="flex justify-center mb-6">
-          <img src="/src/assets/img/Logo.png" alt="GastroFlow" className="h-20 w-auto" />
-        </div>
-
-        <div className="text-center mb-6">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-            {isForgot ? 'Recuperar Contraseña' : 'Bienvenido de Nuevo'}
-          </h1>
-
-          <p className="text-gray-600 text-base max-w-md mx-auto">
-            {isForgot ? 'Ingresa tu correo para recuperar contraseña' : 'Ingresa a tu cuenta de administrador GastroFlow'}
-          </p>
-        </div>
-
+    <AuthContainer>
+      <AuthCard
+        logoSrc="/src/assets/img/Logo.png"
+        logoAlt="GastroFlow"
+        title={isForgot ? 'Recuperar Contraseña' : 'Bienvenido de Nuevo'}
+        subtitle={
+          isForgot ? 'Ingresa tu correo para recuperar contraseña' : 'Ingresa a tu cuenta de administrador GastroFlow'
+        }
+      >
         {isForgot ? (
           <ForgotPasswordForm
             onSwitch={() => {
@@ -31,7 +25,7 @@ export const AuthPage = () => {
         ) : (
           <LoginForm onForgot={() => setIsForgot(true)} />
         )}
-      </div>
-    </div>
+      </AuthCard>
+    </AuthContainer>
   );
 };
