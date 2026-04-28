@@ -61,9 +61,12 @@ FRONTEND_URL=http://localhost:5173
  
 # Cloudinary (upload de imágenes de restaurantes, platos y perfiles)
 # Requiere: crear cuenta en https://cloudinary.com/ y obtener credenciales
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_CLOUD_NAME=dut08rmaz
+CLOUDINARY_API_KEY=279612751725163
+CLOUDINARY_API_SECRET=UxGMRqU1iB580Kxb2AlDR4n4hu0
+CLOUDINARY_BASE_URL=https://res.cloudinary.com/dut08rmaz/image/upload/
+CLOUDINARY_FOLDER=gastroflow/profiles
+CLOUDINARY_DEFAULT_AVATAR_FILENAME=default-avatar_ewzxwx.png
 # Carpetas para organización:
 # - gastrflow/restaurantes (fotos de restaurantes)
 # - gastrflow/platos (fotos de platos)

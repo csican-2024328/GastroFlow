@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { forgotPassword } from '../../../shared/api/auth.js';
 import { AuthInput, AuthPrimaryButton, AuthSwitchLink } from '../../../shared/components/auth/index.js';
-import { showError, showSuccess } from '../../../shared/utils/toast.js';
 
 export const ForgotPasswordForm = ({ onSwitch }) => {
   const [loading, setLoading] = useState(false);
