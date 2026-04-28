@@ -1,16 +1,30 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { forgotPassword } from '../../../shared/api/auth.js';
 import { AuthInput, AuthPrimaryButton, AuthSwitchLink } from '../../../shared/components/auth/index.js';
+import { showError, showSuccess } from '../../../shared/utils/toast.js';
 
 export const ForgotPasswordForm = ({ onSwitch }) => {
+  const [loading, setLoading] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
-    // Mandar información al backend para restablecer contraseña
-    console.log(data);
+  const onSubmit = async ({ email }) => {
+    try {
+      setLoading(true);
+      const { data } = await forgotPassword({ email });
+
+      showSuccess(data?.message || 'Si el correo existe, recibirás instrucciones para recuperar tu contraseña.');
+      onSwitch();
+    } catch (error) {
+      const message = error.response?.data?.message || 'No fue posible enviar el correo de recuperación';
+      showError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,7 +42,9 @@ export const ForgotPasswordForm = ({ onSwitch }) => {
         autoComplete="email"
       />
 
-      <AuthPrimaryButton type="submit">Enviar Correo</AuthPrimaryButton>
+      <AuthPrimaryButton type="submit" loading={loading} loadingText="Enviando...">
+        Enviar Correo
+      </AuthPrimaryButton>
 
       <AuthSwitchLink
         prefixText="¿Recordaste tu contraseña?"
