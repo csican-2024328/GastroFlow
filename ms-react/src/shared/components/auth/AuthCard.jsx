@@ -2,7 +2,7 @@ export const AuthCard = ({ logoSrc, logoAlt, title, subtitle, children }) => {
   return (
     <div className="w-full max-w-xl bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-10">
       <div className="flex justify-center mb-6">
-        <img src={logoSrc} alt={logoAlt} className="h-20 w-auto" />
+        <img src={logoSrc} alt={logoAlt} className="h-28 w-auto" />
       </div>
 
       <div className="text-center mb-6">

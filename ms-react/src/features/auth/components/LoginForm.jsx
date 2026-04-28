@@ -1,8 +1,10 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore.js';
-import { showError, showSuccess } from '../../../shared/utils/toast.js';
 import { AuthInput, AuthPrimaryButton, AuthSwitchLink } from '../../../shared/components/auth/index.js';
+import toast from 'react-hot-toast';
+import { notyfSuccess } from '../../../shared/utils/notyf.js';
+
 
 export const LoginForm = ({ onForgot }) => {
   const navigate = useNavigate();
@@ -18,14 +20,13 @@ export const LoginForm = ({ onForgot }) => {
 
   const onSubmit = async (data) => {
     const result = await login(data);
-
     if (result.success) {
+      notyfSuccess('¡Bienvenido de nuevo!', { duration: 2000 });
       navigate('/dashboard');
-      showSuccess('¡Bienvenido de nuevo!');
       return;
     }
 
-    showError(result.error || 'No fue posible iniciar sesión');
+    notyfError(result.error || 'No fue posible iniciar sesión', { duration: 2000 });
   };
 
   return (
