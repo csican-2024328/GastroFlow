@@ -149,11 +149,7 @@ export const ProfilePage = () => {
 
                 <div className="flex gap-2">
                   <button onClick={startEdit} className="px-4 py-2 rounded bg-[#1A3D25] hover:bg-[#0F452A]">Editar perfil</button>
-                  <button onClick={() => {
-                    const role = user?.role || 'CLIENT'
-                    if (role === 'CLIENT') navigate('/cliente')
-                    else navigate('/dashboard')
-                  }} className="px-4 py-2 rounded bg-gray-700">Volver</button>
+                  <button onClick={() => navigate('/dashboard')} className="px-4 py-2 rounded bg-gray-700">Volver</button>
                 </div>
               </div>
             ) : (

@@ -21,8 +21,7 @@ export const LoginForm = ({ onForgot, onRegister }) => {
     const result = await login(data);
     if (result.success) {
       notyfSuccess('¡Bienvenido de nuevo!', { duration: 2000 });
-      const role = result.data?.userDetails?.role || 'CLIENT';
-      navigate(role === 'CLIENT' ? '/cliente' : '/dashboard');
+      navigate('/dashboard');
       return;
     }
 

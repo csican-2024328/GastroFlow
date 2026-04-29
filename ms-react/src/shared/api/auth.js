@@ -22,6 +22,18 @@ export const login = async (data) => {
   return authClient.post('/auth/login', data);
 };
 
+export const refreshToken = async (token) => {
+  return authClient.post(
+    '/auth/refresh-token',
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+};
+
 export const forgotPassword = async (data) => {
   return authClient.post('/auth/forgot-password', data);
 };

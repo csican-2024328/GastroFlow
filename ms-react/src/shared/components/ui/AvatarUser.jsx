@@ -53,7 +53,7 @@ export const AvatarUser = () => {
             <div className="absolute right-0 mt-2 w-56 bg-[#112D1C] border border-[#0D2818] rounded-lg shadow-lg animated-fadeIn z-50">
                 <div className="px-4 py-3 border-b border-[#0D2818]">
                     <p className="font-semibold text-[#F0EDE8]">{user?.username}</p>
-                    <p className="text-xs text-[#C4A882]">{user?.role || 'CLIENT'}</p>
+                    <p className="text-xs text-[#C4A882]">{user?.role || ''}</p>
                     <p className="text-sm text-[#C4A882] truncate">{user?.email}</p>
                 </div>
                 <ul className="p-2 text-sm text-[#F0EDE8] font-medium space-y-1">

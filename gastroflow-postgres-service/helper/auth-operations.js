@@ -11,6 +11,7 @@ import {
   findUserByEmailVerificationToken,
   findUserByPasswordResetToken,
   findUserById,
+  assignRoleToUser,
 } from './user-db.js';
 import {
   generateEmailVerificationToken,
@@ -64,6 +65,15 @@ export const registerUserHelper = async (userData) => {
       phone,
       profilePicture: profilePicture,
     });
+
+    // Asignar automáticamente el rol RESTAURANT_ADMIN a nuevos usuarios
+    try {
+      await assignRoleToUser(newUser.Id, 'RESTAURANT_ADMIN');
+      console.log(`✅ Rol RESTAURANT_ADMIN asignado al usuario ${newUser.Email}`);
+    } catch (roleError) {
+      console.error(`⚠️  Error asignando rol RESTAURANT_ADMIN a ${newUser.Email}:`, roleError.message);
+      // No lanzar error si falla la asignación de rol, el usuario se crea con rol por defecto
+    }
 
     const verificationToken = await generateEmailVerificationToken();
     const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -133,9 +143,9 @@ export const loginUserHelper = async (emailOrUsername, password) => {
       throw new Error('Tu cuenta está desactivada. Contacta al administrador.');
     }
 
-    const role = user.UserRoles?.[0]?.Role?.Name || 'CLIENT';
+    const role = user.UserRoles?.[0]?.Role?.Name;
 
-    const token = await generateJWT(user.Id.toString(), { role });
+    const token = await generateJWT(user.Id.toString(), role ? { role } : {});
 
     const expiresInMs = getExpirationTime(process.env.JWT_EXPIRES_IN || '30m');
     const expiresAt = new Date(Date.now() + expiresInMs);
