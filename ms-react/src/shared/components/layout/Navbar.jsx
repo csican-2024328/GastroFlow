@@ -4,17 +4,21 @@ import { AvatarUser } from '../ui/AvatarUser.jsx';
 
 export const Navbar = () => {
   return (
-    <nav className="bg-[#F8F5F0] border-b border-[#E2D4B7] shadow-sm sticky top-0 z-50">
-      <div className='max-w-7xl mx-auto px-6 h-16 flex items-center justify-between'>
-        <div className='flex items-center gap-2 '>
-          <img 
-              src={Logo}
-              alt="GastroFlow Logo"
-              className='h-12 md:h-14 w-auto object-contain'/>
-              <Typography variant="h5" className="text-[#1A1A1A] font-bold">
-                GastroFlow
-              </Typography>
+    <nav className="bg-[var(--gf-cream)] border-b border-[var(--gf-beige)] shadow-sm sticky top-0 z-50 w-full">
+      <div className="h-16 flex items-center justify-between px-6">
+        {/* Left: logo + title */}
+        <div className="flex items-center gap-3">
+          <img
+            src={Logo}
+            alt="GastroFlow Logo"
+            className="h-12 md:h-14 w-auto object-contain"
+          />
+          <Typography variant="h5" className="text-[var(--gf-graphite)] font-bold text-lg md:text-2xl">
+            GastroFlow
+          </Typography>
         </div>
+
+        {/* Right: avatar/menu */}
         <div className="flex items-center gap-4">
           <AvatarUser />
         </div>
