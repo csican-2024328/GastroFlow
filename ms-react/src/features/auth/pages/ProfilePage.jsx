@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore.js'
 import { getProfile, updateProfile, updateProfileAvatar } from '../../../shared/api/profile.js'
+import defaultAvatar from '../../../assets/img/Icono.png'
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js'
 
 export const ProfilePage = () => {
@@ -17,7 +18,7 @@ export const ProfilePage = () => {
       phone: user?.phone || '',
     },
   })
-  const [preview, setPreview] = useState(user?.profileImage || '')
+  const [preview, setPreview] = useState(user?.profileImage || defaultAvatar)
   const [avatarFile, setAvatarFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [editMode, setEditMode] = useState(false)
@@ -32,7 +33,7 @@ export const ProfilePage = () => {
           setValue('name', profileData.name || '')
           setValue('surname', profileData.surname || '')
           setValue('phone', profileData.phone || '')
-          setPreview(profileData.profileImage || '')
+          setPreview(profileData.profileImage || defaultAvatar)
         }
       } catch (err) {
         const status = err?.response?.status
@@ -49,7 +50,7 @@ export const ProfilePage = () => {
   const cancelEdit = () => {
     setEditMode(false)
     setAvatarFile(null)
-    setPreview(user?.profileImage || '')
+    setPreview(user?.profileImage || defaultAvatar)
   }
 
   const onAvatarChange = (e) => {
@@ -113,7 +114,7 @@ export const ProfilePage = () => {
       <div className="bg-[#0F452A] p-6 rounded border border-[#113a26]">
         <div className="flex gap-6 items-start">
           <div className="flex-shrink-0">
-            <img src={preview || '/'} alt="avatar" className="w-24 h-24 rounded-full object-cover border-2 border-[#3B5E45]" />
+            <img src={preview} alt="avatar" className="w-24 h-24 rounded-full object-cover border-2 border-[#3B5E45]" />
             {editMode && (
               <div className="mt-2">
                 <label className="text-xs text-[#C4A882] cursor-pointer hover:underline">
