@@ -1,21 +1,31 @@
-import { axiosClient } from './api.js';
+import axios from 'axios';
+
+const authBaseURL = import.meta.env.VITE_AUTH_URL || 'http://localhost:3007/api/v1';
+
+const authClient = axios.create({
+  baseURL: authBaseURL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 export const register = async (data) => {
-  return axiosClient.post('/auth/register', data);
+  return authClient.post('/auth/register', data);
 };
 
 export const verifyEmail = async (data) => {
-  return axiosClient.post('/auth/verify-email', data);
+  return authClient.post('/auth/verify-email', data);
 };
 
 export const login = async (data) => {
-  return axiosClient.post('/auth/login', data);
+  return authClient.post('/auth/login', data);
 };
 
 export const forgotPassword = async (data) => {
-  return axiosClient.post('/auth/forgot-password', data);
+  return authClient.post('/auth/forgot-password', data);
 };
 
 export const resetPassword = async (data) => {
-  return axiosClient.post('/auth/reset-password', data);
+  return authClient.post('/auth/reset-password', data);
 };
