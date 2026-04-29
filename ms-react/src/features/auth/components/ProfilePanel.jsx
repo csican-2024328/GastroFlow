@@ -32,7 +32,6 @@ export const ProfilePanel = ({ onClose, initialEdit=false }) => {
     }
   }
 
-  // reset fields when user changes or when modal opens
   React.useEffect(() => {
     setName(user?.name || '')
     setSurname(user?.surname || '')
@@ -47,7 +46,6 @@ export const ProfilePanel = ({ onClose, initialEdit=false }) => {
       const payload = { name, surname, phone }
       const resProfile = await updateProfile(payload)
       if (resProfile?.data?.success && resProfile.data.data) {
-        // Only update global auth store if the returned user is the same as the logged-in user
         if (resProfile.data.data.id === user?.id) {
           setUser(resProfile.data.data)
         } else {
@@ -59,7 +57,6 @@ export const ProfilePanel = ({ onClose, initialEdit=false }) => {
       if (avatarFile) {
         const resAvatar = await updateProfileAvatar(avatarFile)
         if (resAvatar?.data?.success && resAvatar.data.data) {
-          // Only update global auth store if the returned user matches logged-in user
           if (resAvatar.data.data.id === user?.id) {
             setUser(resAvatar.data.data)
           } else {
