@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { forgotPassword } from '../../../shared/api/auth.js';
+import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
 import { AuthInput, AuthPrimaryButton, AuthSwitchLink } from '../../../shared/components/auth/index.js';
 
-export const ForgotPasswordForm = ({ onSwitch }) => {
+export const ForgotPasswordForm = ({ onSwitch, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const {
     register,
@@ -16,11 +17,11 @@ export const ForgotPasswordForm = ({ onSwitch }) => {
       setLoading(true);
       const { data } = await forgotPassword({ email });
 
-      showSuccess(data?.message || 'Si el correo existe, recibirás instrucciones para recuperar tu contraseña.');
-      onSwitch();
+      notyfSuccess(data?.message || 'Si el correo existe, recibirás instrucciones para recuperar tu contraseña.');
+      onSuccess?.();
     } catch (error) {
       const message = error.response?.data?.message || 'No fue posible enviar el correo de recuperación';
-      showError(message);
+      notyfError(message);
     } finally {
       setLoading(false);
     }

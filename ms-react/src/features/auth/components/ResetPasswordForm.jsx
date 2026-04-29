@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { resetPassword } from '../../../shared/api/auth.js';
+import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
 import { AuthInput, AuthPrimaryButton, AuthSwitchLink } from '../../../shared/components/auth/index.js';
 
 export const ResetPasswordForm = ({ token, onSwitch }) => {
@@ -16,7 +17,7 @@ export const ResetPasswordForm = ({ token, onSwitch }) => {
 
   const onSubmit = async ({ password, passwordConfirm }) => {
     if (!token) {
-      showError('Falta el token de recuperación. Revisa el enlace del correo.');
+      notyfError('Falta el token de recuperación. Revisa el enlace del correo.');
       return;
     }
 
@@ -24,11 +25,11 @@ export const ResetPasswordForm = ({ token, onSwitch }) => {
       setLoading(true);
       const { data } = await resetPassword({ token, password, passwordConfirm });
 
-      showSuccess(data?.message || 'Tu contraseña fue actualizada correctamente.');
+      notyfSuccess(data?.message || 'Tu contraseña fue actualizada correctamente.');
       onSwitch();
     } catch (error) {
       const message = error.response?.data?.message || 'No fue posible actualizar la contraseña';
-      showError(message);
+      notyfError(message);
     } finally {
       setLoading(false);
     }
