@@ -60,7 +60,6 @@ export const User = sequelize.define(
           args: [2, 25],
           msg: 'El nombre debe tener entre 2 y 25 caracteres.',
         },
-        isAlpha: { msg: 'El nombre solo puede contener letras y espacios.' },
         customValidator(value) {
           if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) {
             throw new Error('El nombre contiene caracteres no válidos.');
@@ -78,7 +77,6 @@ export const User = sequelize.define(
           args: [2, 25],
           msg: 'El apellido debe tener entre 2 y 25 caracteres.',
         },
-        isAlpha: { msg: 'El apellido solo puede contener letras y espacios.' },
         customValidator(value) {
           if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) {
             throw new Error('El apellido contiene caracteres no válidos.');
@@ -97,7 +95,6 @@ export const User = sequelize.define(
           args: [3, 50],
           msg: 'El nombre de usuario debe tener entre 3 y 50 caracteres.',
         },
-        isAlphanumeric: { msg: 'El nombre de usuario solo puede contener letras, números y guiones bajos.' },
         customValidator(value) {
           if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
             throw new Error('El nombre de usuario solo puede contener letras, números, guiones y guiones bajos.');

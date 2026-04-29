@@ -2,11 +2,10 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore.js';
 import { AuthInput, AuthPrimaryButton, AuthSwitchLink } from '../../../shared/components/auth/index.js';
-import toast from 'react-hot-toast';
-import { notyfSuccess } from '../../../shared/utils/notyf.js';
+import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
 
 
-export const LoginForm = ({ onForgot }) => {
+export const LoginForm = ({ onForgot, onRegister }) => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
   const loading = useAuthStore((state) => state.loading);
@@ -22,7 +21,8 @@ export const LoginForm = ({ onForgot }) => {
     const result = await login(data);
     if (result.success) {
       notyfSuccess('¡Bienvenido de nuevo!', { duration: 2000 });
-      navigate('/dashboard');
+      const role = result.data?.userDetails?.role || 'CLIENT';
+      navigate(role === 'CLIENT' ? '/cliente' : '/dashboard');
       return;
     }
 
@@ -62,6 +62,12 @@ export const LoginForm = ({ onForgot }) => {
       <AuthPrimaryButton type="submit" loading={loading} loadingText="Iniciando...">
         Iniciar Sesión
       </AuthPrimaryButton>
+
+      <AuthSwitchLink
+        prefixText="¿No tienes cuenta?"
+        actionText="Registrarme"
+        onClick={onRegister}
+      />
 
       <AuthSwitchLink
         actionText="¿Olvidaste tu contraseña?"

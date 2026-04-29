@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LoginForm } from '../components/LoginForm.jsx';
 import { ForgotPasswordForm } from '../components/ForgotPasswordForm.jsx';
 import { AuthCard, AuthContainer } from '../../../shared/components/auth/index.js';
 
 export const AuthPage = () => {
   const [isForgot, setIsForgot] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <AuthContainer>
@@ -23,7 +25,10 @@ export const AuthPage = () => {
             }}
           />
         ) : (
-          <LoginForm onForgot={() => setIsForgot(true)} />
+          <LoginForm
+            onForgot={() => setIsForgot(true)}
+            onRegister={() => navigate('/register')}
+          />
         )}
       </AuthCard>
     </AuthContainer>

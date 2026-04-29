@@ -100,6 +100,29 @@ export const DashboardContainer = () => {
                     </div>
                   </div>
                 </div>
+
+                <div className="bg-[#0F452A] rounded p-4 border border-[#113a26]">
+                  <h3 className="text-sm font-semibold text-[#F0EDE8] mb-3">Usuarios registrados</h3>
+                  <table className="w-full text-sm text-left">
+                    <thead>
+                      <tr className="text-[#C4A882]">
+                        <th className="py-2">Usuario</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-[#F0EDE8]">
+                      <tr className="border-t border-[#113a26]">
+                        <td className="py-2">admin</td>
+                        <td>admin@gastroflow.local</td>
+                        <td><span className="text-[#4CAF50]">Admin</span></td>
+                        <td><span className="px-2 py-1 bg-green-700 rounded text-xs">Activo</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <p className="text-[#7A9E85] text-xs mt-2">Los nuevos usuarios aparecerán aquí automáticamente</p>
+                </div>
               </section>
             </div>
           ) : (
