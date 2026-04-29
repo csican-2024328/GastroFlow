@@ -21,8 +21,14 @@ export const LoginForm = ({ onForgot, onRegister }) => {
     const result = await login(data);
     if (result.success) {
       notyfSuccess('¡Bienvenido de nuevo!', { duration: 2000 });
-      const role = result.data?.userDetails?.role || 'CLIENT';
-      navigate(role === 'CLIENT' ? '/cliente' : '/dashboard');
+      // Redirect based on role
+      const role = result.data?.userDetails?.role || result.data?.role || '';
+      const roleUp = (role || '').toString().toUpperCase();
+      if (roleUp.includes('ADMIN') || roleUp.includes('PLATFORM')) {
+        navigate('/dashboard');
+      } else {
+        navigate('/cliente');
+      }
       return;
     }
 

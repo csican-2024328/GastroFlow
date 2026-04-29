@@ -8,7 +8,17 @@ export const validateCreateMesa = [
 
     check('capacidad')
         .isInt({ min: 1 })
-        .withMessage('La capacidad debe ser un número positivo')
+        .withMessage('La capacidad debe ser un número positivo'),
+
+    check('restaurantID')
+        .not()
+        .isEmpty()
+        .withMessage('El ID del restaurante es obligatorio'),
+
+    check('ubicacion')
+        .not()
+        .isEmpty()
+        .withMessage('La ubicación es obligatoria')
 ];
 
 export const validateMesaId = [

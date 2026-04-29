@@ -70,7 +70,7 @@ export const AvatarUser = () => {
                     <button onClick={handleLogout} role="menuitem" tabIndex={0} className="w-full text-left block px-4 py-2 rounded hover:bg-[var(--gf-beige)]">Cerrar Sesion</button>
                 </ul>
             </div>
-        )}  
+        )}
     </div>
   )
 }

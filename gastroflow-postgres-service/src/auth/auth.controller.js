@@ -271,9 +271,9 @@ export const deleteProfile = asyncHandler(async (req, res) => {
 
 export const refreshToken = asyncHandler(async (req, res) => {
   const user = req.user;
-  const role = user?.UserRoles?.[0]?.Role?.Name || 'CLIENT';
+  const role = user?.UserRoles?.[0]?.Role?.Name;
 
-  const token = await generateJWT(user.Id.toString(), { role });
+  const token = await generateJWT(user.Id.toString(), role ? { role } : {});
 
   return res.status(200).json({
     success: true,

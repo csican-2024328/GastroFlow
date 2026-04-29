@@ -95,6 +95,15 @@ router.put(
   authController.updateProfileAvatar
 );
 
+// Accept POST as well for clients that submit multipart form-data via POST
+router.post(
+  '/profile/avatar',
+  validateJWT,
+  uploadProfileAvatar.single('profilePicture'),
+  (err, req, res, next) => handleMulterError(err, req, res, next),
+  authController.updateProfileAvatar
+);
+
 router.delete('/profile', validateJWT, authController.deleteProfile);
 
 router.post('/profile/by-id', validateJWT, requestLimit, authController.getProfileById);

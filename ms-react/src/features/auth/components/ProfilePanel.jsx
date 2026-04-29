@@ -71,7 +71,11 @@ export const ProfilePanel = ({ onClose, initialEdit=false }) => {
       notyfSuccess('Perfil actualizado')
     } catch (err) {
       console.error('Error saving profile', err)
-      notyfError(err?.response?.data?.message || err.message || 'Error al guardar perfil')
+      // If error was enriched in API helper, show the enriched message
+      const detailed = err?.message || err?.toString();
+      notyfError(detailed || 'Error al guardar perfil')
+      // Log cause if present for backend debugging
+      if (err?.cause) console.debug('Error cause:', err.cause)
     } finally {
       setSaving(false)
     }

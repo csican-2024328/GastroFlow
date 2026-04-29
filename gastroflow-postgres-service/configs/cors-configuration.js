@@ -3,6 +3,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
     'http://localhost:3006',
     'http://localhost:3007',
     'http://localhost:5173',
+    'http://localhost:5174',
 ];
 
 const envAllowedOrigins = (process.env.ALLOWED_ORIGINS || '')

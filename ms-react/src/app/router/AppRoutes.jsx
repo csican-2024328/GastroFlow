@@ -6,6 +6,8 @@ import { ResetPasswordPage } from '../../features/auth/pages/ResetPasswordPage.j
 import { ClientPage } from '../layouts/ClientPage.jsx';
 import { DashboardPage } from '../layouts/DashboardPage.jsx';
 import { ProfilePage } from '../../features/auth/pages/ProfilePage.jsx';
+import { RestaurantsPage } from '../../features/restaurants/pages/RestaurantsPage.jsx';
+import { TablesPage } from '../../features/tables/pages/TablesPage.jsx';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -15,7 +17,8 @@ export const AppRoutes = () => {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/cliente" element={<ClientPage />} />
             <Route path="/dashboard" element={<DashboardPage />} >
-            
+                <Route path="mesas" element={<TablesPage />} />
+                <Route path="restaurantes" element={<RestaurantsPage />} />
             </Route>
             {/* Profile is shown as an in-app modal (ProfileModal) — no standalone route to avoid redirecting users to a separate page. */}
         </Routes>
