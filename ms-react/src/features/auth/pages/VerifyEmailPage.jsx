@@ -20,11 +20,11 @@ export const VerifyEmailPage = () => {
         status === "loading" ? "Verificando correo, por favor espera..." : message;
 
     return (
-        <div className="flex flex-col justify-center items-center h-screen bg-gray-100 px-4">
+        <div className="flex flex-col justify-center items-center h-screen bg-[#F8F5F0] px-4">
             <img src={logo} alt="GastroFlow" className="w-28 h-28 object-contain mb-4" />
 
             <p
-                className="text-lg font-semibold text-gray-700 text-center max-w-lg"
+                className="text-lg font-semibold text-[#1A1A1A] text-center max-w-lg"
                 aria-live="polite"
             >
                 {displayMessage}

@@ -41,7 +41,7 @@ export const AvatarUser = () => {
         <img
             src={avatarSrc}
             alt={user?.username || 'avatar'}
-            className="w-10 h-10 object-cover rounded-full border-2 border-[#3B5E45] cursor-pointer"
+            className="w-10 h-10 object-cover rounded-full border-2 border-[#2C4035] cursor-pointer"
             onClick={toggleMenu}
             onError={(e) => {
                 e.target.onerror = null;
@@ -50,15 +50,15 @@ export const AvatarUser = () => {
             />
 
         {open && (
-            <div className="absolute right-0 mt-2 w-56 bg-[#112D1C] border border-[#0D2818] rounded-lg shadow-lg animated-fadeIn z-50">
-                <div className="px-4 py-3 border-b border-[#0D2818]">
-                    <p className="font-semibold text-[#F0EDE8]">{user?.username}</p>
-                    <p className="text-xs text-[#C4A882]">{user?.role || 'CLIENT'}</p>
-                    <p className="text-sm text-[#C4A882] truncate">{user?.email}</p>
+            <div className="absolute right-0 mt-2 w-56 bg-[#F8F5F0] border border-[#E2D4B7] rounded-lg shadow-lg animated-fadeIn z-50">
+                <div className="px-4 py-3 border-b border-[#E2D4B7]">
+                    <p className="font-semibold text-[#1A1A1A]">{user?.username}</p>
+                    <p className="text-xs text-[#2C4035]">{user?.role || 'CLIENT'}</p>
+                    <p className="text-sm text-[#4b4b4b] truncate">{user?.email}</p>
                 </div>
-                <ul className="p-2 text-sm text-[#F0EDE8] font-medium space-y-1">
-                    <button onClick={handleProfile} className="w-full text-left block px-4 py-2 rounded hover:bg-[#0F452A]">Detalles de perfil</button>
-                    <button onClick={handleLogout} className="w-full text-left block px-4 py-2 rounded hover:bg-[#0F452A]">Cerrar Sesion</button>
+                <ul className="p-2 text-sm text-[#1A1A1A] font-medium space-y-1">
+                    <button onClick={handleProfile} className="w-full text-left block px-4 py-2 rounded hover:bg-[#E2D4B7]">Detalles de perfil</button>
+                    <button onClick={handleLogout} className="w-full text-left block px-4 py-2 rounded hover:bg-[#E2D4B7]">Cerrar Sesion</button>
                 </ul>
             </div>
         )}  

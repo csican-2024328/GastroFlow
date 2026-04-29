@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --gf-cream: #F8F5F0;
+  --gf-graphite: #1A1A1A;
+  --gf-beige: #E2D4B7;
+  --gf-green: #2C4035;
+  --gf-terracotta: #C87A55;
 }
 
 html,
@@ -14,7 +19,8 @@ body,
 
 body {
   min-height: 100vh;
-  background: #07111d;
+  background: var(--gf-cream);
+  color: var(--gf-graphite);
 }
 
 * {

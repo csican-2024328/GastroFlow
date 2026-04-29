@@ -96,7 +96,7 @@ export const ProfilePage = () => {
   if (!user) {
     return (
       <div className="max-w-3xl mx-auto p-6">
-        <p className="text-[#C4A882]">Cargando perfil...</p>
+        <p className="text-[#1A1A1A]">Cargando perfil...</p>
       </div>
     )
   }
@@ -111,13 +111,13 @@ export const ProfilePage = () => {
     <div className="max-w-3xl mx-auto p-6">
       <h2 className="text-2xl font-semibold mb-4">Detalles de perfil</h2>
 
-      <div className="bg-[#0F452A] p-6 rounded border border-[#113a26]">
+      <div className="bg-[#E2D4B7] p-6 rounded border border-[#d8c8a6] text-[#1A1A1A]">
         <div className="flex gap-6 items-start">
           <div className="flex-shrink-0">
-            <img src={preview} alt="avatar" className="w-24 h-24 rounded-full object-cover border-2 border-[#3B5E45]" />
+            <img src={preview} alt="avatar" className="w-24 h-24 rounded-full object-cover border-2 border-[#2C4035]" />
             {editMode && (
               <div className="mt-2">
-                <label className="text-xs text-[#C4A882] cursor-pointer hover:underline">
+                <label className="text-xs text-[#1A1A1A] cursor-pointer hover:underline">
                   Cambiar avatar (cualquier imagen)
                   <input type="file" accept="image/*" onChange={onAvatarChange} className="hidden" />
                 </label>
@@ -129,48 +129,48 @@ export const ProfilePage = () => {
             {!editMode ? (
               <div>
                 <div className="mb-4">
-                  <p className="text-sm text-[#C4A882]">Nombre</p>
+                  <p className="text-sm text-[#1A1A1A]">Nombre</p>
                   <p className="text-lg font-medium">{displayName} {displaySurname}</p>
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-sm text-[#C4A882]">Usuario</p>
+                  <p className="text-sm text-[#1A1A1A]">Usuario</p>
                   <p className="text-lg">{displayUsername}</p>
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-sm text-[#C4A882]">Email</p>
+                  <p className="text-sm text-[#1A1A1A]">Email</p>
                   <p className="text-lg">{displayEmail}</p>
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-sm text-[#C4A882]">Teléfono</p>
+                  <p className="text-sm text-[#1A1A1A]">Teléfono</p>
                   <p className="text-lg">{displayPhone}</p>
                 </div>
 
                 <div className="flex gap-2">
-                  <button onClick={startEdit} className="px-4 py-2 rounded bg-[#1A3D25] hover:bg-[#0F452A]">Editar perfil</button>
+                  <button onClick={startEdit} className="px-4 py-2 rounded bg-[#2C4035] text-[#F8F5F0] hover:bg-[#24362d]">Editar perfil</button>
                   <button onClick={() => {
                     const role = user?.role || 'CLIENT'
                     if (role === 'CLIENT') navigate('/cliente')
                     else navigate('/dashboard')
-                  }} className="px-4 py-2 rounded bg-gray-700">Volver</button>
+                  }} className="px-4 py-2 rounded bg-[#C87A55] text-[#F8F5F0] hover:opacity-90">Volver</button>
                 </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-3">
-                <label className="text-sm text-[#C4A882]">Nombre</label>
-                <input className="p-2 rounded bg-[#112D1C] text-[#F0EDE8]" {...register('name')} />
+                <label className="text-sm text-[#1A1A1A]">Nombre</label>
+                <input className="p-2 rounded bg-[#F8F5F0] border border-[#c9b898] text-[#1A1A1A]" {...register('name')} />
 
-                <label className="text-sm text-[#C4A882]">Apellido</label>
-                <input className="p-2 rounded bg-[#112D1C] text-[#F0EDE8]" {...register('surname')} />
+                <label className="text-sm text-[#1A1A1A]">Apellido</label>
+                <input className="p-2 rounded bg-[#F8F5F0] border border-[#c9b898] text-[#1A1A1A]" {...register('surname')} />
 
-                <label className="text-sm text-[#C4A882]">Teléfono</label>
-                <input className="p-2 rounded bg-[#112D1C] text-[#F0EDE8]" {...register('phone')} />
+                <label className="text-sm text-[#1A1A1A]">Teléfono</label>
+                <input className="p-2 rounded bg-[#F8F5F0] border border-[#c9b898] text-[#1A1A1A]" {...register('phone')} />
 
                 <div className="flex gap-2 pt-2">
-                  <button type="submit" disabled={loading} className="px-4 py-2 rounded bg-[#1A3D25] hover:bg-[#0F452A]">{loading ? 'Guardando...' : 'Guardar cambios'}</button>
-                  <button type="button" onClick={cancelEdit} className="px-4 py-2 rounded bg-gray-700">Cancelar</button>
+                  <button type="submit" disabled={loading} className="px-4 py-2 rounded bg-[#2C4035] text-[#F8F5F0] hover:bg-[#24362d]">{loading ? 'Guardando...' : 'Guardar cambios'}</button>
+                  <button type="button" onClick={cancelEdit} className="px-4 py-2 rounded bg-[#C87A55] text-[#F8F5F0] hover:opacity-90">Cancelar</button>
                 </div>
               </form>
             )}

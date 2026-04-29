@@ -13,7 +13,7 @@ export const Sidebar = () => {
         {label: "Reportes", to: "/dashboard/reportes"},
     ]
   return (
-    <aside className='w-60 bg-[#0D2818] min-h-[calc(100vh-4rem)] p-4'>
+        <aside className='w-60 bg-[#1A1A1A] min-h-[calc(100vh-4rem)] p-4'>
         <ul className='space-y-2'>
             {items.map((item) => {
                 const active = location.pathname === item.to
@@ -22,8 +22,8 @@ export const Sidebar = () => {
                     <li key={item.to}>
                         <Link
                             to={item.to}
-                           className={`block px-4 py-2 rounded-lg font-medium transition-colors text-[#C4A882] ${active ? '' : 'hover:bg-[#112D1C] hover:text-[#F0EDE8]'}`}
-                            style={active ? {fontWeight: 700, backgroundColor: '#112D1C', color: '#F0EDE8'} : {}}
+                           className={`block px-4 py-2 rounded-lg font-medium transition-colors text-[#F8F5F0] ${active ? '' : 'hover:bg-[#2C4035] hover:text-[#F8F5F0]'}`}
+                            style={active ? {fontWeight: 700, backgroundColor: '#2C4035', color: '#F8F5F0'} : {}}
                             >
                                 {item.label}
                         </Link>
