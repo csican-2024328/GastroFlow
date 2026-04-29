@@ -17,7 +17,7 @@ export const AppRoutes = () => {
             <Route path="/dashboard" element={<DashboardPage />} >
             
             </Route>
-            <Route path="/profile" element={<ProfilePage />} />
+            {/* Profile is shown as an in-app modal (ProfileModal) — no standalone route to avoid redirecting users to a separate page. */}
         </Routes>
     )
 }  

@@ -1,5 +1,6 @@
 import { useAuthStore } from '../../features/auth/store/authStore.js';
 import { AvatarUser } from '../../shared/components/ui/AvatarUser.jsx';
+import { ProfileModal } from '../../features/auth/components/ProfileModal.jsx';
 
 export const ClientPage = () => {
   const user = useAuthStore((state) => state.user);
@@ -34,6 +35,7 @@ export const ClientPage = () => {
           </div>
         </section>
       </main>
+      <ProfileModal />
     </div>
   );
 };

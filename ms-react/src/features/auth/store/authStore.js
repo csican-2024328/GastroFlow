@@ -11,6 +11,8 @@ export const useAuthStore = create(
       loading: false,
       error: null,
       isAuthenticated: false,
+  showProfileModal: false,
+  profileModalEdit: false,
 
       logout: () => {
         set({
@@ -20,6 +22,8 @@ export const useAuthStore = create(
           error: null,
           loading: false,
           isAuthenticated: false,
+          showProfileModal: false,
+          profileModalEdit: false,
         });
       },
 
@@ -51,6 +55,8 @@ export const useAuthStore = create(
         }
       },
       setUser: (user) => set({ user }),
+  openProfileModal: (edit=false) => set({ showProfileModal: true, profileModalEdit: !!edit }),
+  closeProfileModal: () => set({ showProfileModal: false, profileModalEdit: false }),
     }),
     {
       name: 'gastroflow-auth-storage',

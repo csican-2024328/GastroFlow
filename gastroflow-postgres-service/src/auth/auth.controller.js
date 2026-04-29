@@ -189,9 +189,13 @@ export const updateProfileAvatar = asyncHandler(async (req, res) => {
     });
   }
 
+  console.debug('[auth.controller] updateProfileAvatar - req.file:', req.file);
+
   const updatedProfile = await updateUserProfile(userId, {
     profilePicture: req.file.path,
   });
+
+  console.debug('[auth.controller] updateProfileAvatar - updatedProfile.UserProfile.ProfilePicture:', updatedProfile?.UserProfile?.ProfilePicture);
 
   return res.status(200).json({
     success: true,

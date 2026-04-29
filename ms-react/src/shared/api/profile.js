@@ -16,7 +16,7 @@ export const updateProfileAvatar = async (file) => {
   const formData = new FormData();
   formData.append('profilePicture', file);
 
-  return axiosClient.put('/auth/profile/avatar', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  // Let the browser / axios set the Content-Type (including boundary).
+  // Setting it manually can omit the multipart boundary and break multer parsing on the server.
+  return axiosClient.put('/auth/profile/avatar', formData);
 };

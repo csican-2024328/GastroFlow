@@ -3,6 +3,7 @@ import { Sidebar } from "./Sidebar.jsx"
 import { Outlet, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { getUsers } from '../../../shared/api/users.js'
+import { ProfileModal } from '../../../features/auth/components/ProfileModal.jsx'
 
 export const DashboardContainer = () => {
   const location = useLocation()
@@ -168,6 +169,7 @@ export const DashboardContainer = () => {
           )}
         </main>
       </div>
+      <ProfileModal />
     </div>
   )
 }
