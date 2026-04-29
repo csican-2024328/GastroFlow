@@ -19,7 +19,6 @@ export const ProfileModal = () => {
     return () => document.removeEventListener('keydown', onKey)
   }, [show, close])
 
-  // prevent background scroll when modal is open
   useEffect(() => {
     if (show) {
       const original = document.body.style.overflow;
@@ -29,11 +28,9 @@ export const ProfileModal = () => {
   }, [show])
 
   useEffect(() => {
-    // reset to profile tab when opening
     if (show) setActiveTab('profile')
   }, [show])
 
-  // debug: log when modal is shown
   useEffect(() => {
     if (show) console.debug('[ProfileModal] opened')
   }, [show])
@@ -80,7 +77,6 @@ export const ProfileModal = () => {
                 <li>Gestionar roles</li>
                 <li>Ver logs (placeholder)</li>
               </ul>
-              <p className="mt-3 text-xs text-gray-500">(Panel administrativo básico — dime si quieres funcionalidades concretas aquí)</p>
             </div>
           )}
         </div>

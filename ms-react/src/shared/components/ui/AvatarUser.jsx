@@ -30,7 +30,6 @@ export const AvatarUser = () => {
 
     const openProfileModal = useAuthStore((s) => s.openProfileModal);
     const handleProfile = (edit = false) => {
-        // open the centered modal with profile details (edit flag optional)
         openProfileModal(!!edit);
         setOpen(false);
     }
