@@ -11,8 +11,6 @@ cloudinary.v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Tipos de archivos permitidos
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 /**
@@ -52,14 +50,32 @@ const platoPhotoStorage = new CloudinaryStorage({
 });
 
 /**
+ * Middleware para subir avatar de perfil
+ * Almacena la imagen en Cloudinary en la carpeta /profiles/
+ */
+const profileAvatarStorage = new CloudinaryStorage({
+  cloudinary: cloudinary.v2,
+  params: {
+    folder: process.env.CLOUDINARY_FOLDER || 'gastroflow/profiles',
+    resource_type: 'image',
+    format: async () => 'webp',
+    public_id: async (req, file) => {
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(2, 8);
+      return `avatar_${timestamp}_${randomStr}`;
+    },
+  },
+});
+
+/**
  * Filtro de archivos personalizado
  * Valida que el archivo sea una imagen y tenga tamaño permitido
  */
 const fileFilter = (req, file, cb) => {
-  // Validar tipo MIME
-  if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+  // Validar tipo MIME: aceptar cualquier imagen
+  if (!file.mimetype || !file.mimetype.startsWith('image/')) {
     const error = new Error(
-      `Tipo de archivo no permitido. Solo se aceptan: ${ALLOWED_MIME_TYPES.join(', ')}`
+      'Tipo de archivo no permitido. Solo se aceptan imágenes.'
     );
     error.status = 400;
     return cb(error);
@@ -91,6 +107,18 @@ export const uploadRestaurantPhotos = multer({
  */
 export const uploadPlatoPhoto = multer({
   storage: platoPhotoStorage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: MAX_FILE_SIZE,
+  },
+});
+
+/**
+ * Middleware para subida de avatar de perfil
+ * Usa: uploadProfileAvatar.single('profilePicture')
+ */
+export const uploadProfileAvatar = multer({
+  storage: profileAvatarStorage,
   fileFilter: fileFilter,
   limits: {
     fileSize: MAX_FILE_SIZE,

@@ -18,6 +18,7 @@ import {
   validarCampos,
 } from '../../middlewares/validator.middleware.js';
 import { updateProfile } from '../User/user.admin.controller.js';
+import { uploadProfileAvatar, handleMulterError } from '../../middlewares/upload.middleware.js';
 
 const router = Router();
 
@@ -84,7 +85,15 @@ router.post(
 
 router.get('/profile', validateJWT, authController.getProfile);
 
-router.put('/profile', updateProfile);
+router.put('/profile', validateJWT, updateProfile);
+
+router.put(
+  '/profile/avatar',
+  validateJWT,
+  uploadProfileAvatar.single('profilePicture'),
+  (err, req, res, next) => handleMulterError(err, req, res, next),
+  authController.updateProfileAvatar
+);
 
 router.delete('/profile', validateJWT, authController.deleteProfile);
 

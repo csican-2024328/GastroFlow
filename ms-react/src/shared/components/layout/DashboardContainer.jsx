@@ -1,10 +1,40 @@
 import { Navbar } from "./Navbar.jsx"
 import { Sidebar } from "./Sidebar.jsx"
 import { Outlet, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { getUsers } from '../../../shared/api/users.js'
 
 export const DashboardContainer = () => {
   const location = useLocation()
   const showWelcome = location.pathname === '/dashboard'
+  const [users, setUsers] = useState([])
+  const [loadingUsers, setLoadingUsers] = useState(false)
+  const [usersError, setUsersError] = useState(null)
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoadingUsers(true)
+        setUsersError(null)
+        const res = await getUsers()
+        if (res?.data?.success) {
+          setUsers(res.data.data || [])
+        } else {
+          setUsers([])
+          setUsersError(res?.data?.message || 'No fue posible obtener usuarios')
+        }
+      } catch (err) {
+        setUsers([])
+        setUsersError(err?.response?.data?.message || err.message || 'Error al obtener usuarios')
+      } finally {
+        setLoadingUsers(false)
+      }
+    }
+
+    if (showWelcome) {
+      fetchUsers()
+    }
+  }, [showWelcome])
 
   return (
     <div className="min-h-screen bg-[#0D2818] flex flex-col text-[#F0EDE8]">
@@ -113,12 +143,20 @@ export const DashboardContainer = () => {
                       </tr>
                     </thead>
                     <tbody className="text-[#F0EDE8]">
-                      <tr className="border-t border-[#113a26]">
-                        <td className="py-2">admin</td>
-                        <td>admin@gastroflow.local</td>
-                        <td><span className="text-[#4CAF50]">Admin</span></td>
-                        <td><span className="px-2 py-1 bg-green-700 rounded text-xs">Activo</span></td>
-                      </tr>
+                      {users && users.length > 0 ? (
+                        users.map((u) => (
+                          <tr key={u.id} className="border-t border-[#113a26]">
+                            <td className="py-2">{u.username}</td>
+                            <td>{u.email}</td>
+                            <td><span className="text-[#4CAF50]">{u.role}</span></td>
+                            <td>{u.status ? <span className="px-2 py-1 bg-green-700 rounded text-xs">Activo</span> : <span className="px-2 py-1 bg-gray-600 rounded text-xs">Inactivo</span>}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr className="border-t border-[#113a26]">
+                          <td colSpan="4" className="py-4 text-[#7A9E85]">No hay usuarios registrados aún.</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                   <p className="text-[#7A9E85] text-xs mt-2">Los nuevos usuarios aparecerán aquí automáticamente</p>

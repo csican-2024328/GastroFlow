@@ -8,10 +8,11 @@ import {
   assignRoleHelper,
 } from '../../helper/auth-operations.js';
 import { getUserProfileHelper } from '../../helper/profile-operations.js';
-import { findUserById, softDeleteUser } from '../../helper/user-db.js';
+import { findUserById, softDeleteUser, updateUserProfile } from '../../helper/user-db.js';
 import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
 import { generateJWT } from '../../helper/generate-jwt.js';
 import { revokeTokenByJti } from '../../helper/session-token-store.js';
+import { buildUserResponse } from '../../utils/user-helpers.js';
 
 export const register = asyncHandler(async (req, res) => {
   try {
@@ -175,6 +176,27 @@ export const getProfile = asyncHandler(async (req, res) => {
     success: true,
     message: 'Perfil obtenido exitosamente',
     data: user,
+  });
+});
+
+export const updateProfileAvatar = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+
+  if (!req.file || !req.file.path) {
+    return res.status(400).json({
+      success: false,
+      message: 'La imagen de perfil es requerida',
+    });
+  }
+
+  const updatedProfile = await updateUserProfile(userId, {
+    profilePicture: req.file.path,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Avatar actualizado exitosamente',
+    data: buildUserResponse(updatedProfile),
   });
 });
 

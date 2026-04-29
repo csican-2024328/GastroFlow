@@ -50,6 +50,7 @@ export const useAuthStore = create(
           return { success: false, error: message };
         }
       },
+      setUser: (user) => set({ user }),
     }),
     {
       name: 'gastroflow-auth-storage',

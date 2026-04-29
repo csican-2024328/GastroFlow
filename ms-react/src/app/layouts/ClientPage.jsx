@@ -1,8 +1,8 @@
 import { useAuthStore } from '../../features/auth/store/authStore.js';
+import { AvatarUser } from '../../shared/components/ui/AvatarUser.jsx';
 
 export const ClientPage = () => {
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
 
   return (
     <div className="min-h-screen bg-[#0D2818] text-[#F0EDE8]">
@@ -12,15 +12,7 @@ export const ClientPage = () => {
             <h1 className="text-xl font-bold">GastroFlow - Mi Cuenta</h1>
             <p className="text-xs text-[#C4A882]">Hola, {user?.name || 'Cliente'}</p>
           </div>
-          <button
-            onClick={() => {
-              logout();
-              window.location.href = '/';
-            }}
-            className="text-sm px-4 py-2 rounded bg-[#1A3D25] hover:bg-[#0F452A] border border-[#2D5C3A]"
-          >
-            Cerrar sesión
-          </button>
+          <AvatarUser />
         </div>
       </header>
 
