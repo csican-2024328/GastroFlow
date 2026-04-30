@@ -52,7 +52,7 @@ export const RestaurantsPage = () => {
   if (loading && restaurants.length === 0) {
     return (
       <div className="p-6">
-        <p className="text-[#C4A882]">Cargando restaurantes...</p>
+        <p className="text-[#2C4035]">Cargando restaurantes...</p>
       </div>
     );
   }
@@ -60,10 +60,10 @@ export const RestaurantsPage = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-[#F0EDE8]">Restaurantes</h1>
+        <h1 className="text-3xl font-bold text-[#1A1A1A]">Restaurantes</h1>
         <button
           onClick={handleCreateRestaurant}
-          className="px-4 py-2 rounded bg-[#1A3D25] hover:bg-[#0F452A] text-[#F0EDE8] font-medium"
+          className="px-4 py-2 rounded bg-[#2C4035] hover:opacity-90 text-white font-medium"
         >
           + Nuevo Restaurante
         </button>
@@ -75,10 +75,10 @@ export const RestaurantsPage = () => {
           {restaurants.map((restaurant) => (
             <div
               key={restaurant._id}
-              className="bg-[#0F452A] border border-[#113a26] rounded-lg overflow-hidden hover:border-[#C4A882] transition-colors"
+              className="bg-white border border-[#E2D4B7] rounded-lg overflow-hidden hover:border-[#2C4035] transition-colors shadow-sm"
             >
               {/* Imagen del restaurante */}
-              <div className="relative h-40 bg-[#112D1C] overflow-hidden">
+              <div className="relative h-40 bg-[#F8F5F0] overflow-hidden">
                 {restaurant.photos && restaurant.photos.length > 0 ? (
                   <img
                     src={restaurant.photos[0]}
@@ -86,7 +86,7 @@ export const RestaurantsPage = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[#C4A882]">
+                  <div className="w-full h-full flex items-center justify-center text-[#2C4035]">
                     Sin imagen
                   </div>
                 )}
@@ -106,11 +106,11 @@ export const RestaurantsPage = () => {
 
               {/* Contenido */}
               <div className="p-4">
-                <h3 className="text-lg font-semibold text-[#F0EDE8] mb-2">
+                <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2">
                   {restaurant.name}
                 </h3>
 
-                <div className="space-y-1 text-sm text-[#C4A882] mb-4">
+                <div className="space-y-1 text-sm text-[#2C4035] mb-4">
                   <p>
                     <span className="font-semibold">Dirección:</span> {restaurant.address}
                   </p>
@@ -146,7 +146,7 @@ export const RestaurantsPage = () => {
                 </div>
 
                 {restaurant.description && (
-                  <p className="text-xs text-[#C4A882] mb-4 line-clamp-2">
+                  <p className="text-xs text-gray-600 mb-4 line-clamp-2">
                     {restaurant.description}
                   </p>
                 )}
@@ -155,13 +155,13 @@ export const RestaurantsPage = () => {
                 <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={() => handleEditRestaurant(restaurant)}
-                    className="flex-1 px-3 py-2 rounded bg-[#1A3D25] hover:bg-[#0F452A] text-[#F0EDE8] text-sm font-medium"
+                    className="flex-1 px-3 py-2 rounded bg-[#2C4035] hover:opacity-90 text-white text-sm font-medium"
                   >
                     Editar
                   </button>
                   <button
                     onClick={() => handleDeleteRestaurant(restaurant._id)}
-                    className="flex-1 px-3 py-2 rounded bg-red-700 hover:bg-red-600 text-[#F0EDE8] text-sm font-medium"
+                    className="flex-1 px-3 py-2 rounded bg-[#C87A55] hover:opacity-90 text-white text-sm font-medium"
                   >
                     Eliminar
                   </button>
@@ -172,10 +172,10 @@ export const RestaurantsPage = () => {
         </div>
       ) : (
         <div className="text-center py-12">
-          <p className="text-[#C4A882] text-lg mb-4">No hay restaurantes registrados</p>
+          <p className="text-[#2C4035] text-lg mb-4">No hay restaurantes registrados</p>
           <button
             onClick={handleCreateRestaurant}
-            className="px-4 py-2 rounded bg-[#1A3D25] hover:bg-[#0F452A] text-[#F0EDE8] font-medium"
+            className="px-4 py-2 rounded bg-[#2C4035] hover:opacity-90 text-white font-medium"
           >
             Crear primer restaurante
           </button>
@@ -191,8 +191,8 @@ export const RestaurantsPage = () => {
               onClick={() => setCurrentPage(page)}
               className={`px-3 py-2 rounded ${
                 currentPage === page
-                  ? 'bg-[#1A3D25] text-[#F0EDE8]'
-                  : 'bg-[#0F452A] text-[#C4A882] hover:bg-[#112D1C]'
+                  ? 'bg-[#2C4035] text-white'
+                  : 'bg-white border border-[#E2D4B7] text-[#2C4035] hover:bg-[#F8F5F0]'
               }`}
             >
               {page}

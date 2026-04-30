@@ -151,12 +151,7 @@ export const loginUserHelper = async (emailOrUsername, password) => {
     const expiresAt = new Date(Date.now() + expiresInMs);
 
     const fullUser = buildUserResponse(user);
-    const userDetails = {
-      id: fullUser.id,
-      username: fullUser.username,
-      profileImage: fullUser.profileImage,
-      role: fullUser.role,
-    };
+    const userDetails = fullUser;
 
     return {
       success: true,

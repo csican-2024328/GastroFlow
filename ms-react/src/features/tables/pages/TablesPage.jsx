@@ -90,7 +90,7 @@ export const TablesPage = () => {
   if (loading && mesas.length === 0) {
     return (
       <div className="p-6">
-        <p className="text-[#C4A882]">Cargando mesas...</p>
+        <p className="text-[#2C4035]">Cargando mesas...</p>
       </div>
     );
   }
@@ -99,29 +99,29 @@ export const TablesPage = () => {
     <div className="p-6">
       <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
         <div>
-          <Typography variant="h3" className="text-[#F0EDE8]">Mesas</Typography>
-          <Typography variant="small" className="text-[#C4A882]">
+          <Typography variant="h3" className="text-[#1A1A1A]">Mesas</Typography>
+          <Typography variant="small" className="text-[#2C4035]">
             Administra las mesas por sucursal.
           </Typography>
         </div>
-        <Button onClick={handleCreateMesa} className="bg-[#1A3D25] text-[#F0EDE8]">
+        <Button onClick={handleCreateMesa} className="bg-[#2C4035] text-white">
           + Nueva mesa
         </Button>
       </div>
 
       <TableFilters />
 
-      <Card className="bg-[#0F452A] border border-[#113a26] shadow-none rounded-lg overflow-hidden">
-        <CardHeader floated={false} shadow={false} className="bg-transparent m-0 rounded-none border-b border-[#113a26] px-4 py-3">
-          <Typography variant="h6" className="text-[#F0EDE8]">
+      <Card className="bg-white border border-[#E2D4B7] shadow-sm rounded-lg overflow-hidden">
+        <CardHeader floated={false} shadow={false} className="bg-transparent m-0 rounded-none border-b border-[#E2D4B7] px-4 py-3">
+          <Typography variant="h6" className="text-[#1A1A1A]">
             Lista de mesas
           </Typography>
         </CardHeader>
         <CardBody className="px-0 py-0">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-[#F0EDE8]">
+            <table className="min-w-full text-[#1A1A1A]">
               <thead>
-                <tr className="text-[#C4A882]">
+                <tr className="text-[#2C4035]">
                   <th className="p-4 text-left font-normal">Identificador</th>
                   <th className="p-4 text-left font-normal">Número</th>
                   <th className="p-4 text-left font-normal">Capacidad</th>
@@ -133,15 +133,15 @@ export const TablesPage = () => {
               <tbody>
                 {mesas.length > 0 ? (
                   mesas.map((mesa) => (
-                    <tr key={mesa._id} className="border-t border-[#113a26]">
+                    <tr key={mesa._id} className="border-t border-[#E2D4B7]">
                       <td className="p-4">
-                        <Typography variant="small" className="font-semibold text-[#F0EDE8]">
+                        <Typography variant="small" className="font-semibold text-[#1A1A1A]">
                           {mesa.ubicacion}
                         </Typography>
                       </td>
-                      <td className="p-4 text-[#F0EDE8]">{mesa.numero}</td>
-                      <td className="p-4 text-[#F0EDE8]">{mesa.capacidad}</td>
-                      <td className="p-4 text-[#F0EDE8]">{getRestaurantName(mesa.restaurantID)}</td>
+                      <td className="p-4 text-[#1A1A1A]">{mesa.numero}</td>
+                      <td className="p-4 text-[#1A1A1A]">{mesa.capacidad}</td>
+                      <td className="p-4 text-[#1A1A1A]">{getRestaurantName(mesa.restaurantID)}</td>
                       <td className="p-4">
                         <Chip
                           value={mesa.isActive ? 'Activa' : 'Inactiva'}
@@ -153,7 +153,7 @@ export const TablesPage = () => {
                           <IconButton
                             size="sm"
                             onClick={() => handleEditMesa(mesa)}
-                            className="bg-[#1A3D25]"
+                            className="bg-[#2C4035]"
                             title="Editar mesa"
                           >
                             <svg
@@ -171,7 +171,7 @@ export const TablesPage = () => {
                           <IconButton
                             size="sm"
                             onClick={() => handleDeleteMesa(mesa._id)}
-                            className="bg-red-700"
+                            className="bg-[#C87A55]"
                             title="Eliminar mesa"
                           >
                             <svg
@@ -195,7 +195,7 @@ export const TablesPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="p-6 text-center text-[#7A9E85]">
+                    <td colSpan="6" className="p-6 text-center text-[#2C4035]">
                       No hay mesas registradas para este filtro.
                     </td>
                   </tr>
@@ -213,7 +213,7 @@ export const TablesPage = () => {
               key={page}
               size="sm"
               onClick={() => setCurrentPage(page)}
-              className={page === currentPage ? 'bg-[#1A3D25] text-[#F0EDE8]' : 'bg-[#0F452A] text-[#C4A882]'}
+              className={page === currentPage ? 'bg-[#2C4035] text-white' : 'bg-white border border-[#E2D4B7] text-[#2C4035]'}
             >
               {page}
             </Button>

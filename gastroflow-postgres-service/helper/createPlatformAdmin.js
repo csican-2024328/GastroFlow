@@ -12,7 +12,7 @@ import { hashPassword } from '../utils/password-utils.js';
 const PLATFORM_ADMIN_ROLE = 'PLATFORM_ADMIN';
 const DEFAULT_ROLES = [PLATFORM_ADMIN_ROLE, 'RESTAURANT_ADMIN', 'CLIENT'];
 const DEFAULT_ADMIN_USERNAME = 'admin';
-const DEFAULT_ADMIN_EMAIL = 'ssical-2024422@kinal.edu.gt';
+const DEFAULT_ADMIN_EMAIL = 'admin@gastroflow.local';
 const DEFAULT_ADMIN_PASSWORD = 'Admin@1234!';
 
 const seedBaseRoles = async (transaction) => {
