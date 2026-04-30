@@ -17,18 +17,22 @@ export const LoginForm = ({ onForgot, onRegister }) => {
     formState: { errors },
   } = useForm();
 
+  const getLandingRouteForRole = (role) => {
+    const normalizedRole = (role || '').toString().trim().toUpperCase();
+
+    if (normalizedRole === 'PLATFORM_ADMIN' || normalizedRole === 'RESTAURANT_ADMIN') {
+      return '/dashboard';
+    }
+
+    return '/cliente';
+  };
+
   const onSubmit = async (data) => {
     const result = await login(data);
     if (result.success) {
       notyfSuccess('¡Bienvenido de nuevo!', { duration: 2000 });
-      // Redirect based on role
       const role = result.data?.userDetails?.role || result.data?.role || '';
-      const roleUp = (role || '').toString().toUpperCase();
-      if (roleUp.includes('ADMIN') || roleUp.includes('PLATFORM')) {
-        navigate('/dashboard');
-      } else {
-        navigate('/cliente');
-      }
+      navigate(getLandingRouteForRole(role), { replace: true });
       return;
     }
 

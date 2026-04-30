@@ -23,6 +23,16 @@ export const ProfilePage = () => {
   const [loading, setLoading] = useState(false)
   const [editMode, setEditMode] = useState(false)
 
+  const getLandingRouteForRole = (role) => {
+    const normalizedRole = (role || '').toString().trim().toUpperCase();
+
+    if (normalizedRole === 'PLATFORM_ADMIN' || normalizedRole === 'RESTAURANT_ADMIN') {
+      return '/dashboard';
+    }
+
+    return '/cliente';
+  };
+
   useEffect(() => {
     const loadProfile = async () => {
       try {
@@ -38,7 +48,7 @@ export const ProfilePage = () => {
       } catch (err) {
         const status = err?.response?.status
         if (status === 401 || status === 403) {
-          navigate('/')
+          navigate('/login')
         }
       }
     }
@@ -150,11 +160,7 @@ export const ProfilePage = () => {
 
                 <div className="flex gap-2">
                   <button onClick={startEdit} className="px-4 py-2 rounded bg-[#1A3D25] text-white hover:bg-[#0F452A]">Editar perfil</button>
-                  <button onClick={() => {
-                    const role = user?.role || 'CLIENT'
-                    if (role === 'CLIENT') navigate('/cliente')
-                    else navigate('/dashboard')
-                  }} className="px-4 py-2 rounded bg-[#C97B60] text-white hover:opacity-90">Volver</button>
+                  <button onClick={() => navigate(getLandingRouteForRole(user?.role), { replace: true })} className="px-4 py-2 rounded bg-[#C97B60] text-white hover:opacity-90">Volver</button>
                 </div>
               </div>
             ) : (

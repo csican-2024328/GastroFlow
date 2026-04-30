@@ -66,12 +66,12 @@ export const registerUserHelper = async (userData) => {
       profilePicture: profilePicture,
     });
 
-    // Asignar automáticamente el rol RESTAURANT_ADMIN a nuevos usuarios
+    // Asignar automáticamente el rol CLIENT a nuevos usuarios
     try {
-      await assignRoleToUser(newUser.Id, 'RESTAURANT_ADMIN');
-      console.log(`✅ Rol RESTAURANT_ADMIN asignado al usuario ${newUser.Email}`);
+      await assignRoleToUser(newUser.Id, 'CLIENT');
+      console.log(`✅ Rol CLIENT asignado al usuario ${newUser.Email}`);
     } catch (roleError) {
-      console.error(`⚠️  Error asignando rol RESTAURANT_ADMIN a ${newUser.Email}:`, roleError.message);
+      console.error(`⚠️  Error asignando rol CLIENT a ${newUser.Email}:`, roleError.message);
       // No lanzar error si falla la asignación de rol, el usuario se crea con rol por defecto
     }
 

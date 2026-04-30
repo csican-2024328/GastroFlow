@@ -50,7 +50,7 @@ export const RegisterForm = ({ onSwitch }) => {
       const { data } = await registerRequest(payload);
 
       toast.success(data?.message || 'Cuenta creada correctamente');
-      navigate('/');
+      navigate('/login');
     } catch (error) {
       toast.error(getRegisterErrorMessage(error));
     } finally {

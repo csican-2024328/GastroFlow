@@ -15,7 +15,7 @@ export const ResetPasswordPage = () => {
         title="Restablecer contraseña"
         subtitle="Crea una nueva contraseña para volver a entrar a tu cuenta"
       >
-        <ResetPasswordForm token={token} onSwitch={() => navigate('/')} />
+        <ResetPasswordForm token={token} onSwitch={() => navigate('/login')} />
       </AuthCard>
     </AuthContainer>
   );

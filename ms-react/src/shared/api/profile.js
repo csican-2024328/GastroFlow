@@ -25,13 +25,17 @@ export const updateProfileAvatar = async (file) => {
   // Let the browser / axios set the Content-Type (including boundary).
   // Setting it manually can omit the multipart boundary and break multer parsing on the server.
   try {
-    return await axiosClient.put(`${AUTH_BASE}/auth/profile/avatar`, formData);
+    return await axiosClient.put(`${AUTH_BASE}/auth/profile/avatar`, formData, {
+      timeout: 600000,
+    });
   } catch (err) {
     // If the server returns 404 for PUT (some setups expect POST for multipart), retry with POST
     const statusCode = err?.response?.status;
     if (statusCode === 404) {
       try {
-        return await axiosClient.post(`${AUTH_BASE}/auth/profile/avatar`, formData);
+        return await axiosClient.post(`${AUTH_BASE}/auth/profile/avatar`, formData, {
+          timeout: 600000,
+        });
       } catch (err2) {
         // fall through to throwing enriched error
         err = err2;

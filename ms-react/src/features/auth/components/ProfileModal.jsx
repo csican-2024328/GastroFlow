@@ -37,7 +37,8 @@ export const ProfileModal = () => {
 
   if (!show) return null
 
-  const isAdmin = (user?.role || '').toUpperCase().includes('ADMIN') || (user?.role || '').toUpperCase().includes('PLATFORM')
+  const normalizedRole = (user?.role || '').toString().trim().toUpperCase()
+  const isAdmin = normalizedRole === 'PLATFORM_ADMIN' || normalizedRole === 'RESTAURANT_ADMIN'
 
   return (
     <div

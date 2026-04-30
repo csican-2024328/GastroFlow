@@ -22,7 +22,8 @@ export const ProfilePanel = ({ onClose, initialEdit=false }) => {
   const [preview, setPreview] = useState(avatarSrcDefault)
   const [saving, setSaving] = useState(false)
 
-  const isAdmin = (user?.role || '').toUpperCase().includes('ADMIN') || (user?.role || '').toUpperCase().includes('PLATFORM')
+  const normalizedRole = (user?.role || '').toString().trim().toUpperCase()
+  const isAdmin = normalizedRole === 'PLATFORM_ADMIN' || normalizedRole === 'RESTAURANT_ADMIN'
 
   const onAvatarChange = (e) => {
     const file = e.target.files?.[0]
@@ -107,7 +108,11 @@ export const ProfilePanel = ({ onClose, initialEdit=false }) => {
 
             <div className="mt-6 flex gap-3">
               <button onClick={() => setEditMode(true)} className="px-4 py-2 rounded bg-[#1A3D25] text-white">Editar perfil</button>
-              <button onClick={() => onClose && onClose()} className="px-4 py-2 rounded bg-[#C97B60] text-white">Volver</button>
+              <button onClick={() => {
+                const role = (user?.role || '').toString().trim().toUpperCase()
+                if (role === 'PLATFORM_ADMIN' || role === 'RESTAURANT_ADMIN') navigate('/dashboard')
+                else navigate('/cliente')
+              }} className="px-4 py-2 rounded bg-[#C97B60] text-white">Volver</button>
             </div>
 
             {isAdmin && (

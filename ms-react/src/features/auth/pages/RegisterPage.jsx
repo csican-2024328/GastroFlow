@@ -13,7 +13,7 @@ export const RegisterPage = () => {
         title="Crear cuenta"
         subtitle="Completa tus datos para registrarte en GastroFlow"
       >
-        <RegisterForm onSwitch={() => navigate('/')} />
+        <RegisterForm onSwitch={() => navigate('/login')} />
       </AuthCard>
     </AuthContainer>
   );

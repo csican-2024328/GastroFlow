@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import { LandingPage } from '../layouts/LandingPage.jsx';
 import { AuthPage } from '../../features/auth/pages/AuthPage.jsx';
 import { RegisterPage } from '../../features/auth/pages/RegisterPage.jsx';
 import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx';
@@ -11,7 +12,8 @@ import { TablesPage } from '../../features/tables/pages/TablesPage.jsx';
 export const AppRoutes = () => {
     return (
         <Routes>
-            <Route path="/" element={<AuthPage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<AuthPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/verificar-email" element={<VerifyEmailPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
