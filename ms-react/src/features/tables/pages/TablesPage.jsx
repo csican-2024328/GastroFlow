@@ -96,7 +96,7 @@ export const TablesPage = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 md:p-8">
       <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
         <div>
           <Typography variant="h3" className="text-[#1A1A1A]">Mesas</Typography>
@@ -104,15 +104,15 @@ export const TablesPage = () => {
             Administra las mesas por sucursal.
           </Typography>
         </div>
-        <Button onClick={handleCreateMesa} className="bg-[#2C4035] text-white">
+        <Button onClick={handleCreateMesa} className="bg-[#2C4035] text-white rounded-lg shadow-[0_10px_22px_rgba(44,64,53,0.3)] hover:shadow-[0_14px_30px_rgba(44,64,53,0.35)] transition-all duration-200">
           + Nueva mesa
         </Button>
       </div>
 
       <TableFilters />
 
-      <Card className="bg-white border border-[#E2D4B7] shadow-sm rounded-lg overflow-hidden">
-        <CardHeader floated={false} shadow={false} className="bg-transparent m-0 rounded-none border-b border-[#E2D4B7] px-4 py-3">
+      <Card className="bg-gradient-to-b from-white to-[#F8F5F0] border border-[#E2D4B7] shadow-[0_16px_34px_rgba(26,26,26,0.08)] rounded-xl overflow-hidden">
+        <CardHeader floated={false} shadow={false} className="bg-transparent m-0 rounded-none border-b border-[#E2D4B7] px-5 py-4">
           <Typography variant="h6" className="text-[#1A1A1A]">
             Lista de mesas
           </Typography>
@@ -121,19 +121,19 @@ export const TablesPage = () => {
           <div className="overflow-x-auto">
             <table className="min-w-full text-[#1A1A1A]">
               <thead>
-                <tr className="text-[#2C4035]">
-                  <th className="p-4 text-left font-normal">Identificador</th>
-                  <th className="p-4 text-left font-normal">Número</th>
-                  <th className="p-4 text-left font-normal">Capacidad</th>
-                  <th className="p-4 text-left font-normal">Restaurante</th>
-                  <th className="p-4 text-left font-normal">Estado</th>
-                  <th className="p-4 text-left font-normal">Acciones</th>
+                <tr className="text-[#2C4035] uppercase tracking-wide text-xs">
+                  <th className="p-4 text-left font-semibold">Identificador</th>
+                  <th className="p-4 text-left font-semibold">Número</th>
+                  <th className="p-4 text-left font-semibold">Capacidad</th>
+                  <th className="p-4 text-left font-semibold">Restaurante</th>
+                  <th className="p-4 text-left font-semibold">Estado</th>
+                  <th className="p-4 text-left font-semibold">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {mesas.length > 0 ? (
                   mesas.map((mesa) => (
-                    <tr key={mesa._id} className="border-t border-[#E2D4B7]">
+                    <tr key={mesa._id} className="border-t border-[#E2D4B7] hover:bg-[#F8F5F0]/70 transition-colors duration-200">
                       <td className="p-4">
                         <Typography variant="small" className="font-semibold text-[#1A1A1A]">
                           {mesa.ubicacion}
@@ -145,7 +145,7 @@ export const TablesPage = () => {
                       <td className="p-4">
                         <Chip
                           value={mesa.isActive ? 'Activa' : 'Inactiva'}
-                          className={mesa.isActive ? 'bg-green-700' : 'bg-gray-600'}
+                          className={mesa.isActive ? 'bg-[#2C4035] text-white' : 'bg-[#C87A55] text-white'}
                         />
                       </td>
                       <td className="p-4">
@@ -153,7 +153,7 @@ export const TablesPage = () => {
                           <IconButton
                             size="sm"
                             onClick={() => handleEditMesa(mesa)}
-                            className="bg-[#2C4035]"
+                            className="bg-[#2C4035] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
                             title="Editar mesa"
                           >
                             <svg
@@ -171,7 +171,7 @@ export const TablesPage = () => {
                           <IconButton
                             size="sm"
                             onClick={() => handleDeleteMesa(mesa._id)}
-                            className="bg-[#C87A55]"
+                            className="bg-[#C87A55] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
                             title="Eliminar mesa"
                           >
                             <svg
@@ -213,7 +213,7 @@ export const TablesPage = () => {
               key={page}
               size="sm"
               onClick={() => setCurrentPage(page)}
-              className={page === currentPage ? 'bg-[#2C4035] text-white' : 'bg-white border border-[#E2D4B7] text-[#2C4035]'}
+              className={page === currentPage ? 'bg-[#2C4035] text-white rounded-md shadow-md' : 'bg-white border border-[#E2D4B7] text-[#2C4035] rounded-md hover:bg-[#F8F5F0] transition-colors duration-200'}
             >
               {page}
             </Button>

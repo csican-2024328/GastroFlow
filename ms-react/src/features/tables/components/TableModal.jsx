@@ -2,10 +2,6 @@ import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import {
   Button,
-  Dialog,
-  DialogBody,
-  DialogFooter,
-  DialogHeader,
   Input,
   Option,
   Select,
@@ -80,17 +76,25 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
     }
   };
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} handler={onClose} size="lg" className="bg-[#0F452A] text-[#F0EDE8]">
-      <DialogHeader className="border-b border-[#113a26]">
-        <Typography variant="h5" className="text-[#F0EDE8]">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-gradient-to-br from-[var(--gf-green)] to-[var(--gf-green)]/95 text-[var(--gf-cream)] border border-[var(--gf-beige)]/35 rounded-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-[0_30px_70px_rgba(26,26,26,0.45)]">
+      <div className="border-b border-[var(--gf-beige)]/25 px-6 py-5">
+        <Typography variant="h5" className="text-[var(--gf-cream)]">
           {mesa ? 'Editar mesa' : 'Nueva mesa'}
         </Typography>
-      </DialogHeader>
-      <DialogBody className="space-y-4 overflow-y-auto max-h-[75vh]">
+      </div>
+      <div className="space-y-4 overflow-y-auto max-h-[75vh] px-6 py-5">
         <form id="table-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Typography variant="small" className="mb-2 text-[#C4A882]">
+            <Typography variant="small" className="mb-2 text-[var(--gf-beige)]">
               Número de mesa *
             </Typography>
             <Input
@@ -101,14 +105,14 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
                 valueAsNumber: true,
                 validate: (value) => Number(value) > 0 || 'El número debe ser mayor a 0',
               })}
-              className="!border-[#1A3D25] text-[#F0EDE8]"
+              className="!border-[var(--gf-beige)]/40 text-[var(--gf-cream)] rounded-md"
               labelProps={{ className: 'hidden' }}
             />
             {errors.numero && <p className="mt-1 text-xs text-red-400">{errors.numero.message}</p>}
           </div>
 
           <div>
-            <Typography variant="small" className="mb-2 text-[#C4A882]">
+            <Typography variant="small" className="mb-2 text-[var(--gf-beige)]">
               Capacidad de personas *
             </Typography>
             <Input
@@ -119,14 +123,14 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
                 valueAsNumber: true,
                 validate: (value) => Number(value) > 0 || 'La capacidad debe ser mayor a 0',
               })}
-              className="!border-[#1A3D25] text-[#F0EDE8]"
+              className="!border-[var(--gf-beige)]/40 text-[var(--gf-cream)] rounded-md"
               labelProps={{ className: 'hidden' }}
             />
             {errors.capacidad && <p className="mt-1 text-xs text-red-400">{errors.capacidad.message}</p>}
           </div>
 
           <div>
-            <Typography variant="small" className="mb-2 text-[#C4A882]">
+            <Typography variant="small" className="mb-2 text-[var(--gf-beige)]">
               Identificador visual / Ubicación *
             </Typography>
             <Input
@@ -135,14 +139,14 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
                 required: 'El identificador visual es obligatorio',
               })}
               placeholder="Terraza, Ventana, Sala 1"
-              className="!border-[#1A3D25] text-[#F0EDE8]"
+              className="!border-[var(--gf-beige)]/40 text-[var(--gf-cream)] rounded-md"
               labelProps={{ className: 'hidden' }}
             />
             {errors.ubicacion && <p className="mt-1 text-xs text-red-400">{errors.ubicacion.message}</p>}
           </div>
 
           <div>
-            <Typography variant="small" className="mb-2 text-[#C4A882]">
+            <Typography variant="small" className="mb-2 text-[var(--gf-beige)]">
               Restaurante *
             </Typography>
             <Controller
@@ -155,12 +159,25 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
                   value={field.value || ''}
                   onChange={field.onChange}
                   disabled={restaurantOptionsLoading}
-                  className="text-[#F0EDE8]"
+                  className="text-[var(--gf-cream)] !border-[var(--gf-beige)]/45 rounded-md"
                   containerProps={{ className: 'min-w-full' }}
+                  menuProps={{
+                    className:
+                      'bg-[var(--gf-cream)] border border-[var(--gf-beige)] text-[var(--gf-graphite)]',
+                  }}
                 >
-                  <Option value="">-- Selecciona un restaurante --</Option>
+                  <Option
+                    value=""
+                    className="!text-[var(--gf-graphite)] hover:!bg-[var(--gf-beige)]/40 focus:!bg-[var(--gf-beige)]/40"
+                  >
+                    -- Selecciona un restaurante --
+                  </Option>
                   {restaurantOptions.map((restaurant) => (
-                    <Option key={restaurant._id} value={restaurant._id}>
+                    <Option
+                      key={restaurant._id}
+                      value={restaurant._id}
+                      className="!text-[var(--gf-graphite)] hover:!bg-[var(--gf-beige)]/40 focus:!bg-[var(--gf-beige)]/40"
+                    >
                       {restaurant.name}
                     </Option>
                   ))}
@@ -170,19 +187,20 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
             {errors.restaurantID && <p className="mt-1 text-xs text-red-400">{errors.restaurantID.message}</p>}
           </div>
         </form>
-      </DialogBody>
-      <DialogFooter className="border-t border-[#113a26] gap-2">
-        <Button variant="text" onClick={onClose} className="text-[#C4A882]">
+      </div>
+      <div className="border-t border-[var(--gf-beige)]/25 gap-2 flex justify-end px-6 py-4">
+        <Button variant="text" onClick={onClose} className="text-[var(--gf-beige)] hover:bg-[var(--gf-beige)]/10 rounded-md transition-colors duration-200">
           Cancelar
         </Button>
         <Button
           onClick={handleSubmit(onSubmit)}
           disabled={loading}
-          className="bg-[#1A3D25] text-[#F0EDE8]"
+          className="bg-[var(--gf-beige)] text-[var(--gf-graphite)] hover:bg-[var(--gf-terracotta)] hover:text-[var(--gf-cream)] rounded-md shadow-md hover:shadow-lg transition-all duration-200"
         >
           {loading ? 'Guardando...' : 'Guardar'}
         </Button>
-      </DialogFooter>
-    </Dialog>
+      </div>
+      </div>
+    </div>
   );
 };

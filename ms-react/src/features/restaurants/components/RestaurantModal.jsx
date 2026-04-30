@@ -118,20 +118,23 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 
   if (!isOpen) return null;
 
+  const fieldClassName =
+    'w-full p-2.5 rounded-md bg-[var(--gf-green)]/75 text-[var(--gf-cream)] placeholder:text-[var(--gf-beige)]/60 border border-[var(--gf-beige)]/35 focus:border-[var(--gf-beige)] focus:outline-none transition-colors duration-200';
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-[#0F452A] rounded-lg border border-[#113a26] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-        <h2 className="text-2xl font-semibold mb-6 text-[#F0EDE8]">
+    <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 p-4">
+      <div className="bg-gradient-to-br from-[var(--gf-green)] to-[var(--gf-green)]/95 rounded-xl border border-[var(--gf-beige)]/35 max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-[0_30px_70px_rgba(26,26,26,0.45)]">
+        <h2 className="text-2xl font-semibold mb-6 text-[var(--gf-cream)]">
           {restaurant ? 'Editar Restaurante' : 'Crear Nuevo Restaurante'}
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Nombre */}
           <div>
-            <label className="text-sm text-[#C4A882]">Nombre *</label>
+            <label className="text-sm font-medium text-[var(--gf-beige)]">Nombre *</label>
             <input
               {...register('name', { required: 'El nombre es obligatorio' })}
-              className="w-full p-2 rounded bg-[#112D1C] text-[#F0EDE8] border border-[#1A3D25] focus:border-[#C4A882] focus:outline-none"
+              className={fieldClassName}
               placeholder="Nombre del restaurante"
             />
             {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>}
@@ -139,7 +142,7 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 
           {/* Email */}
           <div>
-            <label className="text-sm text-[#C4A882]">Email *</label>
+            <label className="text-sm font-medium text-[var(--gf-beige)]">Email *</label>
             <input
               {...register('email', {
                 required: 'El email es obligatorio',
@@ -148,7 +151,7 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
                   message: 'El email debe ser válido',
                 },
               })}
-              className="w-full p-2 rounded bg-[#112D1C] text-[#F0EDE8] border border-[#1A3D25] focus:border-[#C4A882] focus:outline-none"
+              className={fieldClassName}
               placeholder="restaurante@email.com"
               type="email"
             />
@@ -157,10 +160,10 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 
           {/* Teléfono */}
           <div>
-            <label className="text-sm text-[#C4A882]">Teléfono *</label>
+            <label className="text-sm font-medium text-[var(--gf-beige)]">Teléfono *</label>
             <input
               {...register('phone', { required: 'El teléfono es obligatorio' })}
-              className="w-full p-2 rounded bg-[#112D1C] text-[#F0EDE8] border border-[#1A3D25] focus:border-[#C4A882] focus:outline-none"
+              className={fieldClassName}
               placeholder="23456789"
             />
             {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone.message}</p>}
@@ -168,10 +171,10 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 
           {/* Dirección */}
           <div>
-            <label className="text-sm text-[#C4A882]">Dirección *</label>
+            <label className="text-sm font-medium text-[var(--gf-beige)]">Dirección *</label>
             <input
               {...register('address', { required: 'La dirección es obligatoria' })}
-              className="w-full p-2 rounded bg-[#112D1C] text-[#F0EDE8] border border-[#1A3D25] focus:border-[#C4A882] focus:outline-none"
+              className={fieldClassName}
               placeholder="Calle Principal 123"
             />
             {errors.address && <p className="text-red-400 text-xs mt-1">{errors.address.message}</p>}
@@ -179,10 +182,10 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 
           {/* Ciudad */}
           <div>
-            <label className="text-sm text-[#C4A882]">Ciudad *</label>
+            <label className="text-sm font-medium text-[var(--gf-beige)]">Ciudad *</label>
             <input
               {...register('city', { required: 'La ciudad es obligatoria' })}
-              className="w-full p-2 rounded bg-[#112D1C] text-[#F0EDE8] border border-[#1A3D25] focus:border-[#C4A882] focus:outline-none"
+              className={fieldClassName}
               placeholder="Ciudad de Guatemala"
             />
             {errors.city && <p className="text-red-400 text-xs mt-1">{errors.city.message}</p>}
@@ -190,10 +193,10 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 
           {/* Horario de apertura */}
           <div>
-            <label className="text-sm text-[#C4A882]">Horario de apertura *</label>
+            <label className="text-sm font-medium text-[var(--gf-beige)]">Horario de apertura *</label>
             <input
               {...register('openingHours', { required: 'El horario es obligatorio' })}
-              className="w-full p-2 rounded bg-[#112D1C] text-[#F0EDE8] border border-[#1A3D25] focus:border-[#C4A882] focus:outline-none"
+              className={fieldClassName}
               placeholder="Lun-Vie 9:00-18:00"
             />
             {errors.openingHours && <p className="text-red-400 text-xs mt-1">{errors.openingHours.message}</p>}
@@ -201,10 +204,10 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 
           {/* Aforo máximo */}
           <div>
-            <label className="text-sm text-[#C4A882]">Aforo máximo *</label>
+            <label className="text-sm font-medium text-[var(--gf-beige)]">Aforo máximo *</label>
             <input
               {...register('aforoMaximo', { required: 'El aforo máximo es obligatorio' })}
-              className="w-full p-2 rounded bg-[#112D1C] text-[#F0EDE8] border border-[#1A3D25] focus:border-[#C4A882] focus:outline-none"
+              className={fieldClassName}
               placeholder="100"
               type="number"
             />
@@ -213,20 +216,20 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 
           {/* Categoría */}
           <div>
-            <label className="text-sm text-[#C4A882]">Categoría</label>
+            <label className="text-sm font-medium text-[var(--gf-beige)]">Categoría</label>
             <input
               {...register('category')}
-              className="w-full p-2 rounded bg-[#112D1C] text-[#F0EDE8] border border-[#1A3D25] focus:border-[#C4A882] focus:outline-none"
+              className={fieldClassName}
               placeholder="Italiana, Mexicana, etc."
             />
           </div>
 
           {/* Descripción */}
           <div>
-            <label className="text-sm text-[#C4A882]">Descripción</label>
+            <label className="text-sm font-medium text-[var(--gf-beige)]">Descripción</label>
             <textarea
               {...register('description')}
-              className="w-full p-2 rounded bg-[#112D1C] text-[#F0EDE8] border border-[#1A3D25] focus:border-[#C4A882] focus:outline-none"
+              className={fieldClassName}
               placeholder="Descripción del restaurante"
               rows="3"
             />
@@ -234,10 +237,10 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 
           {/* Precio promedio */}
           <div>
-            <label className="text-sm text-[#C4A882]">Precio promedio</label>
+            <label className="text-sm font-medium text-[var(--gf-beige)]">Precio promedio</label>
             <input
               {...register('averagePrice')}
-              className="w-full p-2 rounded bg-[#112D1C] text-[#F0EDE8] border border-[#1A3D25] focus:border-[#C4A882] focus:outline-none"
+              className={fieldClassName}
               placeholder="50.00"
               type="number"
               step="0.01"
@@ -246,13 +249,13 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 
           {/* Fotos */}
           <div>
-            <label className="text-sm text-[#C4A882]">Fotos (cualquier imagen)</label>
+            <label className="text-sm font-medium text-[var(--gf-beige)]">Fotos (cualquier imagen)</label>
             <input
               type="file"
               accept="image/*"
               multiple
               onChange={onPhotoChange}
-              className="w-full p-2 rounded bg-[#112D1C] text-[#F0EDE8] border border-[#1A3D25]"
+              className="w-full p-2.5 rounded-md bg-[var(--gf-green)]/75 text-[var(--gf-cream)] border border-[var(--gf-beige)]/35"
             />
             
             {/* Preview de fotos */}
@@ -263,12 +266,12 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
                     <img
                       src={preview}
                       alt={`Preview ${index}`}
-                      className="w-full h-24 object-cover rounded"
+                      className="w-full h-24 object-cover rounded-md border border-[var(--gf-beige)]/35"
                     />
                     <button
                       type="button"
                       onClick={() => removePhoto(index)}
-                      className="absolute top-1 right-1 bg-red-600 text-white px-2 py-1 text-xs rounded"
+                      className="absolute top-1 right-1 bg-[var(--gf-terracotta)] text-white px-2 py-1 text-xs rounded-md"
                     >
                       ✕
                     </button>
@@ -279,18 +282,18 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
           </div>
 
           {/* Botones */}
-          <div className="flex gap-3 justify-end pt-4 border-t border-[#1A3D25]">
+          <div className="flex gap-3 justify-end pt-4 border-t border-[var(--gf-beige)]/35">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-[#F0EDE8]"
+              className="px-4 py-2 rounded-md bg-[var(--gf-graphite)]/70 hover:bg-[var(--gf-graphite)] text-[var(--gf-cream)] transition-colors duration-200"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || storeLoading}
-              className="px-4 py-2 rounded bg-[#1A3D25] hover:bg-[#0F452A] text-[#F0EDE8] disabled:opacity-50"
+              className="px-4 py-2 rounded-md bg-[var(--gf-beige)] hover:bg-[var(--gf-terracotta)] text-[var(--gf-graphite)] hover:text-[var(--gf-cream)] shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
             >
               {loading || storeLoading ? 'Guardando...' : 'Guardar'}
             </button>
