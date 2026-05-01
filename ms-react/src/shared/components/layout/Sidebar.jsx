@@ -6,6 +6,7 @@ export const Sidebar = () => {
     const items = [
         {label: "Mesas", to: "/dashboard/mesas"},
         {label: "Restaurantes", to: "/dashboard/restaurantes"},
+        {label: "Ingredientes", to: "/dashboard/ingredientes"},
         {label: "Cupones", to: "/dashboard/cupones"},
         {label: "Pedidos", to: "/dashboard/pedidos"},
         {label: "Reservas", to: "/dashboard/reservas"},

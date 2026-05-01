@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 
 export const crearInsumo = async (req, res, next) => {
     try {
-        const { nombre, stock, unidadMedida, restaurantId } = req.body;
+        const { nombre, stock, unidadMedida, restaurantId, activo = true } = req.body;
 
         // Validación: nombre, stock, unidad de medida son requeridos
         if (!nombre || stock === undefined || !unidadMedida) {
@@ -47,7 +47,8 @@ export const crearInsumo = async (req, res, next) => {
             nombre: nombre.toLowerCase(),
             stock,
             unidadMedida,
-            restaurantId
+            restaurantId,
+            activo: activo === true || activo === 'true'
         });
 
         // Actualizar disponibilidad de platos que usen este ingrediente
@@ -117,7 +118,7 @@ export const obtenerInsumoPorId = async (req, res, next) => {
 
 export const actualizarInsumo = async (req, res, next) => {
     try {
-        const { nombre, stock, unidadMedida, restaurantId } = req.body;
+        const { nombre, stock, unidadMedida, restaurantId, activo } = req.body;
 
         // Obtener el insumo actual
         const insumoActual = await Inventory.findById(req.params.id);
@@ -149,7 +150,8 @@ export const actualizarInsumo = async (req, res, next) => {
         const updateData = {
             nombre: nombre ? nombre.toLowerCase() : insumoActual.nombre,
             stock: stock !== undefined ? stock : insumoActual.stock,
-            unidadMedida: unidadMedida || insumoActual.unidadMedida
+            unidadMedida: unidadMedida || insumoActual.unidadMedida,
+            activo: activo !== undefined ? (activo === true || activo === 'true') : insumoActual.activo
         };
 
         const insumo = await Inventory.findByIdAndUpdate(
