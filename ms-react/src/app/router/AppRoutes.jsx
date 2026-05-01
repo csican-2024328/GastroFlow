@@ -10,6 +10,7 @@ import { ProfilePage } from '../../features/auth/pages/ProfilePage.jsx';
 import { RestaurantsPage } from '../../features/restaurants/pages/RestaurantsPage.jsx';
 import { TablesPage } from '../../features/tables/pages/TablesPage.jsx';
 import { IngredientsPage } from '../../features/ingredients/pages/IngredientsPage.jsx';
+import { DishesPage } from '../../features/dishes/pages/DishesPage.jsx';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -22,7 +23,8 @@ export const AppRoutes = () => {
             <Route path="/dashboard" element={<DashboardPage />} >
                 <Route path="mesas" element={<TablesPage />} />
                 <Route path="restaurantes" element={<RestaurantsPage />} />
-                <Route path="ingredientes" element={<IngredientsPage />} />
+                 <Route path="ingredientes" element={<IngredientsPage />} />
+                 <Route path="platos" element={<DishesPage />} />
             </Route>
             {/* Profile is shown as an in-app modal (ProfileModal) — no standalone route to avoid redirecting users to a separate page. */}
         </Routes>
