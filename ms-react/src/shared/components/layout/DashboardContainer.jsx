@@ -10,23 +10,19 @@ export const DashboardContainer = () => {
   const showWelcome = location.pathname === '/dashboard'
   const [users, setUsers] = useState([])
   const [loadingUsers, setLoadingUsers] = useState(false)
-  const [usersError, setUsersError] = useState(null)
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoadingUsers(true)
-        setUsersError(null)
         const res = await getUsers()
         if (res?.data?.success) {
           setUsers(res.data.data || [])
         } else {
           setUsers([])
-          setUsersError(res?.data?.message || 'No fue posible obtener usuarios')
         }
-      } catch (err) {
+      } catch {
         setUsers([])
-        setUsersError(err?.response?.data?.message || err.message || 'Error al obtener usuarios')
       } finally {
         setLoadingUsers(false)
       }

@@ -32,7 +32,7 @@ export const createRestaurant = async (data) => {
   
   // Agregar múltiples fotos si existen
   if (data.photos && data.photos.length > 0) {
-    data.photos.forEach((photo, index) => {
+    data.photos.forEach((photo) => {
       if (photo instanceof File) {
         formData.append('fotos', photo);
       }

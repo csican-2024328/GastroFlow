@@ -6,11 +6,12 @@ import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx';
 import { ResetPasswordPage } from '../../features/auth/pages/ResetPasswordPage.jsx';
 import { ClientPage } from '../layouts/ClientPage.jsx';
 import { DashboardPage } from '../layouts/DashboardPage.jsx';
-import { ProfilePage } from '../../features/auth/pages/ProfilePage.jsx';
 import { RestaurantsPage } from '../../features/restaurants/pages/RestaurantsPage.jsx';
 import { TablesPage } from '../../features/tables/pages/TablesPage.jsx';
 import { IngredientsPage } from '../../features/ingredients/pages/IngredientsPage.jsx';
 import { DishesPage } from '../../features/dishes/pages/DishesPage.jsx';
+import { ProtectedRoute } from '../../shared/components/auth/ProtectedRoute.jsx';
+import { RoleGuard } from '../../shared/components/auth/RoleGuard.jsx';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -20,7 +21,16 @@ export const AppRoutes = () => {
             <Route path="/verificar-email" element={<VerifyEmailPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/cliente" element={<ClientPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} >
+            <Route 
+                path="/dashboard" 
+                element={
+                    <ProtectedRoute>
+                        <RoleGuard allowedRoles={['PLATFORM_ADMIN', 'RESTAURANT_ADMIN']}>
+                            <DashboardPage />
+                        </RoleGuard>
+                    </ProtectedRoute>
+                }
+            >
                 <Route path="mesas" element={<TablesPage />} />
                 <Route path="restaurantes" element={<RestaurantsPage />} />
                  <Route path="ingredientes" element={<IngredientsPage />} />

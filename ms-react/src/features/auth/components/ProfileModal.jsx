@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '../store/authStore.js'
 import { ProfilePanel } from './ProfilePanel.jsx'
 
@@ -8,7 +8,6 @@ export const ProfileModal = () => {
   const initialEdit = useAuthStore((s) => s.profileModalEdit)
   const user = useAuthStore((s) => s.user)
   const modalRef = useRef(null)
-  const [activeTab, setActiveTab] = useState('profile')
 
   useEffect(() => {
     if (!show) return
@@ -28,14 +27,23 @@ export const ProfileModal = () => {
   }, [show])
 
   useEffect(() => {
-    if (show) setActiveTab('profile')
-  }, [show])
-
-  useEffect(() => {
     if (show) console.debug('[ProfileModal] opened')
   }, [show])
 
   if (!show) return null
+
+  return (
+    <ProfileModalContent
+      close={close}
+      initialEdit={initialEdit}
+      modalRef={modalRef}
+      user={user}
+    />
+  )
+}
+
+const ProfileModalContent = ({ close, initialEdit, modalRef, user }) => {
+  const [activeTab, setActiveTab] = useState('profile')
 
   const normalizedRole = (user?.role || '').toString().trim().toUpperCase()
   const isAdmin = normalizedRole === 'PLATFORM_ADMIN' || normalizedRole === 'RESTAURANT_ADMIN'

@@ -3,8 +3,6 @@ import { useForm, Controller } from 'react-hook-form';
 import {
   Button,
   Input,
-  Option,
-  Select,
   Typography,
 } from '@material-tailwind/react';
 import { useTableStore } from '../store/useTableStore.js';
@@ -154,34 +152,19 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
               control={control}
               rules={{ required: 'El restaurante es obligatorio' }}
               render={({ field }) => (
-                <Select
-                  label="Selecciona un restaurante"
+                <select
+                  {...field}
                   value={field.value || ''}
-                  onChange={field.onChange}
                   disabled={restaurantOptionsLoading}
-                  className="text-[var(--gf-cream)] !border-[var(--gf-beige)]/45 rounded-md"
-                  containerProps={{ className: 'min-w-full' }}
-                  menuProps={{
-                    className:
-                      'bg-[var(--gf-cream)] border border-[var(--gf-beige)] text-[var(--gf-graphite)]',
-                  }}
+                  className="w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-3 text-stone-900 shadow-sm outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  <Option
-                    value=""
-                    className="!text-[var(--gf-graphite)] hover:!bg-[var(--gf-beige)]/40 focus:!bg-[var(--gf-beige)]/40"
-                  >
-                    -- Selecciona un restaurante --
-                  </Option>
+                  <option value="">Selecciona un restaurante</option>
                   {restaurantOptions.map((restaurant) => (
-                    <Option
-                      key={restaurant._id}
-                      value={restaurant._id}
-                      className="!text-[var(--gf-graphite)] hover:!bg-[var(--gf-beige)]/40 focus:!bg-[var(--gf-beige)]/40"
-                    >
+                    <option key={restaurant._id} value={restaurant._id}>
                       {restaurant.name}
-                    </Option>
+                    </option>
                   ))}
-                </Select>
+                </select>
               )}
             />
             {errors.restaurantID && <p className="mt-1 text-xs text-red-400">{errors.restaurantID.message}</p>}

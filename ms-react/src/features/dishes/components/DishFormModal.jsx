@@ -94,6 +94,9 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
   };
 
   const onSubmit = async (data) => {
+    // Prevenir doble envío si ya está cargando
+    if (loading) return;
+
     try {
       const formData = new FormData();
       formData.append('nombre', data.nombre.trim());
@@ -121,18 +124,23 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
         notyfError(result.error || 'No fue posible guardar el plato');
       }
     } catch (error) {
-      notyfError(error?.response?.data?.message || error.message || 'No fue posible guardar el plato');
+      const errorMessage = error?.response?.data?.message || error.message || 'No fue posible guardar el plato';
+      if (error?.response?.status === 429) {
+        notyfError('Demasiadas solicitudes. Espera un momento e intenta nuevamente.');
+      } else {
+        notyfError(errorMessage);
+      }
     }
   };
 
   if (!open) return null;
 
   const selectClassName =
-    'w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/20 disabled:cursor-not-allowed disabled:opacity-70';
+    'w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20 disabled:cursor-not-allowed disabled:opacity-70';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-stone-200 bg-emerald-900 text-stone-50 shadow-2xl">
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-stone-200 bg-[#2C4035] text-stone-50 shadow-2xl">
         <div className="border-b border-stone-200/20 px-6 py-5">
           <Typography variant="h5" className="text-stone-50">
             {dish ? 'Editar plato' : 'Nuevo plato'}
@@ -156,7 +164,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
                 render={({ field }) => (
                   <select
                     {...field}
-                    disabled={restaurantOptionsLoading}
+                    disabled={restaurantOptionsLoading || loading}
                     className={selectClassName}
                   >
                     <option value="">-- Selecciona un restaurante --</option>
@@ -178,12 +186,13 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
               </Typography>
               <Input
                 type="text"
+                disabled={loading}
                 {...register('nombre', {
                   required: 'El nombre es obligatorio',
                   minLength: { value: 2, message: 'El nombre debe tener al menos 2 caracteres' },
                 })}
                 placeholder="Ej: Ceviche mixto"
-                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/20"
+                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20"
                 labelProps={{ className: 'hidden' }}
               />
               {errors.nombre && <p className="mt-1 text-xs text-red-300">{errors.nombre.message}</p>}
@@ -195,12 +204,13 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
                 Descripción
               </Typography>
               <textarea
+                disabled={loading}
                 rows={3}
                 {...register('descripcion', {
                   maxLength: { value: 500, message: 'La descripción no debe exceder 500 caracteres' },
                 })}
                 placeholder="Ej: Filete de pescado con limón, cebolla morada y cilantro fresco"
-                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/20"
+                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20"
               />
               {errors.descripcion && <p className="mt-1 text-xs text-red-300">{errors.descripcion.message}</p>}
             </div>
@@ -212,6 +222,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
               </Typography>
               <Input
                 type="number"
+                disabled={loading}
                 min="0"
                 step="0.01"
                 {...register('precio', {
@@ -220,7 +231,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
                   validate: (value) => Number.isFinite(value) && value > 0 || 'El precio debe ser mayor a 0',
                 })}
                 placeholder="0.00"
-                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/20"
+                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20"
                 labelProps={{ className: 'hidden' }}
               />
               {errors.precio && <p className="mt-1 text-xs text-red-300">{errors.precio.message}</p>}
@@ -238,6 +249,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
                 render={({ field }) => (
                   <select
                     {...field}
+                    disabled={loading}
                     className={selectClassName}
                   >
                     <option value="">-- Selecciona una categoría --</option>
@@ -267,6 +279,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
                 render={({ field }) => (
                   <select
                     {...field}
+                    disabled={loading}
                     multiple
                     size={5}
                     className={selectClassName}
@@ -297,6 +310,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
               <input
                 type="file"
                 accept="image/*"
+                disabled={loading}
                 {...register('foto', {
                   validate: () => {
                     if (dish?.foto && !selectedFile) return true;
@@ -337,7 +351,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
             form="dish-form"
             type="submit"
             disabled={loading}
-            className="rounded-md bg-stone-50 text-emerald-900 shadow-md transition-all duration-200 hover:shadow-lg"
+            className="rounded-md bg-[#2C4035] text-white shadow-md transition-all duration-200 hover:bg-[#24352c] hover:shadow-lg"
           >
             {loading ? 'Guardando...' : 'Guardar plato'}
           </Button>

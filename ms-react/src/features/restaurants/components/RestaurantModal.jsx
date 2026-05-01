@@ -1,55 +1,42 @@
-import { useEffect, useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useRestaurantStore } from '../store/useRestaurantStore.js';
 import { notyfSuccess, notyfError } from '../../../shared/utils/notyf.js';
 
 export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
-  const { register, handleSubmit, formState: { errors }, reset, control, setValue } = useForm({
+  if (!isOpen) return null;
+
+  return (
+    <RestaurantModalContent
+      key={restaurant?._id || 'new'}
+      onClose={onClose}
+      restaurant={restaurant}
+    />
+  );
+};
+
+const RestaurantModalContent = ({ onClose, restaurant = null }) => {
+  const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      city: '',
-      openingHours: '',
-      aforoMaximo: '',
-      category: '',
-      description: '',
-      averagePrice: '',
+      name: restaurant?.name || '',
+      email: restaurant?.email || '',
+      phone: restaurant?.phone || '',
+      address: restaurant?.address || '',
+      city: restaurant?.city || '',
+      openingHours: restaurant?.openingHours || '',
+      aforoMaximo: restaurant?.aforoMaximo || '',
+      category: restaurant?.category || '',
+      description: restaurant?.description || '',
+      averagePrice: restaurant?.averagePrice || '',
     },
   });
 
   const [loading, setLoading] = useState(false);
-  const [photoPreviews, setPhotoPreviews] = useState([]);
+  const [photoPreviews, setPhotoPreviews] = useState(restaurant?.photos ? [...restaurant.photos] : []);
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const createRestaurantAction = useRestaurantStore((s) => s.createRestaurantAction);
   const updateRestaurantAction = useRestaurantStore((s) => s.updateRestaurantAction);
   const storeLoading = useRestaurantStore((s) => s.loading);
-
-  // Load restaurant data when editing
-  useEffect(() => {
-    if (restaurant && isOpen) {
-      setValue('name', restaurant.name || '');
-      setValue('email', restaurant.email || '');
-      setValue('phone', restaurant.phone || '');
-      setValue('address', restaurant.address || '');
-      setValue('city', restaurant.city || '');
-      setValue('openingHours', restaurant.openingHours || '');
-      setValue('aforoMaximo', restaurant.aforoMaximo || '');
-      setValue('category', restaurant.category || '');
-      setValue('description', restaurant.description || '');
-      setValue('averagePrice', restaurant.averagePrice || '');
-      
-      // Set existing photos as previews
-      if (restaurant.photos && restaurant.photos.length > 0) {
-        setPhotoPreviews(restaurant.photos);
-      }
-    } else {
-      reset();
-      setPhotoPreviews([]);
-      setSelectedPhotos([]);
-    }
-  }, [restaurant, isOpen, setValue, reset]);
 
   const onPhotoChange = (e) => {
     const files = Array.from(e.target.files || []);
@@ -102,7 +89,6 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
         notyfSuccess(
           restaurant ? 'Restaurante actualizado correctamente' : 'Restaurante creado correctamente'
         );
-        reset();
         setPhotoPreviews([]);
         setSelectedPhotos([]);
         onClose();
@@ -115,8 +101,6 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
       setLoading(false);
     }
   };
-
-  if (!isOpen) return null;
 
   const fieldClassName =
     'w-full p-2.5 rounded-md bg-[var(--gf-green)]/75 text-[var(--gf-cream)] placeholder:text-[var(--gf-beige)]/60 border border-[var(--gf-beige)]/35 focus:border-[var(--gf-beige)] focus:outline-none transition-colors duration-200';

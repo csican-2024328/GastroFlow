@@ -1,17 +1,13 @@
 import { useEffect } from 'react';
-import { Select, Option } from '@material-tailwind/react';
+import { Input, Typography } from '@material-tailwind/react';
 import { useTableStore } from '../store/useTableStore.js';
 
-export const TableFilters = () => {
+export const TableFilters = ({ searchTerm, onSearchChange }) => {
   const restaurantOptions = useTableStore((state) => state.restaurantOptions);
   const fetchRestaurantOptions = useTableStore((state) => state.fetchRestaurantOptions);
   const restaurantOptionsLoading = useTableStore((state) => state.restaurantOptionsLoading);
   const selectedRestaurantId = useTableStore((state) => state.selectedRestaurantId);
   const setSelectedRestaurantId = useTableStore((state) => state.setSelectedRestaurantId);
-
-  const handleChange = (value) => {
-    setSelectedRestaurantId(value || '');
-  };
 
   useEffect(() => {
     if (restaurantOptions.length === 0) {
@@ -20,38 +16,39 @@ export const TableFilters = () => {
   }, [fetchRestaurantOptions, restaurantOptions.length]);
 
   return (
-    <div className="bg-gradient-to-r from-[var(--gf-green)] to-[var(--gf-green)]/95 border border-[var(--gf-beige)]/35 rounded-xl p-5 mb-6 shadow-[0_12px_28px_rgba(26,26,26,0.16)]">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+    <div className="mb-6 rounded-xl border border-stone-200 bg-[#2C4035] p-5 shadow-lg">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-end">
         <div>
-          <p className="text-sm font-medium tracking-wide text-[var(--gf-beige)] mb-2">Filtrar por restaurante</p>
-          <Select
-            label="Selecciona un restaurante"
-            value={selectedRestaurantId}
-            onChange={handleChange}
-            disabled={restaurantOptionsLoading}
-            className="text-[var(--gf-cream)] !border-[var(--gf-beige)]/45 rounded-md"
+          <Typography variant="small" className="mb-2 font-medium tracking-wide text-stone-300">
+            Buscar por nombre o ubicación
+          </Typography>
+          <Input
+            value={searchTerm}
+            onChange={(event) => onSearchChange(event.target.value)}
+            label="Buscar por nombre o ubicación"
+            className="bg-white"
+            labelProps={{ className: 'text-[#2C4035]' }}
             containerProps={{ className: 'min-w-full' }}
-            menuProps={{
-              className:
-                'bg-[var(--gf-cream)] border border-[var(--gf-beige)] text-[var(--gf-graphite)]',
-            }}
+          />
+        </div>
+
+        <div>
+          <Typography variant="small" className="mb-2 font-medium tracking-wide text-stone-300">
+            Filtrar por restaurante
+          </Typography>
+          <select
+            value={selectedRestaurantId}
+            onChange={(event) => setSelectedRestaurantId(event.target.value || '')}
+            disabled={restaurantOptionsLoading}
+            className="w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-3 text-stone-900 shadow-sm outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            <Option
-              value=""
-              className="!text-[var(--gf-graphite)] hover:!bg-[var(--gf-beige)]/40 focus:!bg-[var(--gf-beige)]/40"
-            >
-              Todos los restaurantes
-            </Option>
+            <option value="">Todos los restaurantes</option>
             {restaurantOptions.map((restaurant) => (
-              <Option
-                key={restaurant._id}
-                value={restaurant._id}
-                className="!text-[var(--gf-graphite)] hover:!bg-[var(--gf-beige)]/40 focus:!bg-[var(--gf-beige)]/40"
-              >
+              <option key={restaurant._id} value={restaurant._id}>
                 {restaurant.name}
-              </Option>
+              </option>
             ))}
-          </Select>
+          </select>
         </div>
       </div>
     </div>

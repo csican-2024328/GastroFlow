@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Card, CardBody, CardHeader, Chip, IconButton, Typography } from '@material-tailwind/react';
 import { useTableStore } from '../store/useTableStore.js';
 import { TableFilters } from '../components/TableFilters.jsx';
@@ -9,11 +9,10 @@ export const TablesPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMesa, setSelectedMesa] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
   const hasMountedRef = useRef(false);
   const skipNextPageFetchRef = useRef(false);
   const currentPageRef = useRef(currentPage);
-
-  currentPageRef.current = currentPage;
 
   const restaurantOptions = useTableStore((state) => state.restaurantOptions);
   const fetchRestaurantOptions = useTableStore((state) => state.fetchRestaurantOptions);
@@ -25,11 +24,29 @@ export const TablesPage = () => {
   const deleteMesaAction = useTableStore((state) => state.deleteMesaAction);
   const clearSelectedMesa = useTableStore((state) => state.clearSelectedMesa);
 
+  const filteredMesas = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    if (!normalizedSearch) return mesas;
+
+    return mesas.filter((mesa) => {
+      const ubicacion = mesa.ubicacion?.toLowerCase() || '';
+      const numero = String(mesa.numero ?? '').toLowerCase();
+      const restaurantName = mesa.restaurantID?.name?.toLowerCase() || '';
+      return ubicacion.includes(normalizedSearch)
+        || numero.includes(normalizedSearch)
+        || restaurantName.includes(normalizedSearch);
+    });
+  }, [mesas, searchTerm]);
+
   useEffect(() => {
     if (restaurantOptions.length === 0) {
       fetchRestaurantOptions();
     }
   }, [fetchRestaurantOptions, restaurantOptions.length]);
+
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
 
   useEffect(() => {
     if (!hasMountedRef.current) {
@@ -52,7 +69,7 @@ export const TablesPage = () => {
     }
 
     fetchMesas(currentPage, 10, selectedRestaurantId);
-  }, [currentPage, fetchMesas]);
+  }, [currentPage, fetchMesas, selectedRestaurantId]);
 
   const handleCreateMesa = () => {
     clearSelectedMesa();
@@ -109,7 +126,7 @@ export const TablesPage = () => {
         </Button>
       </div>
 
-      <TableFilters />
+      <TableFilters searchTerm={searchTerm} onSearchChange={setSearchTerm} />
 
       <Card className="bg-gradient-to-b from-white to-[#F8F5F0] border border-[#E2D4B7] shadow-[0_16px_34px_rgba(26,26,26,0.08)] rounded-xl overflow-hidden">
         <CardHeader floated={false} shadow={false} className="bg-transparent m-0 rounded-none border-b border-[#E2D4B7] px-5 py-4">
@@ -131,8 +148,8 @@ export const TablesPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {mesas.length > 0 ? (
-                  mesas.map((mesa) => (
+                {filteredMesas.length > 0 ? (
+                  filteredMesas.map((mesa) => (
                     <tr key={mesa._id} className="border-t border-[#E2D4B7] hover:bg-[#F8F5F0]/70 transition-colors duration-200">
                       <td className="p-4">
                         <Typography variant="small" className="font-semibold text-[#1A1A1A]">
@@ -196,7 +213,7 @@ export const TablesPage = () => {
                 ) : (
                   <tr>
                     <td colSpan="6" className="p-6 text-center text-[#2C4035]">
-                      No hay mesas registradas para este filtro.
+                      {searchTerm.trim() ? 'No hay mesas que coincidan con la búsqueda.' : 'No hay mesas registradas para este filtro.'}
                     </td>
                   </tr>
                 )}

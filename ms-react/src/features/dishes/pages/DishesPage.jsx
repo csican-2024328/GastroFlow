@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button, Card, CardBody, CardHeader, IconButton, Typography } from '@material-tailwind/react';
 import { DishFilters } from '../components/DishFilters.jsx';
 import { DishFormModal } from '../components/DishFormModal.jsx';
@@ -25,6 +25,7 @@ export const DishesPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState(null);
   const [dishToDelete, setDishToDelete] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const dishes = useDishStore((state) => state.dishes);
   const restaurantOptions = useDishStore((state) => state.restaurantOptions);
@@ -34,6 +35,15 @@ export const DishesPage = () => {
   const fetchDishes = useDishStore((state) => state.fetchDishes);
   const deleteDishAction = useDishStore((state) => state.deleteDishAction);
   const clearSelectedDish = useDishStore((state) => state.clearSelectedDish);
+
+  const filteredDishes = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    if (!normalizedSearch) return dishes;
+
+    return dishes.filter((dish) =>
+      dish.nombre?.toLowerCase().includes(normalizedSearch),
+    );
+  }, [dishes, searchTerm]);
 
   useEffect(() => {
     if (restaurantOptions.length === 0) {
@@ -109,11 +119,11 @@ export const DishesPage = () => {
         </Button>
       </div>
 
-      <DishFilters />
+      <DishFilters searchTerm={searchTerm} onSearchChange={setSearchTerm} />
 
-      {dishes.length > 0 ? (
+      {filteredDishes.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {dishes.map((dish) => (
+          {filteredDishes.map((dish) => (
             <Card
               key={dish._id}
               className="bg-white border border-[#E2D4B7] shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden rounded-xl flex flex-col h-full"
@@ -149,7 +159,7 @@ export const DishesPage = () => {
 
                 <div className="flex items-center justify-between mb-3">
                   <Typography variant="h5" className="text-[#2C4035] font-bold">
-                    S/. {dish.precio.toFixed(2)}
+                    Q {dish.precio.toFixed(2)}
                   </Typography>
                   <span className="inline-block px-2 py-1 bg-[#E2D4B7] text-[#2C4035] text-xs font-semibold rounded-full">
                     {getCategoryLabel(dish.categoria)}
@@ -202,7 +212,7 @@ export const DishesPage = () => {
         <Card className="bg-gradient-to-b from-white to-[#F8F5F0] border border-[#E2D4B7] shadow-[0_16px_34px_rgba(26,26,26,0.08)] rounded-xl">
           <CardBody className="flex items-center justify-center py-12">
             <Typography className="text-center text-[#2C4035]">
-              No hay platos registrados para este filtro.
+              {searchTerm.trim() ? 'No hay platos que coincidan con la búsqueda.' : 'No hay platos registrados para este filtro.'}
             </Typography>
           </CardBody>
         </Card>

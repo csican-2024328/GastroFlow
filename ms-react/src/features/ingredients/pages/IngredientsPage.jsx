@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button, Card, CardBody, CardHeader, Chip, IconButton, Typography } from '@material-tailwind/react';
 import { IngredientFilters } from '../components/IngredientFilters.jsx';
 import { IngredientModal } from '../components/IngredientModal.jsx';
@@ -15,6 +15,7 @@ export const IngredientsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIngredient, setSelectedIngredient] = useState(null);
   const [ingredientToDelete, setIngredientToDelete] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const ingredients = useIngredientStore((state) => state.ingredients);
   const restaurantOptions = useIngredientStore((state) => state.restaurantOptions);
@@ -24,6 +25,15 @@ export const IngredientsPage = () => {
   const fetchIngredients = useIngredientStore((state) => state.fetchIngredients);
   const deleteIngredientAction = useIngredientStore((state) => state.deleteIngredientAction);
   const clearSelectedIngredient = useIngredientStore((state) => state.clearSelectedIngredient);
+
+  const filteredIngredients = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    if (!normalizedSearch) return ingredients;
+
+    return ingredients.filter((ingredient) =>
+      ingredient.nombre?.toLowerCase().includes(normalizedSearch),
+    );
+  }, [ingredients, searchTerm]);
 
   useEffect(() => {
     if (restaurantOptions.length === 0) {
@@ -99,7 +109,7 @@ export const IngredientsPage = () => {
         </Button>
       </div>
 
-      <IngredientFilters />
+      <IngredientFilters searchTerm={searchTerm} onSearchChange={setSearchTerm} />
 
       <Card className="bg-gradient-to-b from-white to-[#F8F5F0] border border-[#E2D4B7] shadow-[0_16px_34px_rgba(26,26,26,0.08)] rounded-xl overflow-hidden">
         <CardHeader floated={false} shadow={false} className="bg-transparent m-0 rounded-none border-b border-[#E2D4B7] px-5 py-4">
@@ -120,8 +130,8 @@ export const IngredientsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {ingredients.length > 0 ? (
-                  ingredients.map((ingredient) => (
+                {filteredIngredients.length > 0 ? (
+                  filteredIngredients.map((ingredient) => (
                     <tr key={ingredient._id} className="border-t border-[#E2D4B7] hover:bg-[#F8F5F0]/70 transition-colors duration-200">
                       <td className="p-4">
                         <Typography variant="small" className="font-semibold text-[#1A1A1A]">
@@ -170,7 +180,7 @@ export const IngredientsPage = () => {
                 ) : (
                   <tr>
                     <td colSpan="5" className="p-6 text-center text-[#2C4035]">
-                      No hay ingredientes registrados para este filtro.
+                      {searchTerm.trim() ? 'No hay ingredientes que coincidan con la búsqueda.' : 'No hay ingredientes registrados para este filtro.'}
                     </td>
                   </tr>
                 )}

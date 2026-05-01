@@ -59,7 +59,7 @@ export const RestaurantsPage = () => {
 
   return (
     <div className="p-6 md:p-8">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
         <h1 className="text-3xl font-bold text-[#1A1A1A]">Restaurantes</h1>
         <button
           onClick={handleCreateRestaurant}

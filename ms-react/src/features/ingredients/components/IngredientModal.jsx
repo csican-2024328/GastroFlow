@@ -81,11 +81,11 @@ export const IngredientModal = ({ open, onClose, ingredient = null }) => {
   if (!open) return null;
 
   const selectClassName =
-    'w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/20 disabled:cursor-not-allowed disabled:opacity-70';
+    'w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20 disabled:cursor-not-allowed disabled:opacity-70';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-stone-200 bg-emerald-900 text-stone-50 shadow-2xl">
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-stone-200 bg-[#2C4035] text-stone-50 shadow-2xl">
         <div className="border-b border-stone-200/20 px-6 py-5">
           <Typography variant="h5" className="text-stone-50">
             {ingredient ? 'Editar ingrediente' : 'Nuevo ingrediente'}
@@ -108,7 +108,7 @@ export const IngredientModal = ({ open, onClose, ingredient = null }) => {
                   minLength: { value: 2, message: 'El nombre debe tener al menos 2 caracteres' },
                 })}
                 placeholder="Leche entera"
-                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/20"
+                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20"
                 labelProps={{ className: 'hidden' }}
               />
               {errors.nombre && <p className="mt-1 text-xs text-red-300">{errors.nombre.message}</p>}
@@ -128,7 +128,7 @@ export const IngredientModal = ({ open, onClose, ingredient = null }) => {
                   validate: (value) => Number.isFinite(value) && value >= 0 || 'El stock debe ser un número mayor o igual a 0',
                 })}
                 placeholder="0"
-                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/20"
+                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20"
                 labelProps={{ className: 'hidden' }}
               />
               {errors.stock && <p className="mt-1 text-xs text-red-300">{errors.stock.message}</p>}
@@ -204,7 +204,7 @@ export const IngredientModal = ({ open, onClose, ingredient = null }) => {
           <Button
             onClick={handleSubmit(onSubmit)}
             disabled={loading}
-            className="rounded-md bg-stone-200 text-stone-900 shadow-md transition-all duration-200 hover:bg-amber-200 hover:shadow-lg"
+            className="rounded-md bg-[#2C4035] text-white shadow-md transition-all duration-200 hover:bg-[#24352c] hover:shadow-lg"
           >
             {loading ? 'Guardando...' : 'Guardar'}
           </Button>

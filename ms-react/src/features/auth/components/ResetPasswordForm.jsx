@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { resetPassword } from '../../../shared/api/auth.js';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
 import { AuthInput, AuthPrimaryButton, AuthSwitchLink } from '../../../shared/components/auth/index.js';
@@ -10,10 +10,10 @@ export const ResetPasswordForm = ({ token, onSwitch }) => {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
+    control,
   } = useForm();
 
-  const password = watch('password');
+  const password = useWatch({ control, name: 'password' });
 
   const onSubmit = async ({ password, passwordConfirm }) => {
     if (!token) {

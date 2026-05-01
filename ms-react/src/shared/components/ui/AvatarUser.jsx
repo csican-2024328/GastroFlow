@@ -34,8 +34,11 @@ export const AvatarUser = () => {
         setOpen(false);
     }
 
-    const avatarSrc = (user?.profilePicture || user?.profileImage) && (user?.profilePicture || user?.profileImage).trim() !== ""
-        ? (user?.profilePicture || user?.profileImage)
+    const avatarImage = [user?.profilePicture, user?.profileImage].find(
+        (value) => typeof value === 'string' && value.trim() !== '',
+    );
+    const avatarSrc = avatarImage
+        ? avatarImage
         : defaultAvatar;
 
   return (

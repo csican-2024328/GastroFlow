@@ -15,7 +15,7 @@ export const updateProfile = async (formData) => {
     name: formData.name,
     surname: formData.surname,
     phone: formData.phone,
-  })
+  });
 };
 
 export const updateProfileAvatar = async (file) => {
@@ -38,7 +38,13 @@ export const updateProfileAvatar = async (file) => {
         });
       } catch (err2) {
         // fall through to throwing enriched error
-        err = err2;
+        const nestedError = err2;
+        const status = nestedError?.response?.status;
+        const url = nestedError?.config?.url || `${AUTH_BASE}/auth/profile/avatar`;
+        const message = nestedError?.response?.data?.message || nestedError.message || 'Error uploading avatar';
+        const e = new Error(`Request failed ${status || ''} ${url}: ${message}`);
+        e.cause = { status, url, original: nestedError };
+        throw e;
       }
     }
     // Enrich error so caller can display helpful info

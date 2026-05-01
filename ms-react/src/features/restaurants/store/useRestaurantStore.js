@@ -7,7 +7,7 @@ import {
   deleteRestaurant,
 } from '../../../shared/api/restaurantService.js';
 
-export const useRestaurantStore = create((set, get) => ({
+export const useRestaurantStore = create((set) => ({
   // State
   restaurants: [],
   selectedRestaurant: null,

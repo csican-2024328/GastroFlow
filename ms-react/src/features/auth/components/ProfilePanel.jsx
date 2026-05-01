@@ -1,18 +1,19 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore.js'
 import defaultAvatar from '../../../assets/img/Icono.png'
 import { updateProfile, updateProfileAvatar } from '../../../shared/api/profile.js'
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js'
 
-export const ProfilePanel = ({ onClose, initialEdit=false }) => {
+export const ProfilePanel = ({ initialEdit = false }) => {
   const user = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
   const navigate = useNavigate()
 
-  const avatarSrcDefault = (user?.profilePicture || user?.profileImage) && (user?.profilePicture || user?.profileImage).trim() !== ''
-    ? (user?.profilePicture || user?.profileImage)
-    : defaultAvatar
+  const profileImage = [user?.profilePicture, user?.profileImage].find(
+    (value) => typeof value === 'string' && value.trim() !== '',
+  )
+  const avatarSrcDefault = profileImage || defaultAvatar
 
   const [editMode, setEditMode] = useState(!!initialEdit)
   const [name, setName] = useState(user?.name || '')
@@ -32,14 +33,6 @@ export const ProfilePanel = ({ onClose, initialEdit=false }) => {
       setPreview(URL.createObjectURL(file))
     }
   }
-
-  React.useEffect(() => {
-    setName(user?.name || '')
-    setSurname(user?.surname || '')
-    setPhone(user?.phone || '')
-    setPreview((user?.profilePicture || user?.profileImage) && (user?.profilePicture || user?.profileImage).trim() !== '' ? (user?.profilePicture || user?.profileImage) : defaultAvatar)
-    setEditMode(!!initialEdit)
-  }, [user, initialEdit])
 
   const onSave = async () => {
     try {
