@@ -5,7 +5,7 @@ import defaultAvatar from '../../../assets/img/Icono.png'
 import { updateProfile, updateProfileAvatar } from '../../../shared/api/profile.js'
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js'
 
-export const ProfilePanel = ({ initialEdit = false }) => {
+export const ProfilePanel = ({ initialEdit = false, onClose }) => {
   const user = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
   const navigate = useNavigate()
@@ -102,6 +102,11 @@ export const ProfilePanel = ({ initialEdit = false }) => {
             <div className="mt-6 flex gap-3">
               <button onClick={() => setEditMode(true)} className="px-4 py-2 rounded bg-[#1A3D25] text-white">Editar perfil</button>
               <button onClick={() => {
+                if (typeof onClose === 'function') {
+                  onClose()
+                  return
+                }
+
                 const role = (user?.role || '').toString().trim().toUpperCase()
                 if (role === 'PLATFORM_ADMIN' || role === 'RESTAURANT_ADMIN') navigate('/dashboard')
                 else navigate('/cliente')
