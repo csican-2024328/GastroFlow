@@ -133,9 +133,9 @@ export const loginUserHelper = async (emailOrUsername, password) => {
       throw new Error('Tu cuenta está desactivada. Contacta al administrador.');
     }
 
-    const role = user.UserRoles?.[0]?.Role?.Name || 'CLIENT';
+    const role = user.UserRoles?.[0]?.Role?.Name;
 
-    const token = await generateJWT(user.Id.toString(), { role });
+    const token = await generateJWT(user.Id.toString(), role ? { role } : {});
 
     const expiresInMs = getExpirationTime(process.env.JWT_EXPIRES_IN || '30m');
     const expiresAt = new Date(Date.now() + expiresInMs);

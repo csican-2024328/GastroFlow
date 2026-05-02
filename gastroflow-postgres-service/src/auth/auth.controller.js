@@ -8,10 +8,11 @@ import {
   assignRoleHelper,
 } from '../../helper/auth-operations.js';
 import { getUserProfileHelper } from '../../helper/profile-operations.js';
-import { findUserById, softDeleteUser } from '../../helper/user-db.js';
+import { findUserById, softDeleteUser, updateUserProfile } from '../../helper/user-db.js';
 import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
 import { generateJWT } from '../../helper/generate-jwt.js';
 import { revokeTokenByJti } from '../../helper/session-token-store.js';
+import { buildUserResponse } from '../../utils/user-helpers.js';
 
 export const register = asyncHandler(async (req, res) => {
   try {
@@ -178,6 +179,31 @@ export const getProfile = asyncHandler(async (req, res) => {
   });
 });
 
+export const updateProfileAvatar = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+
+  if (!req.file || !req.file.path) {
+    return res.status(400).json({
+      success: false,
+      message: 'La imagen de perfil es requerida',
+    });
+  }
+
+  console.debug('[auth.controller] updateProfileAvatar - req.file:', req.file);
+
+  const updatedProfile = await updateUserProfile(userId, {
+    profilePicture: req.file.path,
+  });
+
+  console.debug('[auth.controller] updateProfileAvatar - updatedProfile.UserProfile.ProfilePicture:', updatedProfile?.UserProfile?.ProfilePicture);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Avatar actualizado exitosamente',
+    data: buildUserResponse(updatedProfile),
+  });
+});
+
 export const getProfileById = asyncHandler(async (req, res) => {
   const { userId } = req.body;
 
@@ -245,9 +271,9 @@ export const deleteProfile = asyncHandler(async (req, res) => {
 
 export const refreshToken = asyncHandler(async (req, res) => {
   const user = req.user;
-  const role = user?.UserRoles?.[0]?.Role?.Name || 'CLIENT';
+  const role = user?.UserRoles?.[0]?.Role?.Name;
 
-  const token = await generateJWT(user.Id.toString(), { role });
+  const token = await generateJWT(user.Id.toString(), role ? { role } : {});
 
   return res.status(200).json({
     success: true,

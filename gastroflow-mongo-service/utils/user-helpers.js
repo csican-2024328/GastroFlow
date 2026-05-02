@@ -1,5 +1,5 @@
 export const buildUserResponse = (user) => {
-  const roleName = user.UserRoles?.[0]?.Role?.Name || user.Role || 'CLIENT';
+  const roleName = user.UserRoles?.[0]?.Role?.Name || user.Role;
 
   return {
     id: user.Id,

@@ -8,6 +8,26 @@ import Plato from './platos-model.js';
 import mongoose from 'mongoose';
 import { verificarStockIngredientes, actualizarDisponibilidadPlatos } from '../../helper/inventory-helpers.js';
 
+const normalizeIngredientes = (value) => {
+    if (Array.isArray(value)) return value;
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return [];
+
+        try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) return parsed;
+        } catch {
+        }
+
+        return [trimmed];
+    }
+
+    if (value == null) return [];
+    return [value];
+};
+
 /**
  * Obtiene el menú (platos activos) de un restaurante específico
  * Endpoint: GET /menu/:restaurantId
@@ -107,7 +127,8 @@ export const getMenuByRestaurant = async (req, res) => {
 export const createPlato = async (req, res) => {
     try {
         // Copia los datos del plato desde el cuerpo de la solicitud
-        const platoData = req.body;
+        const platoData = { ...req.body };
+        platoData.ingredientes = normalizeIngredientes(platoData.ingredientes);
 
         // Validación: restaurantId es obligatorio
         if (!platoData.restaurantId) {
@@ -348,6 +369,7 @@ export const updatePlato = async (req, res) => {
 
         // Copia los datos a actualizar desde el cuerpo de la solicitud
         const updateData = { ...req.body };
+        updateData.ingredientes = normalizeIngredientes(updateData.ingredientes);
 
         // Requisito estricto: restaurantId es obligatorio en actualización
         if (!updateData.restaurantId) {
@@ -453,9 +475,19 @@ export const changePlatoStatus = async (req, res) => {
     try {
         // Extrae el ID del plato de los parámetros
         const { id } = req.params;
-        
-        // Detecta si la URL contiene '/activate' para determinar el nuevo estado
-        const isActive = req.url.includes('/activate');
+
+        const isActivateRoute = req.path.endsWith('/activate');
+        const isDeactivateRoute = req.path.endsWith('/deactivate');
+
+        if (!isActivateRoute && !isDeactivateRoute) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ruta de cambio de estado inválida',
+            });
+        }
+
+        // Detecta explícitamente activate/deactivate para evitar falsos positivos.
+        const isActive = isActivateRoute;
         // Define el texto del mensaje según la acción
         const action = isActive ? 'activado' : 'desactivado';
 

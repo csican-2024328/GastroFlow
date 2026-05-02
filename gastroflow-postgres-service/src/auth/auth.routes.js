@@ -18,8 +18,21 @@ import {
   validarCampos,
 } from '../../middlewares/validator.middleware.js';
 import { updateProfile } from '../User/user.admin.controller.js';
+import { uploadProfileAvatar, handleMulterError } from '../../middlewares/upload.middleware.js';
 
 const router = Router();
+
+const normalizeResetPasswordPayload = (req, res, next) => {
+  if (!req.body.password && req.body.newPassword) {
+    req.body.password = req.body.newPassword;
+  }
+
+  if (!req.body.passwordConfirm) {
+    req.body.passwordConfirm = req.body.confirmPassword || req.body.password;
+  }
+
+  next();
+};
 
 router.post(
   '/register',
@@ -64,6 +77,7 @@ router.post(
 router.post(
   '/reset-password',
   authRateLimit,
+  normalizeResetPasswordPayload,
   validateResetPassword,
   validarCampos,
   authController.resetPassword
@@ -71,7 +85,24 @@ router.post(
 
 router.get('/profile', validateJWT, authController.getProfile);
 
-router.put('/profile', updateProfile);
+router.put('/profile', validateJWT, updateProfile);
+
+router.put(
+  '/profile/avatar',
+  validateJWT,
+  uploadProfileAvatar.single('profilePicture'),
+  (err, req, res, next) => handleMulterError(err, req, res, next),
+  authController.updateProfileAvatar
+);
+
+// Accept POST as well for clients that submit multipart form-data via POST
+router.post(
+  '/profile/avatar',
+  validateJWT,
+  uploadProfileAvatar.single('profilePicture'),
+  (err, req, res, next) => handleMulterError(err, req, res, next),
+  authController.updateProfileAvatar
+);
 
 router.delete('/profile', validateJWT, authController.deleteProfile);
 

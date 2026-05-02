@@ -456,6 +456,7 @@ export const updateUserProfile = async (userId, updateData) => {
           where: { UserId: userId },
           transaction,
         });
+        console.debug('[user-db] updateUserProfile - profileUpdates applied:', profileUpdates);
       }
     }
 
@@ -463,6 +464,7 @@ export const updateUserProfile = async (userId, updateData) => {
 
     // Retornar usuario actualizado
     const updatedUser = await findUserById(userId);
+    console.debug('[user-db] updateUserProfile - returning updatedUser.UserProfile.ProfilePicture:', updatedUser?.UserProfile?.ProfilePicture);
     return updatedUser;
   } catch (error) {
     await transaction.rollback();

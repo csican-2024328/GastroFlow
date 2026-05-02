@@ -1,6 +1,30 @@
 import { check, param } from 'express-validator';
 
+const normalizeIngredientes = (value) => {
+    if (Array.isArray(value)) return value;
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (!trimmed) return [];
+
+        try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) return parsed;
+        } catch {
+            // For multipart/form-data, a single selected value commonly arrives as plain string.
+        }
+
+        return [trimmed];
+    }
+
+    if (value == null) return [];
+    return [value];
+};
+
 export const validateCreatePlato = [
+    check('ingredientes').customSanitizer(normalizeIngredientes),
+
     check('nombre')
         .not()
         .isEmpty()
@@ -45,6 +69,8 @@ export const validateUpdatePlato = [
     param('id')
         .isMongoId()
         .withMessage('ID de plato inválido'),
+
+    check('ingredientes').customSanitizer(normalizeIngredientes),
 
     check('restaurantId')
         .notEmpty()

@@ -1,0 +1,78 @@
+import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { resetPassword } from '../../../shared/api/auth.js';
+import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
+import { AuthInput, AuthPrimaryButton, AuthSwitchLink } from '../../../shared/components/auth/index.js';
+
+export const ResetPasswordForm = ({ token, onSwitch }) => {
+  const [loading, setLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    control,
+  } = useForm();
+
+  const password = useWatch({ control, name: 'password' });
+
+  const onSubmit = async ({ password, passwordConfirm }) => {
+    if (!token) {
+      notyfError('Falta el token de recuperación. Revisa el enlace del correo.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data } = await resetPassword({ token, password, passwordConfirm });
+
+      notyfSuccess(data?.message || 'Tu contraseña fue actualizada correctamente.');
+      onSwitch();
+    } catch (error) {
+      const message = error.response?.data?.message || 'No fue posible actualizar la contraseña';
+      notyfError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <AuthInput
+        id="password"
+        label="Nueva contraseña"
+        type="password"
+        placeholder="••••••••"
+        register={register}
+        rules={{
+          required: 'La contraseña es obligatoria',
+          minLength: {
+            value: 8,
+            message: 'La contraseña debe tener al menos 8 caracteres',
+          },
+        }}
+        error={errors.password}
+        autoComplete="new-password"
+      />
+
+      <AuthInput
+        id="passwordConfirm"
+        label="Confirmar contraseña"
+        type="password"
+        placeholder="••••••••"
+        register={register}
+        rules={{
+          required: 'Debes confirmar la contraseña',
+          validate: (value) => value === password || 'Las contraseñas no coinciden',
+        }}
+        error={errors.passwordConfirm}
+        autoComplete="new-password"
+      />
+
+      <AuthPrimaryButton type="submit" loading={loading} loadingText="Guardando...">
+        Cambiar contraseña
+      </AuthPrimaryButton>
+
+      <AuthSwitchLink prefixText="¿No era tu correo?" actionText="Volver al inicio" onClick={onSwitch} />
+    </form>
+  );
+};

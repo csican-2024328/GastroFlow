@@ -33,10 +33,7 @@ Copia este contenido en un archivo `.env` en la raíz del proyecto:
 
 ```env
 NODE_ENV = development
-PORT = 3006
- 
-# MongoDB (Restaurantes, Mesas, Platos) - Local sin autenticación
-MONGODB_URI=mongodb://localhost:27017/GastroFlow
+PORT = 3007
  
 # Database PostgreSQL (Usuarios, Autenticación)
 DB_HOST=localhost
@@ -55,9 +52,9 @@ JWT_AUDIENCE=AuthService
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_ENABLE_SSL=true
-SMTP_USERNAME=kinalsports@gmail.com
-SMTP_PASSWORD=yrsd prvf kwat toee
-EMAIL_FROM=kinalsports@gmail.com
+SMTP_USERNAME=narutoshippude745@gmail.com
+SMTP_PASSWORD=rhcs dgno ywts egrt
+EMAIL_FROM=narutoshippude745@gmail.com
 EMAIL_FROM_NAME=AuthDotnet App
  
 # Verification Tokens (en horas)
@@ -69,9 +66,12 @@ FRONTEND_URL=http://localhost:5173
  
 # Cloudinary (upload de imágenes de restaurantes, platos y perfiles)
 # Requiere: crear cuenta en https://cloudinary.com/ y obtener credenciales
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_CLOUD_NAME=dut08rmaz
+CLOUDINARY_API_KEY=279612751725163
+CLOUDINARY_API_SECRET=UxGMRqU1iB580Kxb2AlDR4n4hu0
+CLOUDINARY_BASE_URL=https://res.cloudinary.com/dut08rmaz/image/upload/
+CLOUDINARY_FOLDER=gastroflow/profiles
+CLOUDINARY_DEFAULT_AVATAR_FILENAME=default-avatar_ewzxwx.png
 # Carpetas para organización:
 # - gastrflow/restaurantes (fotos de restaurantes)
 # - gastrflow/platos (fotos de platos)
