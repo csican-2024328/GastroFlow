@@ -13,6 +13,7 @@ export const Sidebar = () => {
         {label: "Reservas", to: "/dashboard/reservas"},
         {label: "Eventos", to: "/dashboard/eventos"},
         {label: "Reportes", to: "/dashboard/reportes"},
+        {label: "Usuarios", to: "/dashboard/Usuarios"},
     ]
   return (
         <aside className='w-60 bg-[#1A1A1A] min-h-[calc(100vh-4rem)] p-4'>

@@ -23,9 +23,9 @@ export const useIngredientStore = create((set, get) => ({
   setSelectedRestaurantId: (restaurantId) => set({ selectedRestaurantId: restaurantId || '' }),
   clearSelectedIngredient: () => set({ selectedIngredient: null }),
 
-  fetchRestaurantOptions: async () => {
+  fetchRestaurantOptions: async (forceRefresh = false) => {
     try {
-      if (get().restaurantOptionsLoaded || get().restaurantOptionsLoading) {
+      if (!forceRefresh && (get().restaurantOptionsLoaded || get().restaurantOptionsLoading)) {
         return { success: true, data: get().restaurantOptions };
       }
 

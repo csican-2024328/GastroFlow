@@ -33,10 +33,14 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
   });
 
   useEffect(() => {
-    if (restaurantOptions.length === 0) {
-      fetchRestaurantOptions();
+    if (open) {
+      if (restaurantOptions.length === 0) {
+        fetchRestaurantOptions();
+      } else {
+        fetchRestaurantOptions(true);
+      }
     }
-  }, [fetchRestaurantOptions, restaurantOptions.length]);
+  }, [open, fetchRestaurantOptions, restaurantOptions.length]);
 
   useEffect(() => {
     if (open) {
