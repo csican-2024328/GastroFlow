@@ -10,6 +10,7 @@ import { RestaurantsPage } from '../../features/restaurants/pages/RestaurantsPag
 import { TablesPage } from '../../features/tables/pages/TablesPage.jsx';
 import { IngredientsPage } from '../../features/ingredients/pages/IngredientsPage.jsx';
 import { DishesPage } from '../../features/dishes/pages/DishesPage.jsx';
+import OrderManagement  from '../../features/orders/views/OrderManagement.jsx';
 import { ProtectedRoute } from '../../shared/components/auth/ProtectedRoute.jsx';
 import { RoleGuard } from '../../shared/components/auth/RoleGuard.jsx';
 export const AppRoutes = () => {
@@ -35,6 +36,7 @@ export const AppRoutes = () => {
                 <Route path="restaurantes" element={<RestaurantsPage />} />
                  <Route path="ingredientes" element={<IngredientsPage />} />
                  <Route path="platos" element={<DishesPage />} />
+                 <Route path="pedidos" element={<OrderManagement />} />
             </Route>
             {/* Profile is shown as an in-app modal (ProfileModal) — no standalone route to avoid redirecting users to a separate page. */}
         </Routes>
