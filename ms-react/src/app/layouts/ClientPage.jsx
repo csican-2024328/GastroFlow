@@ -68,7 +68,7 @@ export const ClientPage = () => {
           path: '/cliente/pedidos/mis',
           badge: stats.activeOrders > 0 ? String(stats.activeOrders) : null,
         },
-        { label: 'Ofertas', icon: '🔥', path: '/cliente/pedidos/hacer' },
+        { label: 'Ofertas y Eventos', icon: '🎉', path: '/cliente/eventos' },
       ],
     },
     {

@@ -15,6 +15,7 @@ import { RoleGuard } from '../../shared/components/auth/RoleGuard.jsx';
 import { ClientOrdersPage } from '../../features/orders/pages/ClientOrdersPage.jsx';
 import { ClientMakeOrderPage } from '../../features/orders/pages/ClientMakeOrderPage.jsx';
 import { ClientMyOrdersPage } from '../../features/orders/pages/ClientMyOrdersPage.jsx';
+import { EventsPage } from '../../features/events/pages/EventsPage.jsx';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -28,6 +29,7 @@ export const AppRoutes = () => {
             <Route path="/cliente/pedidos/hacer" element={<ClientMakeOrderPage />} />
             <Route path="/cliente/pedidos/mis" element={<ClientMyOrdersPage />} />
             <Route path="/cliente/pedidos/legacy" element={<ClientOrdersPage />} />
+            <Route path="/cliente/eventos" element={<EventsPage />} />
             <Route 
                 path="/dashboard" 
                 element={
