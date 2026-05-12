@@ -16,6 +16,7 @@ import { ClientOrdersPage } from '../../features/orders/pages/ClientOrdersPage.j
 import { ClientMakeOrderPage } from '../../features/orders/pages/ClientMakeOrderPage.jsx';
 import { ClientMyOrdersPage } from '../../features/orders/pages/ClientMyOrdersPage.jsx';
 import { EventsPage } from '../../features/events/pages/EventsPage.jsx';
+import { ReservationsPage } from '../../features/reservations/pages/ReservationsPage.jsx';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -30,6 +31,7 @@ export const AppRoutes = () => {
             <Route path="/cliente/pedidos/mis" element={<ClientMyOrdersPage />} />
             <Route path="/cliente/pedidos/legacy" element={<ClientOrdersPage />} />
             <Route path="/cliente/eventos" element={<EventsPage />} />
+            <Route path="/cliente/reservaciones" element={<ReservationsPage />} />
             <Route 
                 path="/dashboard" 
                 element={
