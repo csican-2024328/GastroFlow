@@ -78,6 +78,13 @@ const RestaurantModalContent = ({ onClose, restaurant = null }) => {
         photos: selectedPhotos,
       };
 
+      console.log('📤 [MODAL] Enviando formulario:', {
+        nombre: payload.name,
+        email: payload.email,
+        fotosCount: selectedPhotos.length,
+        esEdicion: !!restaurant,
+      });
+
       let result;
       if (restaurant && restaurant._id) {
         result = await updateRestaurantAction(restaurant._id, payload);
@@ -86,6 +93,10 @@ const RestaurantModalContent = ({ onClose, restaurant = null }) => {
       }
 
       if (result.success) {
+        console.log('✅ [MODAL] Operación exitosa:', {
+          tipo: restaurant ? 'actualización' : 'creación',
+          restaurante: result.data?.name,
+        });
         notyfSuccess(
           restaurant ? 'Restaurante actualizado correctamente' : 'Restaurante creado correctamente'
         );
@@ -93,9 +104,11 @@ const RestaurantModalContent = ({ onClose, restaurant = null }) => {
         setSelectedPhotos([]);
         onClose();
       } else {
+        console.error('❌ [MODAL] Error en operación:', result.error);
         notyfError(result.error || 'Error al guardar restaurante');
       }
     } catch (err) {
+      console.error('❌ [MODAL] Error desconocido:', err);
       notyfError(err.message || 'Error al guardar restaurante');
     } finally {
       setLoading(false);

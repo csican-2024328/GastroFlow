@@ -39,9 +39,7 @@ export const createRestaurant = async (data) => {
     });
   }
 
-  return axiosClient.post('/restaurants/create', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return axiosClient.post('/restaurants/create', formData);
 };
 
 // UPDATE restaurant
@@ -68,9 +66,7 @@ export const updateRestaurant = async (id, data) => {
     });
   }
 
-  return axiosClient.put(`/restaurants/${id}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return axiosClient.put(`/restaurants/${id}`, formData);
 };
 
 // DELETE restaurant

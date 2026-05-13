@@ -1,19 +1,25 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Input, Typography } from '@material-tailwind/react';
 import { useIngredientStore } from '../store/useIngredientStore.js';
 
 export const IngredientFilters = ({ searchTerm, onSearchChange }) => {
+  const componentMountedRef = useRef(false);
   const restaurantOptions = useIngredientStore((state) => state.restaurantOptions);
   const fetchRestaurantOptions = useIngredientStore((state) => state.fetchRestaurantOptions);
   const restaurantOptionsLoading = useIngredientStore((state) => state.restaurantOptionsLoading);
   const selectedRestaurantId = useIngredientStore((state) => state.selectedRestaurantId);
   const setSelectedRestaurantId = useIngredientStore((state) => state.setSelectedRestaurantId);
 
+  // Refresca cada vez que el componente se monta
   useEffect(() => {
-    if (restaurantOptions.length === 0) {
-      fetchRestaurantOptions();
-    }
-  }, [fetchRestaurantOptions, restaurantOptions.length]);
+    console.log('🔄 [INGREDIENT FILTERS] Componente montado, refrescando restaurantes...');
+    fetchRestaurantOptions(true); // Force refresh
+    componentMountedRef.current = true;
+    
+    return () => {
+      console.log('👋 [INGREDIENT FILTERS] Componente desmontado');
+    };
+  }, [fetchRestaurantOptions]);
 
   return (
     <div className="mb-6 rounded-xl border border-stone-200 bg-[#2C4035] p-5 shadow-lg">

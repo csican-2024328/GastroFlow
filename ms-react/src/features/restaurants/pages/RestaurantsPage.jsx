@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRestaurantStore } from '../store/useRestaurantStore.js';
 import { RestaurantModal } from '../components/RestaurantModal.jsx';
 import { notyfSuccess, notyfError } from '../../../shared/utils/notyf.js';
@@ -7,6 +7,7 @@ export const RestaurantsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const componentMountedRef = useRef(false);
 
   const restaurants = useRestaurantStore((s) => s.restaurants);
   const loading = useRestaurantStore((s) => s.loading);
@@ -14,9 +15,23 @@ export const RestaurantsPage = () => {
   const fetchRestaurants = useRestaurantStore((s) => s.fetchRestaurants);
   const deleteRestaurantAction = useRestaurantStore((s) => s.deleteRestaurantAction);
 
-  // Load restaurants on mount
+  // Refresca cada vez que el componente se monta
   useEffect(() => {
-    fetchRestaurants(currentPage, 10);
+    console.log('🔄 [RESTAURANTES PAGE] Componente montado, refrescando datos...');
+    fetchRestaurants(1, 10);
+    componentMountedRef.current = true;
+    
+    return () => {
+      console.log('👋 [RESTAURANTES PAGE] Componente desmontado');
+    };
+  }, []);
+
+  // Load restaurants cuando cambia la página
+  useEffect(() => {
+    if (componentMountedRef.current) {
+      console.log('📄 [RESTAURANTES PAGE] Página cambiada a:', currentPage);
+      fetchRestaurants(currentPage, 10);
+    }
   }, [currentPage, fetchRestaurants]);
 
   const handleCreateRestaurant = () => {
@@ -46,8 +61,6 @@ export const RestaurantsPage = () => {
       notyfError(result.error || 'Error al eliminar restaurante');
     }
   };
-
-  
 
   if (loading && restaurants.length === 0) {
     return (

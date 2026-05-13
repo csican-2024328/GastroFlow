@@ -15,8 +15,24 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       description,
       averagePrice,
     } = req.body;
+
+    console.log('📝 [CREATE RESTAURANT] Datos recibidos:', {
+      name,
+      email,
+      phone,
+      address,
+      city,
+      openingHours,
+      aforoMaximo,
+      aforoMaximoType: typeof aforoMaximo,
+      category,
+      description,
+      averagePrice,
+      filesCount: req.files?.length || 0,
+    });
     
     if (!name || !email || !phone || !address || !city || !openingHours || !aforoMaximo) {
+      console.warn('⚠️  [CREATE RESTAURANT] Campos requeridos faltantes');
       return res.status(400).json({
         success: false,
         message: 'Todos los campos son requeridos',
@@ -26,6 +42,7 @@ export const createRestaurant = asyncHandler(async (req, res) => {
     const existingRestaurant = await Restaurant.findOne({ email });
 
     if (existingRestaurant) {
+      console.warn('⚠️  [CREATE RESTAURANT] Email duplicado:', email);
       return res.status(409).json({
         success: false,
         message: 'El email del restaurante ya está registrado',
@@ -36,6 +53,7 @@ export const createRestaurant = asyncHandler(async (req, res) => {
     let photos = [];
     if (req.files && req.files.length > 0) {
       photos = req.files.map(file => file.path); // Cloudinary devuelve la URL en 'path'
+      console.log('📸 [CREATE RESTAURANT] Fotos procesadas:', photos);
     }
 
     const restaurant = await Restaurant.create({
@@ -53,13 +71,22 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       isActive: true,
     });
 
+    console.log('✅ [CREATE RESTAURANT] Restaurante creado exitosamente:', {
+      id: restaurant._id,
+      name: restaurant.name,
+      isActive: restaurant.isActive,
+    });
+
     res.status(201).json({
       success: true,
       message: 'Restaurante creado exitosamente',
       data: restaurant,
     });
   } catch (error) {
-    console.error('Error creating restaurant:', error);
+    console.error('❌ [CREATE RESTAURANT] Error:', {
+      message: error.message,
+      stack: error.stack,
+    });
     res.status(500).json({
       success: false,
       message: 'Error al crear el restaurante',
@@ -73,12 +100,26 @@ export const getRestaurants = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, isActive = true } = req.query;
     const filter = { isActive };
 
+    console.log('📋 [GET RESTAURANTS] Parámetros:', {
+      page,
+      limit,
+      isActive,
+      filter,
+    });
+
     const restaurants = await Restaurant.find(filter)
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 });
 
     const total = await Restaurant.countDocuments(filter);
+
+    console.log('✅ [GET RESTAURANTS] Resultados:', {
+      restaurantesEnPagina: restaurants.length,
+      totalEnDB: total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
 
     res.status(200).json({
       success: true,
@@ -91,7 +132,10 @@ export const getRestaurants = asyncHandler(async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching restaurants:', error);
+    console.error('❌ [GET RESTAURANTS] Error:', {
+      message: error.message,
+      stack: error.stack,
+    });
     res.status(500).json({
       success: false,
       message: 'Error al obtener restaurantes',
@@ -274,6 +318,8 @@ export const deleteRestaurant = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
+    console.log('🗑️  [DELETE RESTAURANT] Iniciando eliminación (soft-delete):', id);
+
     const restaurant = await Restaurant.findByIdAndUpdate(
       id,
       { isActive: false },
@@ -281,11 +327,18 @@ export const deleteRestaurant = asyncHandler(async (req, res) => {
     );
 
     if (!restaurant) {
+      console.warn('⚠️  [DELETE RESTAURANT] Restaurante no encontrado:', id);
       return res.status(404).json({
         success: false,
         message: 'Restaurante no encontrado',
       });
     }
+
+    console.log('✅ [DELETE RESTAURANT] Restaurante marcado como inactivo:', {
+      id: restaurant._id,
+      name: restaurant.name,
+      isActive: restaurant.isActive,
+    });
 
     res.status(200).json({
       success: true,
@@ -293,7 +346,10 @@ export const deleteRestaurant = asyncHandler(async (req, res) => {
       data: restaurant,
     });
   } catch (error) {
-    console.error('Error deleting restaurant:', error);
+    console.error('❌ [DELETE RESTAURANT] Error:', {
+      message: error.message,
+      stack: error.stack,
+    });
     res.status(500).json({
       success: false,
       message: 'Error al eliminar restaurante',

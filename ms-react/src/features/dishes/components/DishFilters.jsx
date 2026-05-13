@@ -1,11 +1,25 @@
+import { useEffect, useRef } from 'react';
 import { Input } from '@material-tailwind/react';
 import { Typography } from '@material-tailwind/react';
 import { useDishStore } from '../store/useDishStore.js';
 
 export const DishFilters = ({ searchTerm, onSearchChange }) => {
+  const componentMountedRef = useRef(false);
   const restaurantOptions = useDishStore((state) => state.restaurantOptions);
+  const fetchRestaurantOptions = useDishStore((state) => state.fetchRestaurantOptions);
   const selectedRestaurantId = useDishStore((state) => state.selectedRestaurantId);
   const setSelectedRestaurantId = useDishStore((state) => state.setSelectedRestaurantId);
+
+  // Refresca cada vez que el componente se monta
+  useEffect(() => {
+    console.log('🔄 [DISH FILTERS] Componente montado, refrescando restaurantes...');
+    fetchRestaurantOptions(true); // Force refresh
+    componentMountedRef.current = true;
+    
+    return () => {
+      console.log('👋 [DISH FILTERS] Componente desmontado');
+    };
+  }, [fetchRestaurantOptions]);
 
   return (
     <div className="mb-6 rounded-lg border border-stone-200 bg-[#2C4035] p-4 shadow-md">

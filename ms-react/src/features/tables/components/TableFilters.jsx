@@ -1,19 +1,25 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Input, Typography } from '@material-tailwind/react';
 import { useTableStore } from '../store/useTableStore.js';
 
 export const TableFilters = ({ searchTerm, onSearchChange }) => {
+  const componentMountedRef = useRef(false);
   const restaurantOptions = useTableStore((state) => state.restaurantOptions);
   const fetchRestaurantOptions = useTableStore((state) => state.fetchRestaurantOptions);
   const restaurantOptionsLoading = useTableStore((state) => state.restaurantOptionsLoading);
   const selectedRestaurantId = useTableStore((state) => state.selectedRestaurantId);
   const setSelectedRestaurantId = useTableStore((state) => state.setSelectedRestaurantId);
 
+  // Refresca cada vez que el componente se monta
   useEffect(() => {
-    if (restaurantOptions.length === 0) {
-      fetchRestaurantOptions();
-    }
-  }, [fetchRestaurantOptions, restaurantOptions.length]);
+    console.log('🔄 [TABLE FILTERS] Componente montado, refrescando restaurantes...');
+    fetchRestaurantOptions(true); // Force refresh
+    componentMountedRef.current = true;
+    
+    return () => {
+      console.log('👋 [TABLE FILTERS] Componente desmontado');
+    };
+  }, [fetchRestaurantOptions]);
 
   return (
     <div className="mb-6 rounded-xl border border-stone-200 bg-[#2C4035] p-5 shadow-lg">
