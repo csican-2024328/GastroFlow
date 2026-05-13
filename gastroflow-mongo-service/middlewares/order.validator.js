@@ -272,8 +272,8 @@ export const validateUpdateOrderStatus = [
         .not()
         .isEmpty()
         .withMessage('El estado es obligatorio')
-        .isIn(['EN_PREPARACION', 'LISTO', 'ENTREGADO', 'CANCELADO'])
-        .withMessage('Estado no válido. Debe ser: EN_PREPARACION, LISTO, ENTREGADO o CANCELADO')
+        .isIn(['PENDIENTE', 'EN_PREPARACION', 'LISTO', 'ENTREGADO_AL_REPARTIDOR', 'ENTREGADO', 'CANCELADO'])
+        .withMessage('Estado no válido. Debe ser: PENDIENTE, EN_PREPARACION, LISTO, ENTREGADO_AL_REPARTIDOR, ENTREGADO o CANCELADO')
 ];
 
 /**

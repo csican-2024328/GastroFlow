@@ -699,18 +699,45 @@ export const getOrderByNumber = async (req, res) => {
 
 
 const VALID_TRANSITIONS = {
-    'EN_PREPARACION': ['LISTO', 'CANCELADO'],
-    'LISTO': ['ENTREGADO', 'CANCELADO'],
-    'ENTREGADO': [],
-    'CANCELADO': []
+    'PENDIENTE': {
+        'EN_MESA': ['EN_PREPARACION', 'CANCELADO'],
+        'A_DOMICILIO': ['EN_PREPARACION', 'CANCELADO'],
+        'PARA_LLEVAR': ['EN_PREPARACION', 'CANCELADO']
+    },
+    'EN_PREPARACION': {
+        'EN_MESA': ['LISTO', 'CANCELADO'],
+        'A_DOMICILIO': ['ENTREGADO_AL_REPARTIDOR', 'CANCELADO'],
+        'PARA_LLEVAR': ['LISTO', 'CANCELADO']
+    },
+    'LISTO': {
+        'EN_MESA': ['CANCELADO'],
+        'A_DOMICILIO': [],
+        'PARA_LLEVAR': ['CANCELADO']
+    },
+    'ENTREGADO_AL_REPARTIDOR': {
+        'A_DOMICILIO': ['ENTREGADO', 'CANCELADO']
+    },
+    'ENTREGADO': {
+        'EN_MESA': [],
+        'A_DOMICILIO': [],
+        'PARA_LLEVAR': []
+    },
+    'CANCELADO': {
+        'EN_MESA': [],
+        'A_DOMICILIO': [],
+        'PARA_LLEVAR': []
+    }
 };
 
-const FINAL_STATES = ['ENTREGADO', 'CANCELADO'];
+const FINAL_STATES = ['ENTREGADO', 'LISTO', 'CANCELADO'];
 
 
-const isValidStateTransition = (estadoActual, estadoNuevo) => {
+const isValidStateTransition = (estadoActual, estadoNuevo, tipoPedido) => {
     const transicionesValidas = VALID_TRANSITIONS[estadoActual];
-    return transicionesValidas && transicionesValidas.includes(estadoNuevo);
+    if (!transicionesValidas) return false;
+    
+    const transicionesPorTipo = transicionesValidas[tipoPedido];
+    return transicionesPorTipo && transicionesPorTipo.includes(estadoNuevo);
 };
 
 export const updateOrderStatus = async (req, res) => {
@@ -736,12 +763,12 @@ export const updateOrderStatus = async (req, res) => {
         }
 
         
-        if (!isValidStateTransition(order.estado, estado)) {
+        if (!isValidStateTransition(order.estado, estado, order.tipoPedido)) {
             return res.status(400).json({
                 success: false,
-                message: `Transición inválida: no se puede cambiar de ${order.estado} a ${estado}`,
+                message: `Transición inválida: no se puede cambiar de ${order.estado} a ${estado} en un pedido ${order.tipoPedido}`,
                 estadoActual: order.estado,
-                transicionesValidas: VALID_TRANSITIONS[order.estado]
+                transicionesValidas: VALID_TRANSITIONS[order.estado]?.[order.tipoPedido] || []
             });
         }
 

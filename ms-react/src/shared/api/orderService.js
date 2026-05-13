@@ -19,6 +19,12 @@ export const createOrder = async (orderData) => {
   return axiosClient.post('/orders/create', orderData);
 };
 
+// UPDATE ORDER STATUS
+export const updateOrderStatus = async (orderId, estado) => {
+  const { data } = await axiosClient.put(`/orders/${orderId}/estado`, { estado });
+  return data;
+};
+
 // PAY ORDER
 export const payOrder = async (orderId, payload) => {
   const { data } = await axiosClient.put(`/orders/${orderId}/pagar`, payload);
