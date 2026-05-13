@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { LandingPage } from '../layouts/LandingPage.jsx';
 import { AuthPage } from '../../features/auth/pages/AuthPage.jsx';
 import { RegisterPage } from '../../features/auth/pages/RegisterPage.jsx';
@@ -13,6 +13,11 @@ import { DishesPage } from '../../features/dishes/pages/DishesPage.jsx';
 import OrderManagement  from '../../features/orders/views/OrderManagement.jsx';
 import { ProtectedRoute } from '../../shared/components/auth/ProtectedRoute.jsx';
 import { RoleGuard } from '../../shared/components/auth/RoleGuard.jsx';
+import { ClientOrdersPage } from '../../features/orders/pages/ClientOrdersPage.jsx';
+import { ClientMakeOrderPage } from '../../features/orders/pages/ClientMakeOrderPage.jsx';
+import { ClientMyOrdersPage } from '../../features/orders/pages/ClientMyOrdersPage.jsx';
+import { EventsPage } from '../../features/events/pages/EventsPage.jsx';
+import { ReservationsPage } from '../../features/reservations/pages/ReservationsPage.jsx';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -22,6 +27,12 @@ export const AppRoutes = () => {
             <Route path="/verificar-email" element={<VerifyEmailPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/cliente" element={<ClientPage />} />
+            <Route path="/cliente/pedidos" element={<Navigate to="/cliente/pedidos/hacer" replace />} />
+            <Route path="/cliente/pedidos/hacer" element={<ClientMakeOrderPage />} />
+            <Route path="/cliente/pedidos/mis" element={<ClientMyOrdersPage />} />
+            <Route path="/cliente/pedidos/legacy" element={<ClientOrdersPage />} />
+            <Route path="/cliente/eventos" element={<EventsPage />} />
+            <Route path="/cliente/reservaciones" element={<ReservationsPage />} />
             <Route 
                 path="/dashboard" 
                 element={

@@ -23,6 +23,7 @@ const phonePattern = /^[2-9]\d{7}$/;
 export const RegisterForm = ({ onSwitch }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const {
     register,
@@ -47,10 +48,15 @@ export const RegisterForm = ({ onSwitch }) => {
         email: formData.email.trim().toLowerCase(),
       };
 
-      const { data } = await registerRequest(payload);
+  const { data } = await registerRequest(payload);
 
-      toast.success(data?.message || 'Cuenta creada correctamente');
-      navigate('/login');
+  // Show specific success notification requested
+  const msg = '¡Registrado exitosamente! Se le a enviado un correo para que se verifique';
+  setSuccessMessage(msg);
+  toast.success(msg);
+
+  // keep navigation but give a short delay so the user can see the banner
+  setTimeout(() => navigate('/login'), 900);
     } catch (error) {
       toast.error(getRegisterErrorMessage(error));
     } finally {
@@ -59,56 +65,73 @@ export const RegisterForm = ({ onSwitch }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <AuthInput
-        id="name"
-        label="Nombre"
-        type="text"
-        placeholder="Tu nombre"
-        register={register}
-        rules={{
-          required: 'El nombre es obligatorio',
-          minLength: {
-            value: 2,
-            message: 'El nombre debe tener al menos 2 caracteres',
-          },
-          maxLength: {
-            value: 25,
-            message: 'El nombre no puede tener más de 25 caracteres',
-          },
-          pattern: {
-            value: namePattern,
-            message: 'El nombre solo puede contener letras y espacios',
-          },
-        }}
-        error={errors.name}
-        autoComplete="given-name"
-      />
+  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {successMessage ? (
+        <div className="bg-[#E6F7EA] border border-[#C8E6CF] text-[#22543D] rounded-lg p-3 flex items-start gap-3">
+          <div className="flex-shrink-0 mt-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="text-sm">{successMessage}</div>
+        </div>
+      ) : null}
+      {/* Name + Surname on same row for md+ screens */}
+      <div className="md:flex md:space-x-4 md:items-start">
+        <div className="md:flex-1">
+          <AuthInput
+            id="name"
+            label="Nombre"
+            type="text"
+            placeholder="Tu nombre"
+            register={register}
+            rules={{
+              required: 'El nombre es obligatorio',
+              minLength: {
+                value: 2,
+                message: 'El nombre debe tener al menos 2 caracteres',
+              },
+              maxLength: {
+                value: 25,
+                message: 'El nombre no puede tener más de 25 caracteres',
+              },
+              pattern: {
+                value: namePattern,
+                message: 'El nombre solo puede contener letras y espacios',
+              },
+            }}
+            error={errors.name}
+            autoComplete="given-name"
+          />
+        </div>
 
-      <AuthInput
-        id="surname"
-        label="Apellido"
-        type="text"
-        placeholder="Tu apellido"
-        register={register}
-        rules={{
-          required: 'El apellido es obligatorio',
-          minLength: {
-            value: 2,
-            message: 'El apellido debe tener al menos 2 caracteres',
-          },
-          maxLength: {
-            value: 25,
-            message: 'El apellido no puede tener más de 25 caracteres',
-          },
-          pattern: {
-            value: namePattern,
-            message: 'El apellido solo puede contener letras y espacios',
-          },
-        }}
-        error={errors.surname}
-        autoComplete="family-name"
-      />
+        <div className="md:flex-1 mt-4 md:mt-0">
+          <AuthInput
+            id="surname"
+            label="Apellido"
+            type="text"
+            placeholder="Tu apellido"
+            register={register}
+            rules={{
+              required: 'El apellido es obligatorio',
+              minLength: {
+                value: 2,
+                message: 'El apellido debe tener al menos 2 caracteres',
+              },
+              maxLength: {
+                value: 25,
+                message: 'El apellido no puede tener más de 25 caracteres',
+              },
+              pattern: {
+                value: namePattern,
+                message: 'El apellido solo puede contener letras y espacios',
+              },
+            }}
+            error={errors.surname}
+            autoComplete="family-name"
+          />
+        </div>
+      </div>
 
       <AuthInput
         id="username"
@@ -169,44 +192,51 @@ export const RegisterForm = ({ onSwitch }) => {
         autoComplete="tel"
       />
 
-      <AuthInput
-        id="password"
-        label="Contraseña"
-        type="password"
-        placeholder="••••••••"
-        register={register}
-        rules={{
-          required: 'La contraseña es obligatoria',
-          minLength: {
-            value: 8,
-            message: 'La contraseña debe tener al menos 8 caracteres',
-          },
-          maxLength: {
-            value: 255,
-            message: 'La contraseña no puede superar 255 caracteres',
-          },
-          pattern: {
-            value: passwordPattern,
-            message: 'La contraseña debe incluir mayúscula, minúscula, número y un carácter especial',
-          },
-        }}
-        error={errors.password}
-        autoComplete="new-password"
-      />
+      {/* Password + Confirm Password on same row for md+ screens */}
+      <div className="md:flex md:space-x-4 md:items-start">
+        <div className="md:flex-1">
+          <AuthInput
+            id="password"
+            label="Contraseña"
+            type="password"
+            placeholder="••••••••"
+            register={register}
+            rules={{
+              required: 'La contraseña es obligatoria',
+              minLength: {
+                value: 8,
+                message: 'La contraseña debe tener al menos 8 caracteres',
+              },
+              maxLength: {
+                value: 255,
+                message: 'La contraseña no puede superar 255 caracteres',
+              },
+              pattern: {
+                value: passwordPattern,
+                message: 'La contraseña debe incluir mayúscula, minúscula, número y un carácter especial',
+              },
+            }}
+            error={errors.password}
+            autoComplete="new-password"
+          />
+        </div>
 
-      <AuthInput
-        id="passwordConfirm"
-        label="Confirmar contraseña"
-        type="password"
-        placeholder="••••••••"
-        register={register}
-        rules={{
-          required: 'Debes confirmar la contraseña',
-          validate: (value) => value === password || 'Las contraseñas no coinciden',
-        }}
-        error={errors.passwordConfirm}
-        autoComplete="new-password"
-      />
+        <div className="md:flex-1 mt-4 md:mt-0">
+          <AuthInput
+            id="passwordConfirm"
+            label="Confirmar contraseña"
+            type="password"
+            placeholder="••••••••"
+            register={register}
+            rules={{
+              required: 'Debes confirmar la contraseña',
+              validate: (value) => value === password || 'Las contraseñas no coinciden',
+            }}
+            error={errors.passwordConfirm}
+            autoComplete="new-password"
+          />
+        </div>
+      </div>
 
       <AuthPrimaryButton type="submit" loading={loading} loadingText="Registrando...">
         Crear Cuenta

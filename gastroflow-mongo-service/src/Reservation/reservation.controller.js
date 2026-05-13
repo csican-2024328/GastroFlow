@@ -64,6 +64,15 @@ const validateRestaurantAndMesa = async (restaurantID, mesaID) => {
     }
 };
 
+const parseDateTime = (fechaReserva, hora) => {
+    const reservationDate = new Date(fechaReserva);
+    const [hours, minutes] = String(hora).split(':').map(Number);
+
+    const dateTime = new Date(reservationDate);
+    dateTime.setHours(hours, minutes, 0, 0);
+    return dateTime;
+};
+
 const hasReservationConflict = async ({ mesaID, fechaReserva, horaInicio, horaFin, excludeId }) => {
     const reservationDate = new Date(fechaReserva);
     const dateStart = new Date(reservationDate);
@@ -83,29 +92,24 @@ const hasReservationConflict = async ({ mesaID, fechaReserva, horaInicio, horaFi
     }
 
     const conflictingReservations = await Reservation.find(filter);
-    
-    // Función para convertir hora HH:mm a minutos
-    const timeToMinutes = (timeStr) => {
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        return hours * 60 + minutes;
-    };
-
-    // Función para detectar superposición de horarios
-    const hasTimeOverlap = (start1, end1, start2, end2) => {
-        const s1 = timeToMinutes(start1);
-        const e1 = timeToMinutes(end1);
-        const s2 = timeToMinutes(start2);
-        const e2 = timeToMinutes(end2);
-        return s1 < e2 && e1 > s2;
-    };
+    const requestedStart = parseDateTime(fechaReserva, horaInicio);
+    const requestedEnd = parseDateTime(fechaReserva, horaFin);
 
     for (const reservation of conflictingReservations) {
-        if (hasTimeOverlap(horaInicio, horaFin, reservation.horaInicio, reservation.horaFin)) {
-            return true;
+        const existingStart = parseDateTime(reservation.fechaReserva, reservation.horaInicio);
+        const existingEnd = parseDateTime(reservation.fechaReserva, reservation.horaFin);
+
+        const hasTimeOverlap = requestedStart < existingEnd && requestedEnd > existingStart;
+
+        if (hasTimeOverlap) {
+            return {
+                conflict: true,
+                reservation,
+            };
         }
     }
-    
-    return false;
+
+    return { conflict: false, reservation: null };
 };
 
 const checkRestaurantCapacity = async (restaurantID, cantidadPersonas, fechaReserva, excludeId = null) => {
@@ -180,10 +184,16 @@ export const createReservation = async (req, res) => {
             horaInicio, 
             horaFin 
         });
-        if (conflict) {
+        if (conflict.conflict) {
             return res.status(409).json({
                 success: false,
-                message: 'La mesa ya tiene una reservación en ese rango de horas',
+                message: `La mesa ya está reservada hasta las ${conflict.reservation?.horaFin || 'hora no disponible'}. Selecciona otro horario.`,
+                data: {
+                    mesaID,
+                    reservationId: conflict.reservation?._id || null,
+                    horaInicioOcupada: conflict.reservation?.horaInicio || null,
+                    horaFinOcupada: conflict.reservation?.horaFin || null,
+                },
             });
         }
 
@@ -455,10 +465,16 @@ export const updateReservation = async (req, res) => {
                 excludeId: reservation._id,
             });
 
-            if (conflict) {
+            if (conflict.conflict) {
                 return res.status(409).json({
                     success: false,
-                    message: 'La mesa ya tiene una reservación en ese rango de horas',
+                    message: `La mesa ya está reservada hasta las ${conflict.reservation?.horaFin || 'hora no disponible'}. Selecciona otro horario.`,
+                    data: {
+                        mesaID,
+                        reservationId: conflict.reservation?._id || null,
+                        horaInicioOcupada: conflict.reservation?.horaInicio || null,
+                        horaFinOcupada: conflict.reservation?.horaFin || null,
+                    },
                 });
             }
         }
