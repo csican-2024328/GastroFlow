@@ -18,6 +18,7 @@ import { ClientMyOrdersPage } from '../../features/orders/pages/ClientMyOrdersPa
 import { EventsPage } from '../../features/events/pages/EventsPage.jsx';
 import { ReservationsPage } from '../../features/reservations/pages/ReservationsPage.jsx';
 import { CouponsPage } from '../../features/coupons/pages/CouponsPage.jsx';
+import { ClientOrderTrackingPage } from '../../features/orders/pages/ClientOrderTrackingPage.jsx';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -30,6 +31,7 @@ export const AppRoutes = () => {
             <Route path="/cliente/pedidos" element={<Navigate to="/cliente/pedidos/hacer" replace />} />
             <Route path="/cliente/pedidos/hacer" element={<ClientMakeOrderPage />} />
             <Route path="/cliente/pedidos/mis" element={<ClientMyOrdersPage />} />
+            <Route path="/cliente/pedidos/:orderId" element={<ClientOrderTrackingPage />} />
             <Route path="/cliente/pedidos/legacy" element={<ClientOrdersPage />} />
             <Route path="/cliente/eventos" element={<EventsPage />} />
             <Route path="/cliente/reservaciones" element={<ReservationsPage />} />

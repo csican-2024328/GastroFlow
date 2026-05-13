@@ -94,10 +94,13 @@ export const ClientMyOrdersPage = () => {
                         {statusInfo.icon} {statusInfo.label}
                       </span>
                     </div>
-                    <div className="md:text-right">
-                      <button className="rounded-xl bg-[#E2D4B7] px-4 py-2 text-sm font-semibold text-[#3D2C1E] hover:bg-[#D7C7A5]">
-                        Ver Detalles
-                      </button>
+                      <div className="md:text-right">
+                        <button
+                          onClick={() => navigate(`/cliente/pedidos/${order._id}`)}
+                          className="rounded-xl bg-[#E2D4B7] px-4 py-2 text-sm font-semibold text-[#3D2C1E] hover:bg-[#D7C7A5]"
+                        >
+                          Ver seguimiento
+                        </button>
                     </div>
                   </div>
 

@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import {
   checkOrderStock,
   createOrder,
+  getOrderById,
   getClientOrders,
-  getClientOrderById,
+  payOrder,
 } from '../../../shared/api/orderService.js';
 
 export const useOrderStore = create((set) => ({
@@ -96,13 +97,36 @@ export const useOrderStore = create((set) => ({
   fetchOrderById: async (id) => {
     try {
       set({ loading: true, error: null });
-      const response = await getClientOrderById(id);
+      const response = await getOrderById(id);
       const order = response.data.data;
 
       set({ selectedOrder: order, loading: false });
       return { success: true, data: order };
     } catch (error) {
       const message = error.response?.data?.message || 'Error al obtener pedido';
+      set({ error: message, loading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Pay order
+  payOrderAction: async (orderId, payload) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await payOrder(orderId, payload);
+      const updatedOrder = response.data.data;
+
+      set((state) => ({
+        selectedOrder: updatedOrder,
+        orders: state.orders.map((order) =>
+          order._id === orderId ? updatedOrder : order
+        ),
+        loading: false,
+      }));
+
+      return { success: true, data: updatedOrder };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Error al registrar el pago';
       set({ error: message, loading: false });
       return { success: false, error: message };
     }

@@ -13,6 +13,11 @@ export const createOrder = async (orderData) => {
   return axiosClient.post('/orders/create', orderData);
 };
 
+// GET Order by ID
+export const getOrderById = async (id) => {
+  return axiosClient.get(`/orders/${id}`);
+};
+
 // GET Client's Orders
 export const getClientOrders = async (params = {}) => {
   const queryParams = new URLSearchParams();
@@ -28,6 +33,11 @@ export const getClientOrders = async (params = {}) => {
 // GET Client's Order by ID
 export const getClientOrderById = async (id) => {
   return axiosClient.get(`/orders/mine/${id}`);
+};
+
+// PAY ORDER
+export const payOrder = async (orderId, payload) => {
+  return axiosClient.put(`/orders/${orderId}/pagar`, payload);
 };
 
 // GET Order by Order Number
