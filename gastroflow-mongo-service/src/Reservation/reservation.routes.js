@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
     createReservation,
+    getAvailableTables,
     getReservations,
     getReservationById,
     updateReservation,
@@ -24,6 +25,13 @@ router.post(
     validateCreateReservation,
     validarCampos,
     createReservation
+);
+
+router.get(
+    '/available',
+    autenticar,
+    autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    getAvailableTables
 );
 
 router.get(

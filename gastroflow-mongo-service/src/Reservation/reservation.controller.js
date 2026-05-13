@@ -140,6 +140,65 @@ const checkRestaurantCapacity = async (restaurantID, cantidadPersonas, fechaRese
     return { available: availableCapacity >= cantidadPersonas, availableCapacity, aforoMaximo: restaurant.aforoMaximo };
 };
 
+const hasMesaAvailabilityConflict = async ({ mesaID, fechaReserva, horaInicio, horaFin }) => {
+    const conflict = await hasReservationConflict({ mesaID, fechaReserva, horaInicio, horaFin });
+    return conflict.conflict;
+};
+
+export const getAvailableTables = async (req, res) => {
+    try {
+        const { restaurantID, restaurantId, date, timeStart, timeEnd } = req.query;
+        const effectiveRestaurantID = restaurantID || restaurantId;
+
+        if (!effectiveRestaurantID || !date || !timeStart || !timeEnd) {
+            return res.status(400).json({
+                success: false,
+                message: 'restaurantID, date, timeStart y timeEnd son requeridos',
+            });
+        }
+
+        const restaurant = await Restaurant.findById(effectiveRestaurantID);
+        if (!restaurant || !restaurant.isActive) {
+            return res.status(404).json({
+                success: false,
+                message: 'Restaurante no encontrado o inactivo',
+            });
+        }
+
+        const mesas = await Mesa.find({
+            restaurantID: effectiveRestaurantID,
+            isActive: true,
+        }).sort({ numero: 1 });
+
+        const availableTables = [];
+
+        for (const mesa of mesas) {
+            const conflict = await hasMesaAvailabilityConflict({
+                mesaID: mesa._id,
+                fechaReserva: date,
+                horaInicio: timeStart,
+                horaFin: timeEnd,
+            });
+
+            if (!conflict) {
+                availableTables.push(mesa);
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Mesas disponibles obtenidas exitosamente',
+            data: availableTables,
+        });
+    } catch (error) {
+        return res.status(error.status || 500).json({
+            success: false,
+            message: 'Error al obtener mesas disponibles',
+            error: error.message,
+        });
+    }
+};
+
 export const createReservation = async (req, res) => {
     try {
         const { restaurantID, mesaID, fechaReserva, horaInicio, horaFin, cantidadPersonas, notas } = req.body;

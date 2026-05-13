@@ -23,7 +23,7 @@ export const getReservationById = async (reservationId) => {
 // GET - Get available tables for a restaurant
 export const getAvailableTables = async (restaurantId, date, timeStart, timeEnd) => {
   return axiosClient.get(
-    `/reservation/available?restaurantId=${restaurantId}&date=${date}&timeStart=${timeStart}&timeEnd=${timeEnd}`
+    `/reservation/available?restaurantID=${restaurantId}&date=${date}&timeStart=${timeStart}&timeEnd=${timeEnd}`
   );
 };
 

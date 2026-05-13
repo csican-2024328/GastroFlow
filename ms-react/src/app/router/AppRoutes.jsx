@@ -17,6 +17,7 @@ import { ClientMakeOrderPage } from '../../features/orders/pages/ClientMakeOrder
 import { ClientMyOrdersPage } from '../../features/orders/pages/ClientMyOrdersPage.jsx';
 import { EventsPage } from '../../features/events/pages/EventsPage.jsx';
 import { ReservationsPage } from '../../features/reservations/pages/ReservationsPage.jsx';
+import { CouponsPage } from '../../features/coupons/pages/CouponsPage.jsx';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -32,6 +33,7 @@ export const AppRoutes = () => {
             <Route path="/cliente/pedidos/legacy" element={<ClientOrdersPage />} />
             <Route path="/cliente/eventos" element={<EventsPage />} />
             <Route path="/cliente/reservaciones" element={<ReservationsPage />} />
+            <Route path="/cliente/cupones" element={<CouponsPage />} />
             <Route 
                 path="/dashboard" 
                 element={

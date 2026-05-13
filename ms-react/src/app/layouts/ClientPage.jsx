@@ -69,6 +69,7 @@ export const ClientPage = () => {
           badge: stats.activeOrders > 0 ? String(stats.activeOrders) : null,
         },
         { label: 'Reservaciones', icon: '🪑', path: '/cliente/reservaciones' },
+          { label: 'Cupones', icon: '🏷️', path: '/cliente/cupones' },
         { label: 'Ofertas y Eventos', icon: '🎉', path: '/cliente/eventos' },
       ],
     },
@@ -85,6 +86,7 @@ export const ClientPage = () => {
   const currentTitle = useMemo(() => {
     if (location.pathname.includes('/hacer')) return 'Hacer pedido';
     if (location.pathname.includes('/mis')) return 'Mis pedidos';
+    if (location.pathname.includes('/cupones')) return 'Cupones';
     return 'Inicio';
   }, [location.pathname]);
 
