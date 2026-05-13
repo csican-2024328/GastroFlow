@@ -7,6 +7,24 @@ import {
   deleteRestaurant,
 } from '../../../shared/api/restaurantService.js';
 
+const normalizeRestaurant = (restaurant) => {
+  if (!restaurant) return restaurant;
+
+  const photos = Array.isArray(restaurant.photos)
+    ? restaurant.photos
+    : Array.isArray(restaurant.fotos)
+      ? restaurant.fotos
+      : [];
+
+  return {
+    ...restaurant,
+    photos,
+    fotos: photos,
+    address: restaurant.address || restaurant.direccion || '',
+    direccion: restaurant.direccion || restaurant.address || '',
+  };
+};
+
 export const useRestaurantStore = create((set) => ({
   // State
   restaurants: [],
@@ -26,7 +44,7 @@ export const useRestaurantStore = create((set) => ({
       set({ loading: true, error: null });
       const response = await getRestaurants({ page, limit, isActive: true });
       
-      const data = response.data.data || [];
+      const data = (response.data.data || []).map(normalizeRestaurant);
       const pagination = response.data.pagination || {};
 
       set({
@@ -53,7 +71,7 @@ export const useRestaurantStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await getRestaurantById(id);
-      const restaurant = response.data.data;
+      const restaurant = normalizeRestaurant(response.data.data);
 
       set({ selectedRestaurant: restaurant, loading: false });
       return { success: true, data: restaurant };
@@ -69,7 +87,7 @@ export const useRestaurantStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await createRestaurant(restaurantData);
-      const newRestaurant = response.data.data;
+      const newRestaurant = normalizeRestaurant(response.data.data);
 
       set((state) => ({
         restaurants: [newRestaurant, ...state.restaurants],
@@ -89,7 +107,7 @@ export const useRestaurantStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await updateRestaurant(id, restaurantData);
-      const updatedRestaurant = response.data.data;
+      const updatedRestaurant = normalizeRestaurant(response.data.data);
 
       set((state) => ({
         restaurants: state.restaurants.map((r) =>
