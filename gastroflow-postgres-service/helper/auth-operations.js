@@ -145,7 +145,11 @@ export const loginUserHelper = async (emailOrUsername, password) => {
 
     const role = user.UserRoles?.[0]?.Role?.Name;
 
-    const token = await generateJWT(user.Id.toString(), role ? { role } : {});
+    const token = await generateJWT(user.Id.toString(), { 
+      email: user.Email,
+      name: user.Name,
+      ...(role && { role })
+    });
 
     const expiresInMs = getExpirationTime(process.env.JWT_EXPIRES_IN || '30m');
     const expiresAt = new Date(Date.now() + expiresInMs);

@@ -23,13 +23,18 @@ export const getReservationById = async (reservationId) => {
 // GET - Get available tables for a restaurant
 export const getAvailableTables = async (restaurantId, date, timeStart, timeEnd) => {
   return axiosClient.get(
-    `/reservation/available?restaurantId=${restaurantId}&date=${date}&timeStart=${timeStart}&timeEnd=${timeEnd}`
+    `/reservation/available?restaurantID=${restaurantId}&date=${date}&timeStart=${timeStart}&timeEnd=${timeEnd}`
   );
 };
 
 // PUT - Update reservation
 export const updateReservation = async (reservationId, data) => {
   return axiosClient.put(`/reservation/${reservationId}`, data);
+};
+
+// POST - Approve or reject reservation
+export const approveOrRejectReservation = async (reservationId, data) => {
+  return axiosClient.post(`/reservation/${reservationId}/approve-or-reject`, data);
 };
 
 // DELETE - Cancel reservation

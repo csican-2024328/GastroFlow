@@ -2,7 +2,7 @@ import Reservation from './reservation.model.js';
 import Restaurant from '../Restaurant/Restaurant.model.js';
 import Mesa from '../Mesas/mesa.model.js';
 import { notifyNewReservation, notifyReservationStatusChange } from '../../configs/socket.js';
-import { enviarEmailAlertaTiempoReal } from '../../helper/email-service.js';
+import { enviarEmailAlertaTiempoReal, enviarEmailReservacionPendiente, enviarEmailReservacionAprobada, enviarEmailReservacionRechazada } from '../../helper/email-service.js';
 
 const isClientRole = (req) => req.usuario?.role === 'CLIENT';
 const isRestaurantAdminRole = (req) => req.usuario?.role === 'RESTAURANT_ADMIN';
@@ -140,6 +140,65 @@ const checkRestaurantCapacity = async (restaurantID, cantidadPersonas, fechaRese
     return { available: availableCapacity >= cantidadPersonas, availableCapacity, aforoMaximo: restaurant.aforoMaximo };
 };
 
+const hasMesaAvailabilityConflict = async ({ mesaID, fechaReserva, horaInicio, horaFin }) => {
+    const conflict = await hasReservationConflict({ mesaID, fechaReserva, horaInicio, horaFin });
+    return conflict.conflict;
+};
+
+export const getAvailableTables = async (req, res) => {
+    try {
+        const { restaurantID, restaurantId, date, timeStart, timeEnd } = req.query;
+        const effectiveRestaurantID = restaurantID || restaurantId;
+
+        if (!effectiveRestaurantID || !date || !timeStart || !timeEnd) {
+            return res.status(400).json({
+                success: false,
+                message: 'restaurantID, date, timeStart y timeEnd son requeridos',
+            });
+        }
+
+        const restaurant = await Restaurant.findById(effectiveRestaurantID);
+        if (!restaurant || !restaurant.isActive) {
+            return res.status(404).json({
+                success: false,
+                message: 'Restaurante no encontrado o inactivo',
+            });
+        }
+
+        const mesas = await Mesa.find({
+            restaurantID: effectiveRestaurantID,
+            isActive: true,
+        }).sort({ numero: 1 });
+
+        const availableTables = [];
+
+        for (const mesa of mesas) {
+            const conflict = await hasMesaAvailabilityConflict({
+                mesaID: mesa._id,
+                fechaReserva: date,
+                horaInicio: timeStart,
+                horaFin: timeEnd,
+            });
+
+            if (!conflict) {
+                availableTables.push(mesa);
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Mesas disponibles obtenidas exitosamente',
+            data: availableTables,
+        });
+    } catch (error) {
+        return res.status(error.status || 500).json({
+            success: false,
+            message: 'Error al obtener mesas disponibles',
+            error: error.message,
+        });
+    }
+};
+
 export const createReservation = async (req, res) => {
     try {
         const { restaurantID, mesaID, fechaReserva, horaInicio, horaFin, cantidadPersonas, notas } = req.body;
@@ -161,6 +220,13 @@ export const createReservation = async (req, res) => {
 
         // El email del requester viene del token JWT en req.usuario
         const requesterEmail = req.usuario?.email?.toLowerCase()?.trim();
+        
+        console.log(`\n${'='.repeat(70)}`);
+        console.log(`🔐 DEBUG: Contenido del JWT (req.usuario)`);
+        console.log(`${'='.repeat(70)}`);
+        console.log(`req.usuario:`, JSON.stringify(req.usuario, null, 2));
+        console.log(`email extraído:`, requesterEmail);
+        console.log(`${'='.repeat(70)}\n`);
 
         const clienteId = isClientRole(req) ? requesterId : (req.body.clienteId || requesterId);
         // En MongoDB, asumimos que el cliente es válido si tiene un ID
@@ -212,12 +278,13 @@ export const createReservation = async (req, res) => {
             clienteId,
             clienteNombre: req.body.clienteNombre || req.usuario?.name || 'Cliente',
             clienteTelefono: req.body.clienteTelefono || req.usuario?.phone || '',
+            clienteEmail: req.body.clienteEmail || req.usuario?.email || '',
             fechaReserva: new Date(fechaReserva),
             horaInicio,
             horaFin,
             cantidadPersonas,
             notas,
-            estado: 'CONFIRMADA',
+            estado: 'PENDIENTE',
         });
 
         await reservation.save();
@@ -238,27 +305,49 @@ export const createReservation = async (req, res) => {
             estado: reservation.estado
         });
 
+        // Enviar email al cliente notificando que su reservación está pendiente de aprobación
         if (requesterEmail) {
-            await enviarEmailAlertaTiempoReal({
-                to: requesterEmail,
-                asunto: 'Alerta Tiempo Real: Nueva reservación',
-                titulo: 'Nueva reservación emitida por socket',
-                mensaje: 'Se emitió el evento nueva-reserva para validar notificaciones en tiempo real.',
-                detalles: [
-                    { label: 'Reserva ID', value: reservation._id?.toString() },
-                    { label: 'Restaurante', value: restaurantID },
-                    { label: 'Cliente', value: reservation.clienteNombre },
-                    { label: 'Fecha', value: reservation.fechaReserva?.toISOString?.() || reservation.fechaReserva },
-                    { label: 'Hora', value: `${reservation.horaInicio} - ${reservation.horaFin}` },
-                    { label: 'Estado', value: reservation.estado },
-                ],
-            }).catch(err => console.error('Error enviando email:', err));
+            const fechaFormato = new Date(reservation.fechaReserva).toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+            
+            console.log(`\n${'='.repeat(70)}`);
+            console.log(`📧 EMAIL DE RESERVACIÓN PENDIENTE`);
+            console.log(`${'='.repeat(70)}`);
+            console.log(`📤 Destinatario: ${requesterEmail}`);
+            console.log(`👤 Cliente: ${reservation.clienteNombre}`);
+            console.log(`🏢 Restaurante: ${reservation.restaurantID?.name}`);
+            console.log(`${'='.repeat(70)}\n`);
+            
+            try {
+                await enviarEmailReservacionPendiente({
+                    email: requesterEmail,
+                    nombre: reservation.clienteNombre,
+                    restaurante: reservation.restaurantID?.name || 'Restaurante',
+                    fecha: fechaFormato,
+                    hora: `${reservation.horaInicio} - ${reservation.horaFin}`,
+                    personas: reservation.cantidadPersonas,
+                    mesaNumero: reservation.mesaID?.numero || 'Por asignar'
+                });
+                console.log(`✅ Email de reservación pendiente enviado exitosamente a ${requesterEmail}`);
+            } catch (emailError) {
+                console.error(`❌ Error al enviar email de reservación pendiente a ${requesterEmail}:`, emailError.message);
+            }
+        } else {
+            console.warn('⚠️  No se encontró email del usuario para enviar notificación de reservación pendiente');
         }
 
         res.status(201).json({
             success: true,
-            message: 'Reservación creada exitosamente',
-            data: reservation,
+            message: 'Reservación registrada exitosamente. Tu reservación está siendo observada por un administrador. Recibirás un email de confirmación cuando sea aprobada.',
+            data: {
+                ...reservation.toObject(),
+                estado: 'PENDIENTE',
+                proximosPasos: 'Un administrador del restaurante revisará tu solicitud. Tiempo estimado: 15 minutos a 2 horas. Recibirás un email cuando sea confirmada.'
+            },
         });
     } catch (error) {
         res.status(error.status || 500).json({
@@ -583,6 +672,136 @@ export const deleteReservation = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al eliminar reservación',
+            error: error.message,
+        });
+    }
+};
+
+export const approveOrRejectReservation = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { accion, razon } = req.body; // accion: 'APROBAR' o 'RECHAZAR'
+
+        // Validar que sea admin del restaurante o admin de plataforma
+        if (!isRestaurantAdminRole(req) && !isPlatformAdminRole(req)) {
+            return res.status(403).json({
+                success: false,
+                message: 'Solo administradores pueden aprobar o rechazar reservaciones',
+            });
+        }
+
+        if (!accion || !['APROBAR', 'RECHAZAR'].includes(accion.toUpperCase())) {
+            return res.status(400).json({
+                success: false,
+                message: 'Acción inválida. Debe ser APROBAR o RECHAZAR',
+            });
+        }
+
+        const reservation = await Reservation.findById(id);
+
+        if (!reservation || !reservation.isActive) {
+            return res.status(404).json({
+                success: false,
+                message: 'Reservación no encontrada',
+            });
+        }
+
+        // Verificar que solo sea admin del restaurante correcto
+        if (isRestaurantAdminRole(req)) {
+            const managedRestaurantIds = await getManagedRestaurantIds(req.usuario.sub);
+            if (!managedRestaurantIds.includes(reservation.restaurantID.toString())) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'No tienes permiso para gestionar esta reservación',
+                });
+            }
+        }
+
+        // Solo se pueden aprobar/rechazar reservaciones PENDIENTES
+        if (reservation.estado !== 'PENDIENTE') {
+            return res.status(400).json({
+                success: false,
+                message: `No se puede ${accion.toLowerCase()} una reservación con estado ${reservation.estado}`,
+            });
+        }
+
+        const nuevoEstado = accion.toUpperCase() === 'APROBAR' ? 'CONFIRMADA' : 'CANCELADA';
+        reservation.estado = nuevoEstado;
+        await reservation.save();
+
+        await reservation.populate([
+            { path: 'restaurantID', select: 'name city address phone' },
+            { path: 'mesaID', select: 'numero capacidad ubicacion' },
+        ]);
+
+        // Obtener email del cliente desde la base de datos del PostgreSQL si es posible
+        // Por ahora, usaremos el clienteId para enviar notificaciones
+        const clienteEmail = req.body.clienteEmail; // El frontend debe proporcionar el email
+
+        // Enviar email al cliente
+        if (clienteEmail) {
+            const fechaFormato = new Date(reservation.fechaReserva).toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+
+            console.log(`📧 Intentando enviar email de ${nuevoEstado === 'CONFIRMADA' ? 'aprobación' : 'rechazo'} a: ${clienteEmail}`);
+
+            try {
+                if (nuevoEstado === 'CONFIRMADA') {
+                    await enviarEmailReservacionAprobada({
+                        email: clienteEmail,
+                        nombre: reservation.clienteNombre,
+                        restaurante: reservation.restaurantID?.name || 'Restaurante',
+                        fecha: fechaFormato,
+                        hora: `${reservation.horaInicio} - ${reservation.horaFin}`,
+                        personas: reservation.cantidadPersonas,
+                        mesaNumero: reservation.mesaID?.numero || 'Por asignar',
+                        direccion: reservation.restaurantID?.address || '',
+                        telefono: reservation.restaurantID?.phone || ''
+                    });
+                    console.log(`✅ Email de aprobación de reservación enviado exitosamente a ${clienteEmail}`);
+                } else {
+                    await enviarEmailReservacionRechazada({
+                        email: clienteEmail,
+                        nombre: reservation.clienteNombre,
+                        restaurante: reservation.restaurantID?.name || 'Restaurante',
+                        fecha: fechaFormato,
+                        hora: `${reservation.horaInicio} - ${reservation.horaFin}`,
+                        razon: razon || 'No disponible para esa fecha/hora'
+                    });
+                    console.log(`✅ Email de rechazo de reservación enviado exitosamente a ${clienteEmail}`);
+                }
+            } catch (emailError) {
+                console.error(`❌ Error al enviar email de ${nuevoEstado === 'CONFIRMADA' ? 'aprobación' : 'rechazo'} a ${clienteEmail}:`, emailError.message);
+            }
+        } else {
+            console.warn('⚠️  No se proporcionó email del cliente. Los emails de aprobación/rechazo NO se enviarán.');
+            console.warn(`   Para enviar emails, incluye "clienteEmail" en el body de la solicitud`);
+        }
+
+        // Notificar al cliente en tiempo real
+        notifyReservationStatusChange(reservation.clienteId, {
+            _id: reservation._id,
+            estado: reservation.estado,
+            fechaReserva: reservation.fechaReserva,
+            horaInicio: reservation.horaInicio,
+            horaFin: reservation.horaFin,
+            restaurante: reservation.restaurantID,
+            mesa: reservation.mesaID
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `Reservación ${accion.toLowerCase()}ada exitosamente`,
+            data: reservation,
+        });
+    } catch (error) {
+        res.status(error.status || 500).json({
+            success: false,
+            message: 'Error al aprobar/rechazar reservación',
             error: error.message,
         });
     }

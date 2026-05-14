@@ -4,6 +4,7 @@ import { useAuthStore } from '../../features/auth/store/authStore.js';
 import { useOrderStore } from '../../features/orders/store/useOrderStore.js';
 import { useRestaurantStore } from '../../features/restaurants/store/useRestaurantStore.js';
 import { ProfileModal } from '../../features/auth/components/ProfileModal.jsx';
+import defaultAvatar from '../../assets/img/Icono.png';
 
 export const ClientPage = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export const ClientPage = () => {
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const logout = useAuthStore((state) => state.logout);
+  const openProfileModal = useAuthStore((state) => state.openProfileModal);
 
   const orders = useOrderStore((s) => s.orders);
   const fetchClientOrders = useOrderStore((s) => s.fetchClientOrders);
@@ -69,6 +71,7 @@ export const ClientPage = () => {
           badge: stats.activeOrders > 0 ? String(stats.activeOrders) : null,
         },
         { label: 'Reservaciones', icon: '🪑', path: '/cliente/reservaciones' },
+          { label: 'Cupones', icon: '🏷️', path: '/cliente/cupones' },
         { label: 'Ofertas y Eventos', icon: '🎉', path: '/cliente/eventos' },
       ],
     },
@@ -85,6 +88,7 @@ export const ClientPage = () => {
   const currentTitle = useMemo(() => {
     if (location.pathname.includes('/hacer')) return 'Hacer pedido';
     if (location.pathname.includes('/mis')) return 'Mis pedidos';
+    if (location.pathname.includes('/cupones')) return 'Cupones';
     return 'Inicio';
   }, [location.pathname]);
 
@@ -92,6 +96,10 @@ export const ClientPage = () => {
     logout();
     navigate('/', { replace: true });
   };
+
+  const avatarSrc = [user?.profilePicture, user?.profileImage].find(
+    (value) => typeof value === 'string' && value.trim() !== ''
+  ) || defaultAvatar;
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#3D2C1E]">
@@ -139,8 +147,27 @@ export const ClientPage = () => {
           </div>
 
           <div className="mt-auto rounded-2xl border border-[#E8D9C4] bg-[#FAF7F2] p-3">
-            <p className="font-semibold text-[#3D2C1E]">{user?.name || 'Cliente'}</p>
-            <p className="text-xs text-[#8A7060]">@{user?.username || 'usuario'}</p>
+            <div className="flex items-center gap-3">
+              <img
+                src={avatarSrc}
+                alt="Perfil"
+                className="h-12 w-12 rounded-full border-2 border-[#2C4035] bg-white object-cover"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = defaultAvatar;
+                }}
+              />
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-[#3D2C1E]">{user?.name || 'Cliente'}</p>
+                <p className="truncate text-xs text-[#8A7060]">@{user?.username || 'usuario'}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => openProfileModal(true)}
+              className="mt-3 w-full rounded-xl border border-[#C49A2B] bg-white px-3 py-2 text-sm font-semibold text-[#3D2C1E] hover:bg-[#F5EDE0]"
+            >
+              Editar perfil
+            </button>
             <button
               onClick={handleLogout}
               className="mt-3 w-full rounded-xl border border-[#E8D9C4] px-3 py-2 text-sm font-semibold text-[#8A7060] hover:bg-[#F5EDE0]"
@@ -217,14 +244,27 @@ export const ClientPage = () => {
             {filteredRestaurants.slice(0, 9).map((restaurant) => (
               <article
                 key={restaurant._id}
-                className="rounded-2xl border border-[#E8D9C4] bg-white p-4 transition hover:bg-[#FBF8F3]"
+                className="overflow-hidden rounded-2xl border border-[#E8D9C4] bg-white transition hover:-translate-y-1 hover:shadow-lg"
               >
-                <div className="mb-3 h-24 rounded-xl bg-[#F5EDE0]" />
-                <h4 className="truncate font-semibold text-[#3D2C1E]">{restaurant.name}</h4>
-                <p className="mt-1 text-sm text-[#8A7060]">{restaurant.category || 'Cocina de autor'}</p>
-                <div className="mt-3 flex items-center justify-between text-xs text-[#B59070]">
-                  <span>⏱️ 25-35 min</span>
-                  <span>⭐ 4.8</span>
+                <div className="h-36 bg-[#F5EDE0]">
+                  {restaurant.photos && restaurant.photos.length > 0 ? (
+                    <img
+                      src={restaurant.photos[0]}
+                      alt={restaurant.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-4xl">🍽️</div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h4 className="truncate font-semibold text-[#3D2C1E]">{restaurant.name}</h4>
+                  <p className="mt-1 text-sm text-[#8A7060]">{restaurant.category || 'Cocina de autor'}</p>
+                  <p className="mt-2 truncate text-xs text-[#B59070]">📍 {restaurant.address || 'Dirección no disponible'}</p>
+                  <div className="mt-3 flex items-center justify-between text-xs text-[#B59070]">
+                    <span>⏱️ 25-35 min</span>
+                    <span>⭐ 4.8</span>
+                  </div>
                 </div>
               </article>
             ))}

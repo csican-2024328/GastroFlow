@@ -19,28 +19,9 @@ export const createOrder = async (orderData) => {
   return axiosClient.post('/orders/create', orderData);
 };
 
-// UPDATE ORDER STATUS
-export const updateOrderStatus = async (orderId, estado) => {
-  const { data } = await axiosClient.put(`/orders/${orderId}/estado`, { estado });
-  return data;
-};
-
-// PAY ORDER
-export const payOrder = async (orderId, payload) => {
-  const { data } = await axiosClient.put(`/orders/${orderId}/pagar`, payload);
-  return data;
-};
-
-// CANCEL ORDER
-export const cancelOrder = async (orderId) => {
-  const { data } = await axiosClient.delete(`/orders/${orderId}`);
-  return data;
-};
-
-// DELETE ORDER PERMANENT
-export const deleteOrderPermanent = async (orderId) => {
-  const { data } = await axiosClient.delete(`/orders/${orderId}/permanent`);
-  return data;
+// GET Order by ID
+export const getOrderById = async (id) => {
+  return axiosClient.get(`/orders/${id}`);
 };
 
 // GET Client's Orders
@@ -60,7 +41,24 @@ export const getClientOrderById = async (id) => {
   return axiosClient.get(`/orders/mine/${id}`);
 };
 
+// PAY ORDER
+export const payOrder = async (orderId, payload) => {
+  return axiosClient.put(`/orders/${orderId}/pagar`, payload);
+};
+
 // GET Order by Order Number
 export const getOrderByNumber = async (numeroOrden) => {
   return axiosClient.get(`/orders/numero/${numeroOrden}`);
+};
+
+// UPDATE Order Status
+export const updateOrderStatus = async (orderId, estado) => {
+  return axiosClient.put(`/orders/${orderId}/estado`, { estado });
+};
+
+// CANCEL Order
+export const cancelOrder = async (orderId, motivo = '') => {
+  return axiosClient.delete(`/orders/${orderId}`, {
+    data: { motivo }
+  });
 };

@@ -77,8 +77,7 @@ UPLOAD_PATH=./uploads
 # CORS Configuration
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:3006
 ADMIN_ALLOWED_ORIGINS=http://localhost:5173
-```
-
+`
 ---
 
 # 📖 MANUAL DE USUARIO

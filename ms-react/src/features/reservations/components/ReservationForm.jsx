@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTables }) => {
+export const ReservationForm = ({
+  restaurant,
+  onSubmit,
+  onCheckAvailability,
+  isLoading,
+  availableTables,
+}) => {
   const [formData, setFormData] = useState({
     date: '',
     timeStart: '',
@@ -14,6 +20,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
   const [errors, setErrors] = useState({});
   const [step, setStep] = useState(1); // 1: Datos basicos, 2: Seleccionar mesa, 3: Confirmacion
   const [selectedTable, setSelectedTable] = useState(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -60,10 +67,24 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleStep1Submit = (e) => {
+  const handleStep1Submit = async (e) => {
     e.preventDefault();
     if (validateStep1()) {
-      setStep(2);
+      setCheckingAvailability(true);
+
+      try {
+        const availabilityResponse = onCheckAvailability
+          ? await onCheckAvailability(restaurant._id, formData.date, formData.timeStart, formData.timeEnd)
+          : { success: true };
+
+        if (availabilityResponse?.success === false) {
+          return;
+        }
+
+        setStep(2);
+      } finally {
+        setCheckingAvailability(false);
+      }
     }
   };
 
@@ -81,13 +102,13 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
 
   const handleConfirm = async () => {
     const reservationData = {
-      restaurantId: restaurant._id,
-      date: formData.date,
-      timeStart: formData.timeStart,
-      timeEnd: formData.timeEnd,
-      partySize: formData.partySize,
-      tableId: selectedTable._id,
-      notes: formData.notes || null,
+      restaurantID: restaurant._id,
+      mesaID: selectedTable._id,
+      fechaReserva: formData.date,
+      horaInicio: formData.timeStart,
+      horaFin: formData.timeEnd,
+      cantidadPersonas: Number(formData.partySize),
+      notas: formData.notes || null,
     };
 
     await onSubmit(reservationData);
@@ -216,10 +237,10 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
-              className="flex-1 rounded-lg bg-gradient-to-r from-[#E8956B] to-[#C49A2B] px-6 py-3 font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
-              disabled={isLoading}
+              className="flex-1 rounded-lg bg-gradient-to-r from-[#C87A55] to-[#C49A2B] px-6 py-3 font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
+              disabled={isLoading || checkingAvailability}
             >
-              {isLoading ? 'Cargando...' : 'Siguiente: Seleccionar Mesa'}
+              {isLoading || checkingAvailability ? 'Cargando...' : 'Siguiente: Seleccionar Mesa'}
             </button>
           </div>
         </form>

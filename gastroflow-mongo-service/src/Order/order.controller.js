@@ -979,6 +979,7 @@ export const payOrder = async (req, res) => {
     try {
         const { id } = req.params;
         const { metodoPago, propina = 0, cargosExtra = 0 } = req.body;
+        const requesterId = req.usuario?.sub ? String(req.usuario.sub) : null;
 
         const order = await Order.findById(id);
 
@@ -993,6 +994,13 @@ export const payOrder = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'No se puede pagar un pedido cancelado'
+            });
+        }
+
+        if (req.usuario?.role === 'CLIENT' && order.clienteId?.toString() !== requesterId) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tienes permiso para pagar este pedido'
             });
         }
 
@@ -1033,6 +1041,19 @@ export const payOrder = async (req, res) => {
             invoice.metodoPago = metodoPago;
             invoice.estado = 'PAGADA';
             await invoice.save();
+        }
+
+        if (order.clienteId) {
+            notifyOrderStatusChange(order.clienteId.toString(), {
+                _id: order._id,
+                estado: order.estado,
+                metodoPago: order.metodoPago,
+                propina: order.propina,
+                cargosExtra: order.cargosExtra,
+                total: order.total,
+                restaurantID: order.restaurantID,
+                clienteId: order.clienteId,
+            });
         }
 
         await order.populate([

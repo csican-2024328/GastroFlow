@@ -31,6 +31,12 @@ const reservationSchema = mongoose.Schema(
             trim: true,
             maxLength: [20, 'El teléfono del cliente no puede exceder 20 caracteres'],
         },
+        clienteEmail: {
+            type: String,
+            trim: true,
+            lowercase: true,
+            maxLength: [120, 'El email del cliente no puede exceder 120 caracteres'],
+        },
         fechaReserva: {
             type: Date,
             required: [true, 'La fecha de reserva es requerida'],
@@ -58,7 +64,7 @@ const reservationSchema = mongoose.Schema(
                 values: ['PENDIENTE', 'CONFIRMADA', 'CANCELADA', 'COMPLETADA'],
                 message: 'Estado de reservación no válido',
             },
-            default: 'CONFIRMADA',
+            default: 'PENDIENTE',
             index: true,
         },
         notas: {

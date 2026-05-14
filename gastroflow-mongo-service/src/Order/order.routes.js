@@ -149,7 +149,7 @@ router.put(
 router.put(
     '/:id/pagar',
     autenticar,
-    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
     validatePayOrder,
     validarCampos,
     payOrder

@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import {
     createReservation,
+    getAvailableTables,
     getReservations,
     getReservationById,
     updateReservation,
     deleteReservation,
+    approveOrRejectReservation,
 } from './reservation.controller.js';
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 import { validarCampos } from '../../middlewares/validator.middleware.js';
@@ -24,6 +26,13 @@ router.post(
     validateCreateReservation,
     validarCampos,
     createReservation
+);
+
+router.get(
+    '/available',
+    autenticar,
+    autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    getAvailableTables
 );
 
 router.get(
@@ -58,6 +67,15 @@ router.delete(
     validateDeleteReservation,
     validarCampos,
     deleteReservation
+);
+
+router.post(
+    '/:id/approve-or-reject',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateReservationId,
+    validarCampos,
+    approveOrRejectReservation
 );
 
 export default router;

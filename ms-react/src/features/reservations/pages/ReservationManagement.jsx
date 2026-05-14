@@ -209,8 +209,7 @@ const ReservationManagement = () => {
     loading,
     pagination,
     fetchUserReservations,
-    updateReservationAction,
-    cancelReservationAction,
+    approveOrRejectReservationAction,
   } = useReservationStore();
 
   const [actionLoading, setActionLoading] = useState(false);
@@ -244,7 +243,10 @@ const ReservationManagement = () => {
   const handleConfirm = async () => {
     if (!confirmModal.reservation) return;
     setActionLoading(true);
-    const result = await updateReservationAction(confirmModal.reservation._id, { estado: 'CONFIRMADA' });
+    const result = await approveOrRejectReservationAction(confirmModal.reservation._id, {
+      accion: 'APROBAR',
+      clienteEmail: confirmModal.reservation.clienteEmail,
+    });
     setActionLoading(false);
     if (result.success) {
       toast.success('Reservación confirmada correctamente');
@@ -258,7 +260,11 @@ const ReservationManagement = () => {
   const handleReject = async (reason) => {
     if (!rejectModal.reservation) return;
     setActionLoading(true);
-    const result = await cancelReservationAction(rejectModal.reservation._id, reason);
+    const result = await approveOrRejectReservationAction(rejectModal.reservation._id, {
+      accion: 'RECHAZAR',
+      razon: reason,
+      clienteEmail: rejectModal.reservation.clienteEmail,
+    });
     setActionLoading(false);
     if (result.success) {
       toast.success('Reservación rechazada');

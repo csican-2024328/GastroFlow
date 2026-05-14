@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import {
   createReservation,
+  approveOrRejectReservation,
   getUserReservations,
   getReservationById,
   getAvailableTables,
@@ -126,6 +127,29 @@ export const useReservationStore = create((set) => ({
       return { success: true, data: updatedReservation };
     } catch (error) {
       const message = error.response?.data?.message || 'Error al actualizar reserva';
+      set({ error: message, loading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Approve or reject reservation (admin workflow)
+  approveOrRejectReservationAction: async (reservationId, data) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await approveOrRejectReservation(reservationId, data);
+      const updatedReservation = response.data.data;
+
+      set((state) => ({
+        reservations: state.reservations.map((r) =>
+          r._id === reservationId ? updatedReservation : r
+        ),
+        selectedReservation: updatedReservation,
+        loading: false,
+      }));
+
+      return { success: true, data: updatedReservation };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Error al actualizar estado de la reserva';
       set({ error: message, loading: false });
       return { success: false, error: message };
     }

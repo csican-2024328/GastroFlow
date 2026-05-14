@@ -36,10 +36,12 @@ export const ReservationConfirmation = ({ reservation, restaurant, onClose }) =>
 
         {/* Title */}
         <h2 className="mb-2 text-center font-['Playfair_Display'] text-2xl font-bold text-gray-800">
-          ¡Reserva Confirmada!
+          {reservation?.estado === 'PENDIENTE' ? '⏳ Reservación Recibida' : '¡Reserva Confirmada!'}
         </h2>
         <p className="mb-6 text-center text-sm text-gray-600">
-          Tu reserva ha sido registrada exitosamente
+          {reservation?.estado === 'PENDIENTE' 
+            ? 'Tu reservación está siendo observada por un administrador. Recibirás un email de confirmación pronto.'
+            : 'Tu reserva ha sido registrada exitosamente'}
         </p>
 
         {/* Resumen */}
@@ -91,17 +93,26 @@ export const ReservationConfirmation = ({ reservation, restaurant, onClose }) =>
         </div>
 
         {/* Info Box */}
-        <div className="mb-6 rounded-lg border border-[#C49A2B] bg-[#FFF8E7] p-4">
-          <p className="text-sm text-[#3D2C1E]">
-            📍 <strong>Importante:</strong> Por favor, llega con 15 minutos de anticipación. 
-            Tu reserva se mantendrá por 30 minutos después de la hora de inicio.
+        <div className={`mb-6 rounded-lg border p-4 ${
+          reservation?.estado === 'PENDIENTE' 
+            ? 'border-amber-400 bg-amber-50' 
+            : 'border-[#C49A2B] bg-[#FFF8E7]'
+        }`}>
+          <p className={`text-sm ${reservation?.estado === 'PENDIENTE' ? 'text-amber-900' : 'text-[#3D2C1E]'}`}>
+            {reservation?.estado === 'PENDIENTE' ? (
+              <>⏳ <strong>Tu reservación está bajo observación:</strong> Un administrador del restaurante la revisará en los próximos 15 minutos a 2 horas. Recibirás un email de confirmación cuando sea aprobada. NO confirmes tu asistencia hasta recibir ese email.</>
+            ) : (
+              <>📍 <strong>Importante:</strong> Por favor, llega con 15 minutos de anticipación. Tu reserva se mantendrá por 30 minutos después de la hora de inicio.</>
+            )}
           </p>
         </div>
 
         {/* Email notification */}
         <div className="mb-6 rounded-lg bg-[#FDFBF7] border border-[#E8D4B8] p-4 text-center">
           <p className="text-sm text-[#5A5146]">
-            ✉️ Se ha enviado un correo de confirmación a tu email
+            {reservation?.estado === 'PENDIENTE' 
+              ? '📧 Te hemos enviado un correo notificándote que tu reservación está siendo observada'
+              : '✉️ Se ha enviado un correo de confirmación a tu email'}
           </p>
         </div>
 

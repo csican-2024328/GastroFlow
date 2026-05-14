@@ -7,6 +7,24 @@ import {
   deleteRestaurant,
 } from '../../../shared/api/restaurantService.js';
 
+const normalizeRestaurant = (restaurant) => {
+  if (!restaurant) return restaurant;
+
+  const photos = Array.isArray(restaurant.photos)
+    ? restaurant.photos
+    : Array.isArray(restaurant.fotos)
+      ? restaurant.fotos
+      : [];
+
+  return {
+    ...restaurant,
+    photos,
+    fotos: photos,
+    address: restaurant.address || restaurant.direccion || '',
+    direccion: restaurant.direccion || restaurant.address || '',
+  };
+};
+
 export const useRestaurantStore = create((set) => ({
   // State
   restaurants: [],
@@ -28,7 +46,7 @@ export const useRestaurantStore = create((set) => ({
       
       const response = await getRestaurants({ page, limit, isActive: true });
       
-      const data = response.data.data || [];
+      const data = (response.data.data || []).map(normalizeRestaurant);
       const pagination = response.data.pagination || {};
 
       console.log('✅ [STORE] Restaurantes obtenidos:', {
@@ -70,7 +88,7 @@ export const useRestaurantStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await getRestaurantById(id);
-      const restaurant = response.data.data;
+      const restaurant = normalizeRestaurant(response.data.data);
 
       set({ selectedRestaurant: restaurant, loading: false });
       return { success: true, data: restaurant };
@@ -88,7 +106,7 @@ export const useRestaurantStore = create((set) => ({
       console.log('🔄 [STORE] Creando restaurante...', restaurantData);
       
       const response = await createRestaurant(restaurantData);
-      const newRestaurant = response.data.data;
+      const newRestaurant = normalizeRestaurant(response.data.data);
 
       console.log('✅ [STORE] Restaurante creado exitosamente:', newRestaurant);
 
@@ -145,7 +163,7 @@ export const useRestaurantStore = create((set) => ({
       console.log('🔄 [STORE] Actualizando restaurante:', id);
       
       const response = await updateRestaurant(id, restaurantData);
-      const updatedRestaurant = response.data.data;
+      const updatedRestaurant = normalizeRestaurant(response.data.data);
 
       console.log('✅ [STORE] Restaurante actualizado:', updatedRestaurant);
 

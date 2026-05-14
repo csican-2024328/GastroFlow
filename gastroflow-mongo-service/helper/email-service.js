@@ -445,3 +445,274 @@ export const enviarEmailAlertaTiempoReal = async ({ to, asunto, titulo, mensaje,
         return { success: false, message: error.message };
     }
 };
+
+export const enviarEmailReservacionPendiente = async ({ email, nombre, restaurante, fecha, hora, personas, mesaNumero }) => {
+    if (!initialized) {
+        initializeEmailService();
+    }
+
+    if (!email) {
+        return { success: false, message: 'Email destino requerido' };
+    }
+
+    if (!transporter || !smtpConfigured) {
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`\n${'='.repeat(70)}`);
+            console.log(`📧 [DEVELOPMENT] EMAIL DE RESERVACIÓN PENDIENTE`);
+            console.log(`${'='.repeat(70)}`);
+            console.log(`✉️  Destinatario: ${email}`);
+            console.log(`👤 Cliente: ${nombre}`);
+            console.log(`🏢 Restaurante: ${restaurante}`);
+            console.log(`📅 Fecha: ${fecha}`);
+            console.log(`🕐 Hora: ${hora}`);
+            console.log(`👥 Personas: ${personas}`);
+            console.log(`🪑 Mesa: ${mesaNumero}`);
+            console.log(`${'='.repeat(70)}`);
+            console.log(`📝 Asunto: ⏳ Tu Reservación Está Pendiente de Aprobación`);
+            console.log(`💬 Mensaje: Espera a que un administrador del restaurante apruebe tu reservación.\n`);
+            return { success: true, isDevelopment: true };
+        }
+        return { success: false, message: 'SMTP no configurado' };
+    }
+
+    try {
+        const mailOptions = {
+            from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
+            to: email,
+            subject: '⏳ Tu Reservación Está Siendo Observada por un Administrador',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>⏳ Reservación Siendo Observada por un Administrador</h2>
+                    <p>Hola <strong>${nombre}</strong>,</p>
+                    <p>¡Gracias por realizar tu reservación! Tu solicitud ha sido recibida y <strong>está siendo observada por un administrador del restaurante</strong> en este momento.</p>
+                    
+                    <div style="background-color: #f9f5e8; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                        <p style="margin: 5px 0;"><strong>📍 Restaurante:</strong> ${restaurante}</p>
+                        <p style="margin: 5px 0;"><strong>📅 Fecha:</strong> ${fecha}</p>
+                        <p style="margin: 5px 0;"><strong>🕐 Hora:</strong> ${hora}</p>
+                        <p style="margin: 5px 0;"><strong>👥 Personas:</strong> ${personas}</p>
+                        <p style="margin: 5px 0;"><strong>🪑 Mesa:</strong> ${mesaNumero || 'A asignar'}</p>
+                        <p style="margin: 5px 0; color: #ff9800; font-weight: bold;"><strong>⏳ Estado:</strong> EN OBSERVACIÓN DEL ADMIN</p>
+                    </div>
+
+                    <div style="background-color: #e3f2fd; border-left: 4px solid #2196F3; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                        <p><strong>¿Qué sucede ahora?</strong></p>
+                        <p>Un administrador del restaurante está revisando tu solicitud de reservación en este momento. Una vez aprobada, recibirás un <strong>email de confirmación</strong> con todos los detalles.</p>
+                        <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                            ⏱️ <strong>Tiempo de respuesta:</strong> Entre 15 minutos a 2 horas
+                        </p>
+                    </div>
+
+                    <p style="background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <strong>💡 Importante:</strong> NO confirmes tu asistencia hasta recibir el email de aprobación. Si no recibes confirmación en 2 horas, contacta directamente con el restaurante.
+                    </p>
+
+                    <p style="text-align: center; color: #2196F3; font-weight: bold; margin: 20px 0;">
+                        📧 Recibirás un email cuando tu reservación sea APROBADA
+                    </p>
+                    
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                    <p style="font-size: 12px; color: #666;">
+                        Este es un email automático. Por favor, no respondas a este mensaje.
+                    </p>
+                </div>
+            `,
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log(`✅ Email de reservación pendiente enviado a ${email}`);
+        return { success: true, messageId: result.messageId };
+    } catch (error) {
+        console.error('❌ Error enviando email de reservación pendiente:', error.message);
+        return { success: false, message: error.message };
+    }
+};
+
+export const enviarEmailReservacionAprobada = async ({ email, nombre, restaurante, fecha, hora, personas, mesaNumero, direccion, telefono }) => {
+    if (!initialized) {
+        initializeEmailService();
+    }
+
+    if (!email) {
+        return { success: false, message: 'Email destino requerido' };
+    }
+
+    if (!transporter || !smtpConfigured) {
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`\n${'='.repeat(70)}`);
+            console.log(`📧 [DEVELOPMENT] EMAIL DE RESERVACIÓN APROBADA`);
+            console.log(`${'='.repeat(70)}`);
+            console.log(`✉️  Destinatario: ${email}`);
+            console.log(`👤 Cliente: ${nombre}`);
+            console.log(`🏢 Restaurante: ${restaurante}`);
+            console.log(`📅 Fecha: ${fecha}`);
+            console.log(`🕐 Hora: ${hora}`);
+            console.log(`👥 Personas: ${personas}`);
+            console.log(`🪑 Mesa asignada: ${mesaNumero || 'Por asignar'}`);
+            console.log(`${'='.repeat(70)}`);
+            console.log(`📝 Asunto: ✅ Tu Reservación Ha Sido Confirmada`);
+            console.log(`💬 Mensaje: ¡Excelentes noticias! Tu reservación ha sido APROBADA.\n`);
+            return { success: true, isDevelopment: true };
+        }
+        return { success: false, message: 'SMTP no configurado' };
+    }
+
+    try {
+        const mailOptions = {
+            from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
+            to: email,
+            subject: '✅ Tu Reservación Ha Sido Confirmada',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #4CAF50;">✅ ¡Tu Reservación Ha Sido Confirmada!</h2>
+                    <p>Hola <strong>${nombre}</strong>,</p>
+                    <p>¡Excelentes noticias! Tu reservación ha sido <strong>aceptada</strong> y confirmada. Te esperamos en el restaurante.</p>
+                    
+                    <div style="background-color: #e8f5e9; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                        <p style="margin: 5px 0; font-size: 18px;"><strong>🏢 ${restaurante}</strong></p>
+                        <hr style="border: none; border-top: 1px solid #c8e6c9; margin: 10px 0;">
+                        <p style="margin: 5px 0;"><strong>📅 Fecha:</strong> ${fecha}</p>
+                        <p style="margin: 5px 0;"><strong>🕐 Hora:</strong> ${hora}</p>
+                        <p style="margin: 5px 0;"><strong>👥 Personas:</strong> ${personas}</p>
+                        <p style="margin: 5px 0;"><strong>🪑 Mesa asignada:</strong> ${mesaNumero || 'Será asignada a tu llegada'}</p>
+                        ${direccion ? `<p style="margin: 5px 0;"><strong>📍 Dirección:</strong> ${direccion}</p>` : ''}
+                        ${telefono ? `<p style="margin: 5px 0;"><strong>📞 Teléfono:</strong> ${telefono}</p>` : ''}
+                    </div>
+
+                    <div style="background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                        <p style="margin: 5px 0;"><strong>⚠️ IMPORTANTE - POLÍTICA DE ESPERA:</strong></p>
+                        <p style="margin: 10px 0; font-size: 14px;">
+                            • Te esperaremos <strong>15 minutos después</strong> de la hora reservada<br>
+                            • Si llegas después de ese tiempo, tendremos <strong>15 minutos adicionales</strong> de espera<br>
+                            • Si no asistes dentro de los 30 minutos totales (15 min después + 15 min de espera), tu reservación será <strong>automáticamente cancelada</strong>
+                        </p>
+                    </div>
+
+                    <p><strong>💡 Recomendaciones importantes:</strong></p>
+                    <ul style="line-height: 1.8;">
+                        <li>Por favor, llega <strong>10-15 minutos antes</strong> de tu hora reservada</li>
+                        <li>Si no puedes asistir, avisa lo antes posible para liberar tu mesa</li>
+                        <li>Si necesitas hacer cambios, contacta directamente con el restaurante</li>
+                        <li>Lleva este email contigo para presentarlo en el restaurante</li>
+                    </ul>
+
+                    <p style="margin-top: 30px; text-align: center;">
+                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" style="
+                            background-color: #4CAF50;
+                            color: white;
+                            padding: 12px 30px;
+                            text-decoration: none;
+                            border-radius: 5px;
+                            display: inline-block;
+                            font-weight: bold;
+                        ">
+                            Ver Mi Reservación
+                        </a>
+                    </p>
+                    
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                    <p style="font-size: 12px; color: #666;">
+                        ¿Preguntas? Contacta con el restaurante directamente o visita nuestro sitio web.
+                    </p>
+                </div>
+            `,
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log(`✅ Email de reservación aprobada enviado a ${email}`);
+        return { success: true, messageId: result.messageId };
+    } catch (error) {
+        console.error('❌ Error enviando email de reservación aprobada:', error.message);
+        return { success: false, message: error.message };
+    }
+};
+
+export const enviarEmailReservacionRechazada = async ({ email, nombre, restaurante, fecha, hora, razon }) => {
+    if (!initialized) {
+        initializeEmailService();
+    }
+
+    if (!email) {
+        return { success: false, message: 'Email destino requerido' };
+    }
+
+    if (!transporter || !smtpConfigured) {
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`\n${'='.repeat(70)}`);
+            console.log(`📧 [DEVELOPMENT] EMAIL DE RESERVACIÓN RECHAZADA`);
+            console.log(`${'='.repeat(70)}`);
+            console.log(`✉️  Destinatario: ${email}`);
+            console.log(`👤 Cliente: ${nombre}`);
+            console.log(`🏢 Restaurante: ${restaurante}`);
+            console.log(`📅 Fecha: ${fecha}`);
+            console.log(`🕐 Hora: ${hora}`);
+            console.log(`📝 Razón: ${razon || 'No especificada'}`);
+            console.log(`${'='.repeat(70)}`);
+            console.log(`📝 Asunto: Actualización sobre tu Reservación`);
+            console.log(`💬 Mensaje: Lamentablemente, tu reservación ha sido RECHAZADA.\n`);
+            return { success: true, isDevelopment: true };
+        }
+        return { success: false, message: 'SMTP no configurado' };
+    }
+
+    try {
+        const mailOptions = {
+            from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
+            to: email,
+            subject: 'Actualización sobre tu Reservación',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #d32f2f;">😞 Lamentablemente tu Reservación fue Rechazada</h2>
+                    <p>Hola <strong>${nombre}</strong>,</p>
+                    <p>Sentimos informarte que <strong>lamentablemente tu solicitud de reservación no ha podido ser aceptada</strong> en esta ocasión.</p>
+                    
+                    <div style="background-color: #ffebee; border-left: 4px solid #d32f2f; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                        <p style="margin: 5px 0;"><strong>🏢 Restaurante:</strong> ${restaurante}</p>
+                        <p style="margin: 5px 0;"><strong>📅 Fecha solicitada:</strong> ${fecha}</p>
+                        <p style="margin: 5px 0;"><strong>🕐 Hora solicitada:</strong> ${hora}</p>
+                        ${razon ? `<p style="margin: 5px 0;"><strong>📝 Motivo:</strong> ${razon}</p>` : '<p style="margin: 5px 0;"><strong>📝 Motivo:</strong> No disponible para esa fecha/hora</p>'}
+                    </div>
+
+                    <div style="background-color: #e3f2fd; border-left: 4px solid #2196F3; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                        <p style="margin: 5px 0;"><strong>💡 No te desanimes, aquí hay algunas opciones:</strong></p>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Intenta reservar para una <strong>fecha u hora diferente</strong> en el mismo restaurante</li>
+                            <li><strong>Contacta directamente</strong> con el restaurante para conocer disponibilidad</li>
+                            <li>Explora otros excelentes restaurantes similares en GastroFlow</li>
+                        </ul>
+                    </div>
+
+                    <p style="margin-top: 20px; text-align: center; color: #666;">
+                        No permitas que esto te desanime. ¡Hay muchas otras opciones deliciosas esperándote!
+                    </p>
+
+                    <p style="margin-top: 30px; text-align: center;">
+                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" style="
+                            background-color: #2196F3;
+                            color: white;
+                            padding: 12px 30px;
+                            text-decoration: none;
+                            border-radius: 5px;
+                            display: inline-block;
+                            font-weight: bold;
+                        ">
+                            Intentar Nueva Reservación
+                        </a>
+                    </p>
+                    
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                    <p style="font-size: 12px; color: #666;">
+                        Si crees que es un error o tienes preguntas, por favor contacta directamente con el restaurante.
+                    </p>
+                </div>
+            `,
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log(`✅ Email de reservación rechazada enviado a ${email}`);
+        return { success: true, messageId: result.messageId };
+    } catch (error) {
+        console.error('❌ Error enviando email de reservación rechazada:', error.message);
+        return { success: false, message: error.message };
+    }
+};

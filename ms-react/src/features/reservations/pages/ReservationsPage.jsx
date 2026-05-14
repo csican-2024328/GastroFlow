@@ -46,27 +46,18 @@ export const ReservationsPage = () => {
     setSelectedRestaurant(restaurant);
   };
 
-  const handleFormSubmit = async (formData) => {
-    // Fetch available tables first
-    const result = await fetchAvailableTables(
-      formData.restaurantId,
-      formData.date,
-      formData.timeStart,
-      formData.timeEnd
-    );
-
-    if (!result.success) {
-      toast.error('No hay mesas disponibles para este horario');
-      return;
-    }
-
-    // Create reservation
-    const reservationResult = await createReservationAction(formData);
+  const handleFormSubmit = async (reservationData) => {
+    const reservationResult = await createReservationAction(reservationData);
 
     if (reservationResult.success) {
       setCreatedReservation(reservationResult.data);
       setShowConfirmation(true);
-      toast.success('¡Reserva confirmada exitosamente!');
+      
+      if (reservationResult.data?.estado === 'PENDIENTE') {
+        toast.success('⏳ Tu reservación está siendo observada. Recibirás un email de confirmación pronto.');
+      } else {
+        toast.success('¡Reserva confirmada exitosamente!');
+      }
 
       // Refresh reservations list
       await fetchUserReservations(1, 20);
@@ -227,6 +218,7 @@ export const ReservationsPage = () => {
             <ReservationForm
               restaurant={selectedRestaurant}
               onSubmit={handleFormSubmit}
+              onCheckAvailability={fetchAvailableTables}
               isLoading={loading}
               availableTables={availableTables}
             />
