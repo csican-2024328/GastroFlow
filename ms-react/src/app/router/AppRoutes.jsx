@@ -54,6 +54,7 @@ export const AppRoutes = () => {
                  <Route path="platos" element={<DishesPage />} />
                  <Route path="pedidos" element={<OrderManagement />} />
                  <Route path="reservas" element={<ReservationManagement />} />
+                <Route path="cupones" element={<CouponsPage />} />
             </Route>
             {/* Profile is shown as an in-app modal (ProfileModal) — no standalone route to avoid redirecting users to a separate page. */}
         </Routes>

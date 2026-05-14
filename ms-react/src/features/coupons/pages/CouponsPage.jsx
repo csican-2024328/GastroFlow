@@ -3,7 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../auth/store/authStore.js';
 import { useRestaurantStore } from '../../restaurants/store/useRestaurantStore.js';
-import { getRestaurantVigentesCoupons } from '../../../shared/api/couponService.js';
+import {
+  getRestaurantVigentesCoupons,
+  getCoupons,
+  createCoupon,
+  updateCoupon,
+  deactivateCoupon,
+  activateCoupon,
+  getCouponById,
+} from '../../../shared/api/couponService.js';
 
 const formatDate = (value) => {
   if (!value) return 'No especificada';
@@ -17,6 +25,11 @@ const formatDate = (value) => {
 
 const getCouponStatus = (coupon) => {
   const now = new Date();
+  // If explicitly deactivated, show Inactivo
+  if (coupon.isActive === false) {
+    return { label: 'Inactivo', className: 'bg-[#9DA39A] text-white' };
+  }
+
   const expiration = new Date(coupon.fechaExpiracion);
 
   if (Number.isNaN(expiration.getTime())) {
@@ -45,7 +58,7 @@ const formatDiscount = (coupon) => {
   return `Q ${Number(coupon.montoFijo ?? 0).toFixed(2)}`;
 };
 
-const CouponCard = ({ coupon }) => {
+const CouponCard = ({ coupon, isAdmin, onEdit, onToggleActive }) => {
   const [copied, setCopied] = useState(false);
 
   const status = useMemo(() => getCouponStatus(coupon), [coupon]);
@@ -65,7 +78,7 @@ const CouponCard = ({ coupon }) => {
   };
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-[#E2D4B7] bg-white shadow-[0_10px_24px_rgba(61,44,30,0.10)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(61,44,30,0.14)]">
+    <article className={`overflow-hidden rounded-2xl border border-[#E2D4B7] bg-white shadow-[0_10px_24px_rgba(61,44,30,0.10)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(61,44,30,0.14)] ${coupon.isActive === false ? 'opacity-60' : ''}`}>
       <div className="flex h-28 items-center justify-between bg-gradient-to-br from-[#2C4035] via-[#3D2C1E] to-[#C87A55] px-5 text-white">
         <div>
           <p className="text-xs uppercase tracking-[0.22em] text-white/75">Cupón</p>
@@ -109,14 +122,27 @@ const CouponCard = ({ coupon }) => {
         <button
           type="button"
           onClick={handleCopyCode}
-          className={`inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition ${
-            copied
-              ? 'border border-[#2C4035] bg-[#F5EDE0] text-[#2C4035]'
-              : 'bg-gradient-to-r from-[#C87A55] to-[#C49A2B] text-white shadow-sm hover:shadow-lg'
-          }`}
+          disabled={coupon.isActive === false}
+          className={`inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition ${copied ? 'border border-[#2C4035] bg-[#F5EDE0] text-[#2C4035]' : 'bg-gradient-to-r from-[#C87A55] to-[#C49A2B] text-white shadow-sm hover:shadow-lg'} ${coupon.isActive === false ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          {copied ? '✓ Copiado' : 'Copiar código'}
+          {copied ? '✓ Copiado' : coupon.isActive === false ? 'Inactivo' : 'Copiar código'}
         </button>
+        {isAdmin && (
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => onEdit(coupon)}
+              className="flex-1 rounded-xl border border-[#2C4035] px-3 py-2 text-sm font-semibold text-[#2C4035] hover:bg-[#E2D4B7]"
+            >
+              Editar
+            </button>
+            <button
+              onClick={() => onToggleActive(coupon)}
+              className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold text-white ${coupon.isActive ? 'bg-[#C9695A] hover:bg-[#B45A4C]' : 'bg-[#2C4035] hover:bg-[#23342B]'}`}
+            >
+              {coupon.isActive ? 'Desactivar' : 'Activar'}
+            </button>
+          </div>
+        )}
       </div>
     </article>
   );
@@ -130,8 +156,16 @@ export const CouponsPage = () => {
 
   const [selectedRestaurantId, setSelectedRestaurantId] = useState(null);
   const [coupons, setCoupons] = useState([]);
+  const [allCoupons, setAllCoupons] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [editingCoupon, setEditingCoupon] = useState(null);
+
+  // Form state for admin create/edit
+  const [form, setForm] = useState({
+    codigo: '', descripcion: '', tipo: 'PORCENTAJE', porcentajeDescuento: 0, montoFijo: 0,
+    fechaExpiracion: '', fechaInicio: '', usosMaximos: 0, montoMinimo: 0, montoMaximoDescuento: 0,
+  });
 
   useEffect(() => {
     fetchRestaurants(1, 50);
@@ -147,6 +181,18 @@ export const CouponsPage = () => {
 
         const response = await getRestaurantVigentesCoupons(selectedRestaurantId);
         setCoupons(response.data.data || []);
+
+        // If admin, also fetch inactive coupons to manage (separate call)
+        if (user?.role === 'RESTAURANT_ADMIN' || user?.role === 'PLATFORM_ADMIN') {
+          try {
+            const active = await getCoupons({ restaurantID: selectedRestaurantId, isActive: true, limit: 100 });
+            const inactive = await getCoupons({ restaurantID: selectedRestaurantId, isActive: false, limit: 100 });
+            setAllCoupons([...(active.data.data || []), ...(inactive.data.data || [])]);
+          } catch (innerErr) {
+            // ignore
+            setAllCoupons(response.data.data || []);
+          }
+        }
       } catch (requestError) {
         const message = requestError.response?.data?.message || 'Error al obtener cupones vigentes';
         setCoupons([]);
@@ -157,12 +203,104 @@ export const CouponsPage = () => {
     };
 
     loadCoupons();
-  }, [selectedRestaurantId]);
+  }, [selectedRestaurantId, user]);
+
+  const refreshCoupons = async () => {
+    if (!selectedRestaurantId) return;
+    setLoading(true);
+    try {
+      const active = await getCoupons({ restaurantID: selectedRestaurantId, isActive: true, limit: 100 });
+      const inactive = await getCoupons({ restaurantID: selectedRestaurantId, isActive: false, limit: 100 });
+      setAllCoupons([...(active.data.data || []), ...(inactive.data.data || [])]);
+      setCoupons(active.data.data || []);
+    } catch (err) {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = async (coupon) => {
+    // populate form
+    setEditingCoupon(coupon);
+    setForm({
+      codigo: coupon.codigo || '',
+      descripcion: coupon.descripcion || '',
+      tipo: coupon.tipo || 'PORCENTAJE',
+      porcentajeDescuento: coupon.porcentajeDescuento || 0,
+      montoFijo: coupon.montoFijo || 0,
+      fechaExpiracion: coupon.fechaExpiracion ? new Date(coupon.fechaExpiracion).toISOString().slice(0,10) : '',
+      fechaInicio: coupon.fechaInicio ? new Date(coupon.fechaInicio).toISOString().slice(0,10) : '',
+      usosMaximos: coupon.usosMaximos || 0,
+      montoMinimo: coupon.montoMinimo || 0,
+      montoMaximoDescuento: coupon.montoMaximoDescuento || 0,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleToggleActive = async (coupon) => {
+    try {
+      setLoading(true);
+      if (coupon.isActive) {
+        await deactivateCoupon(coupon._id);
+        toast.success('Cupón desactivado');
+      } else {
+        await activateCoupon(coupon._id);
+        toast.success('Cupón activado');
+      }
+      await refreshCoupons();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Error al cambiar estado del cupón');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFormChange = (key, value) => setForm((s) => ({ ...s, [key]: value }));
+
+  const handleSubmitForm = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const payload = {
+        codigo: form.codigo,
+        descripcion: form.descripcion,
+        tipo: form.tipo,
+        porcentajeDescuento: form.tipo === 'PORCENTAJE' ? Number(form.porcentajeDescuento) : undefined,
+        montoFijo: form.tipo === 'MONTO_FIJO' ? Number(form.montoFijo) : undefined,
+        fechaExpiracion: form.fechaExpiracion,
+        fechaInicio: form.fechaInicio || undefined,
+        usosMaximos: Number(form.usosMaximos) || undefined,
+        montoMinimo: Number(form.montoMinimo) || 0,
+        montoMaximoDescuento: Number(form.montoMaximoDescuento) || undefined,
+        restaurantID: selectedRestaurantId,
+      };
+
+      if (editingCoupon) {
+        await updateCoupon(editingCoupon._id, payload);
+        toast.success('Cupón actualizado');
+      } else {
+        await createCoupon(payload);
+        toast.success('Cupón creado');
+      }
+
+      setForm({ codigo: '', descripcion: '', tipo: 'PORCENTAJE', porcentajeDescuento: 0, montoFijo: 0, fechaExpiracion: '', fechaInicio: '', usosMaximos: 0, montoMinimo: 0, montoMaximoDescuento: 0 });
+      setEditingCoupon(null);
+      await refreshCoupons();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Error al guardar el cupón');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const selectedRestaurant = useMemo(
     () => restaurants.find((restaurant) => restaurant._id === selectedRestaurantId),
     [restaurants, selectedRestaurantId]
   );
+
+  const isAdmin = user && (user.role === 'RESTAURANT_ADMIN' || user.role === 'PLATFORM_ADMIN');
+  const visibleCoupons = isAdmin ? allCoupons : coupons;
 
   if (!selectedRestaurantId) {
     return (
@@ -262,19 +400,50 @@ export const CouponsPage = () => {
       </header>
 
       <main className="mx-auto w-full max-w-6xl px-6 py-8">
+        {user && (user.role === 'RESTAURANT_ADMIN' || user.role === 'PLATFORM_ADMIN') && (
+          <div className="mb-6 rounded-2xl border border-[#E8D9C4] bg-[#FBF8F2] p-6">
+            <h2 className="mb-4 font-['Playfair_Display'] text-2xl font-bold text-[#1A1A1A]">Crear/Editar Cupón</h2>
+            <form onSubmit={handleSubmitForm} className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+              <label className="space-y-1">
+                <div className="text-xs font-semibold text-[#8A7A63]">Código del Cupón *</div>
+                <input value={form.codigo} onChange={(e) => handleFormChange('codigo', e.target.value)} required className="w-full rounded-lg border border-[#D9C7AC] bg-white px-3 py-2 text-sm outline-none" />
+              </label>
+              <label className="space-y-1">
+                <div className="text-xs font-semibold text-[#8A7A63]">Tipo de Descuento *</div>
+                <select value={form.tipo} onChange={(e) => handleFormChange('tipo', e.target.value)} className="w-full rounded-lg border border-[#D9C7AC] bg-white px-3 py-2 text-sm outline-none">
+                  <option value="PORCENTAJE">Porcentaje</option>
+                  <option value="MONTO_FIJO">Monto fijo</option>
+                </select>
+              </label>
+              <label className="space-y-1">
+                <div className="text-xs font-semibold text-[#8A7A63]">Valor del Descuento *</div>
+                {form.tipo === 'PORCENTAJE' ? (
+                  <input type="number" min="0" max="100" value={form.porcentajeDescuento} onChange={(e) => handleFormChange('porcentajeDescuento', e.target.value)} className="w-full rounded-lg border border-[#D9C7AC] bg-white px-3 py-2 text-sm outline-none" />
+                ) : (
+                  <input type="number" min="0" step="0.01" value={form.montoFijo} onChange={(e) => handleFormChange('montoFijo', e.target.value)} className="w-full rounded-lg border border-[#D9C7AC] bg-white px-3 py-2 text-sm outline-none" />
+                )}
+              </label>
+              <label className="space-y-1">
+                <div className="text-xs font-semibold text-[#8A7A63]">Fecha de Expiración *</div>
+                <input type="date" value={form.fechaExpiracion} onChange={(e) => handleFormChange('fechaExpiracion', e.target.value)} required className="w-full rounded-lg border border-[#D9C7AC] bg-white px-3 py-2 text-sm outline-none" />
+              </label>
+
+              <label className="space-y-1 md:col-span-2 lg:col-span-3">
+                <div className="text-xs font-semibold text-[#8A7A63]">Descripción</div>
+                <textarea value={form.descripcion} onChange={(e) => handleFormChange('descripcion', e.target.value)} className="w-full rounded-lg border border-[#D9C7AC] bg-white px-3 py-2 text-sm outline-none" rows={2} />
+              </label>
+
+              <div className="flex items-end gap-3 md:col-span-3 lg:col-span-1">
+                <button type="button" onClick={() => { setEditingCoupon(null); setForm({ codigo: '', descripcion: '', tipo: 'PORCENTAJE', porcentajeDescuento: 0, montoFijo: 0, fechaExpiracion: '', fechaInicio: '', usosMaximos: 0, montoMinimo: 0, montoMaximoDescuento: 0 }); }} className="rounded-lg border border-[#C87A55] px-4 py-2 text-sm font-semibold text-[#C87A55] hover:bg-[#E2D4B7]">Cancelar</button>
+                <button type="submit" className="rounded-lg bg-[#2C4035] px-4 py-2 text-sm font-semibold text-white">{editingCoupon ? 'Guardar Cupón' : 'Crear Cupón'}</button>
+              </div>
+            </form>
+          </div>
+        )}
+
         {loading ? (
           <div className="py-14 text-center text-[#5A5146]">Cargando cupones...</div>
-        ) : error ? (
-          <div className="rounded-2xl border border-red-300 bg-red-50 p-6 text-center">
-            <p className="font-semibold text-red-700">{error}</p>
-            <button
-              onClick={() => setSelectedRestaurantId(null)}
-              className="mt-4 rounded-lg border border-red-700 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
-            >
-              Volver a seleccionar restaurante
-            </button>
-          </div>
-        ) : coupons.length === 0 ? (
+        ) : visibleCoupons.length === 0 ? (
           <div className="rounded-2xl border border-[#E2D4B7] bg-white p-10 text-center">
             <div className="mb-4 text-5xl">🏷️</div>
             <p className="font-semibold text-[#1A1A1A]">No hay cupones vigentes</p>
@@ -290,8 +459,14 @@ export const CouponsPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {coupons.map((coupon) => (
-              <CouponCard key={coupon._id} coupon={coupon} />
+            {visibleCoupons.map((coupon) => (
+              <CouponCard
+                key={coupon._id}
+                coupon={coupon}
+                isAdmin={isAdmin}
+                onEdit={handleEdit}
+                onToggleActive={handleToggleActive}
+              />
             ))}
           </div>
         )}
