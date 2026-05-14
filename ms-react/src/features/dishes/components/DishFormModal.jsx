@@ -140,12 +140,12 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
   if (!open) return null;
 
   const selectClassName =
-    'w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20 disabled:cursor-not-allowed disabled:opacity-70';
+    'w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-3 text-gray-900 outline-none transition focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20 disabled:cursor-not-allowed disabled:opacity-70';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-stone-200 bg-[#2C4035] text-stone-50 shadow-2xl">
-        <div className="border-b border-stone-200/20 px-6 py-5">
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-[#E8D4B8] bg-[#2D4F4F] text-stone-50 shadow-2xl">
+        <div className="border-b border-[#E8D4B8]/20 px-6 py-5">
           <Typography variant="h5" className="text-stone-50">
             {dish ? 'Editar plato' : 'Nuevo plato'}
           </Typography>
@@ -196,7 +196,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
                   minLength: { value: 2, message: 'El nombre debe tener al menos 2 caracteres' },
                 })}
                 placeholder="Ej: Ceviche mixto"
-                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20"
+                className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20"
                 labelProps={{ className: 'hidden' }}
               />
               {errors.nombre && <p className="mt-1 text-xs text-red-300">{errors.nombre.message}</p>}
@@ -214,7 +214,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
                   maxLength: { value: 500, message: 'La descripción no debe exceder 500 caracteres' },
                 })}
                 placeholder="Ej: Filete de pescado con limón, cebolla morada y cilantro fresco"
-                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20"
+                className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20"
               />
               {errors.descripcion && <p className="mt-1 text-xs text-red-300">{errors.descripcion.message}</p>}
             </div>
@@ -235,7 +235,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
                   validate: (value) => Number.isFinite(value) && value > 0 || 'El precio debe ser mayor a 0',
                 })}
                 placeholder="0.00"
-                className="w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-stone-900 placeholder:text-stone-500 outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20"
+                className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-3 text-gray-900 placeholder:text-gray-500 outline-none transition focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20"
                 labelProps={{ className: 'hidden' }}
               />
               {errors.precio && <p className="mt-1 text-xs text-red-300">{errors.precio.message}</p>}
@@ -322,7 +322,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
                   },
                 })}
                 onChange={handleImageChange}
-                className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-stone-900 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/20"
+                className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-2 text-stone-900 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/20"
               />
               {errors.foto && <p className="mt-1 text-xs text-red-300">{errors.foto.message}</p>}
 
@@ -335,7 +335,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
                   <img
                     src={imagePreview}
                     alt="Preview del plato"
-                    className="h-48 w-full rounded-md border border-stone-300 object-cover"
+                    className="h-48 w-full rounded-md border border-[#E8D4B8] object-cover"
                   />
                 </div>
               )}
@@ -343,7 +343,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
           </form>
         </div>
 
-        <div className="border-t border-stone-200/20 flex justify-end gap-3 px-6 py-4">
+        <div className="border-t border-[#E8D4B8]/20 flex justify-end gap-3 px-6 py-4">
           <Button
             variant="text"
             onClick={onClose}
@@ -355,7 +355,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
             form="dish-form"
             type="submit"
             disabled={loading}
-            className="rounded-md bg-[#2C4035] text-white shadow-md transition-all duration-200 hover:bg-[#24352c] hover:shadow-lg"
+            className="rounded-md bg-[#2D4F4F] text-white shadow-md transition-all duration-200 hover:bg-[#24352c] hover:shadow-lg"
           >
             {loading ? 'Guardando...' : 'Guardar plato'}
           </Button>

@@ -26,27 +26,27 @@ export const ReservationConfirmation = ({ reservation, restaurant, onClose }) =>
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 p-4 z-50">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in">
+      <div className="w-full max-w-md rounded-2xl bg-[#FDFBF7] border border-[#E8D4B8] p-8 shadow-2xl animate-in fade-in zoom-in">
         {/* Success Icon */}
         <div className="mb-6 flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#2C4035]">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#2D4F4F]">
             <span className="text-3xl">✓</span>
           </div>
         </div>
 
         {/* Title */}
-        <h2 className="mb-2 text-center font-['Playfair_Display'] text-2xl font-bold text-[#1A1A1A]">
+        <h2 className="mb-2 text-center font-['Playfair_Display'] text-2xl font-bold text-gray-800">
           ¡Reserva Confirmada!
         </h2>
-        <p className="mb-6 text-center text-sm text-[#5A5146]">
+        <p className="mb-6 text-center text-sm text-gray-600">
           Tu reserva ha sido registrada exitosamente
         </p>
 
         {/* Resumen */}
-        <div className="mb-6 space-y-3 rounded-lg bg-[#F8F5F0] p-4">
+        <div className="mb-6 space-y-3 rounded-lg bg-[#F5EFEA] border border-[#E8D4B8] p-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#B59070]">Restaurante</p>
-            <p className="font-semibold text-[#1A1A1A]">{restaurant?.name}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Restaurante</p>
+            <p className="font-semibold text-gray-800">{restaurant?.name}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -78,7 +78,7 @@ export const ReservationConfirmation = ({ reservation, restaurant, onClose }) =>
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#E2D4B7]">
+          <div className="pt-3 border-t border-[#E8D4B8]">
             <p className="text-xs font-semibold uppercase tracking-wide text-[#B59070]">
               Número de Reserva
             </p>
@@ -99,7 +99,7 @@ export const ReservationConfirmation = ({ reservation, restaurant, onClose }) =>
         </div>
 
         {/* Email notification */}
-        <div className="mb-6 rounded-lg bg-[#F8F5F0] p-4 text-center">
+        <div className="mb-6 rounded-lg bg-[#FDFBF7] border border-[#E8D4B8] p-4 text-center">
           <p className="text-sm text-[#5A5146]">
             ✉️ Se ha enviado un correo de confirmación a tu email
           </p>

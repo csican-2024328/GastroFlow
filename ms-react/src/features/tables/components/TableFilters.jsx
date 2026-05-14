@@ -10,43 +10,44 @@ export const TableFilters = ({ searchTerm, onSearchChange }) => {
   const selectedRestaurantId = useTableStore((state) => state.selectedRestaurantId);
   const setSelectedRestaurantId = useTableStore((state) => state.setSelectedRestaurantId);
 
-  // Refresca cada vez que el componente se monta
   useEffect(() => {
-    console.log('🔄 [TABLE FILTERS] Componente montado, refrescando restaurantes...');
-    fetchRestaurantOptions(true); // Force refresh
+    fetchRestaurantOptions(true);
     componentMountedRef.current = true;
-    
-    return () => {
-      console.log('👋 [TABLE FILTERS] Componente desmontado');
-    };
+    return () => {};
   }, [fetchRestaurantOptions]);
 
   return (
-    <div className="mb-6 rounded-xl border border-stone-200 bg-[#2C4035] p-5 shadow-lg">
+    <div className="mb-6 rounded-xl border border-[#E8D4B8] bg-[#FDFBF7] p-5 shadow-sm">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-end">
         <div>
-          <Typography variant="small" className="mb-2 font-medium tracking-wide text-stone-300">
+          <Typography
+            variant="small"
+            className="mb-2 font-medium tracking-wide text-[#2D4F4F]"
+          >
             Buscar por nombre o ubicación
           </Typography>
           <Input
             value={searchTerm}
-            onChange={(event) => onSearchChange(event.target.value)}
+            onChange={(e) => onSearchChange(e.target.value)}
             label="Buscar por nombre o ubicación"
             className="bg-white"
-            labelProps={{ className: 'text-[#2C4035]' }}
+            labelProps={{ className: 'text-[#2D4F4F]' }}
             containerProps={{ className: 'min-w-full' }}
           />
         </div>
 
         <div>
-          <Typography variant="small" className="mb-2 font-medium tracking-wide text-stone-300">
+          <Typography
+            variant="small"
+            className="mb-2 font-medium tracking-wide text-[#2D4F4F]"
+          >
             Filtrar por restaurante
           </Typography>
           <select
             value={selectedRestaurantId}
-            onChange={(event) => setSelectedRestaurantId(event.target.value || '')}
+            onChange={(e) => setSelectedRestaurantId(e.target.value || '')}
             disabled={restaurantOptionsLoading}
-            className="w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-3 text-stone-900 shadow-sm outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20 disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-3 text-gray-900 shadow-sm outline-none transition focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20 disabled:cursor-not-allowed disabled:opacity-70"
           >
             <option value="">Todos los restaurantes</option>
             {restaurantOptions.map((restaurant) => (

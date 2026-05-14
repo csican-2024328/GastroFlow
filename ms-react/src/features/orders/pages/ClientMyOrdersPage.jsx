@@ -23,7 +23,7 @@ export const ClientMyOrdersPage = () => {
       EN_PREPARACION: { icon: '⏳', label: 'En preparacion', color: 'bg-[#F8F1DF] text-[#7B5D27]' },
       LISTO: { icon: '✅', label: 'Listo', color: 'bg-[#E4EFE8] text-[#2C4035]' },
       ENTREGADO: { icon: '📦', label: 'Entregado', color: 'bg-[#E2D4B7] text-[#3D2C1E]' },
-      CANCELADO: { icon: '✖', label: 'Cancelado', color: 'bg-[#F8E7E2] text-[#C87A55]' },
+      CANCELADO: { icon: '✖', label: 'Cancelado', color: 'bg-[#F8E7E2] text-[#D97065]' },
     };
     return statusMap[status] || { icon: '•', label: status, color: 'bg-[#EFE8DC] text-[#5A5146]' };
   };

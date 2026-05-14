@@ -107,7 +107,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
   // STEP 1: Formulario básico
   if (step === 1) {
     return (
-      <div className="space-y-6 rounded-2xl border border-[#E2D4B7] bg-white p-6">
+      <div className="space-y-6 rounded-2xl border border-[#E8D4B8] bg-[#FDFBF7] p-6">
         <div>
           <h3 className="mb-1 font-['Playfair_Display'] text-xl font-bold text-[#1A1A1A]">
             Detalles de la Reserva
@@ -118,7 +118,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
         <form onSubmit={handleStep1Submit} className="space-y-4">
           {/* Date */}
           <div>
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
               📅 Fecha de la reserva
             </label>
             <input
@@ -127,7 +127,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
               value={formData.date}
               onChange={handleInputChange}
               min={new Date().toISOString().split('T')[0]}
-              className="w-full rounded-lg border border-[#E2D4B7] bg-[#F8F5F0] px-4 py-2 text-[#1A1A1A] focus:border-[#C49A2B] focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 bg-[#FAF9F6] px-4 py-2 text-gray-800 focus:border-[#C49A2B] focus:outline-none"
             />
             {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date}</p>}
           </div>
@@ -135,8 +135,8 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
           {/* Time Range */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-                🕐 Hora de inicio
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
+                💭 Hora de inicio
               </label>
               <input
                 type="time"
@@ -144,21 +144,21 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
                 value={formData.timeStart}
                 onChange={handleInputChange}
                 min={getMinTime()}
-                className="w-full rounded-lg border border-[#E2D4B7] bg-[#F8F5F0] px-4 py-2 text-[#1A1A1A] focus:border-[#C49A2B] focus:outline-none"
+                className="w-full rounded-lg border border-gray-200 bg-[#FAF9F6] px-4 py-2 text-gray-800 focus:border-[#C49A2B] focus:outline-none"
               />
               {errors.timeStart && <p className="mt-1 text-sm text-red-600">{errors.timeStart}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-                🕐 Hora de fin
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
+                💭 Hora de fin
               </label>
               <input
                 type="time"
                 name="timeEnd"
                 value={formData.timeEnd}
                 onChange={handleInputChange}
-                className="w-full rounded-lg border border-[#E2D4B7] bg-[#F8F5F0] px-4 py-2 text-[#1A1A1A] focus:border-[#C49A2B] focus:outline-none"
+                className="w-full rounded-lg border border-gray-200 bg-[#FAF9F6] px-4 py-2 text-gray-800 focus:border-[#C49A2B] focus:outline-none"
               />
               {errors.timeEnd && <p className="mt-1 text-sm text-red-600">{errors.timeEnd}</p>}
             </div>
@@ -166,14 +166,14 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
 
           {/* Party Size */}
           <div>
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
               👥 Número de personas
             </label>
             <div className="flex items-center gap-4">
               <button
                 type="button"
                 onClick={() => handlePartySizeChange(-1)}
-                className="rounded-lg border border-[#E2D4B7] bg-[#F8F5F0] px-4 py-2 text-lg font-bold text-[#C87A55] hover:bg-[#E2D4B7]"
+                className="rounded-lg border border-[#E8D4B8] bg-[#FDFBF7] px-4 py-2 text-lg font-bold text-[#E8956B] hover:bg-[#F5EFEA]"
               >
                 −
               </button>
@@ -184,12 +184,12 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
                 onChange={handleInputChange}
                 min="1"
                 max="20"
-                className="w-20 rounded-lg border border-[#E2D4B7] bg-[#F8F5F0] px-4 py-2 text-center text-lg font-bold text-[#1A1A1A] focus:border-[#C49A2B] focus:outline-none"
+                className="w-20 rounded-lg border border-[#E8D4B8] bg-[#FDFBF7] px-4 py-2 text-center text-lg font-bold text-gray-800 focus:border-[#C49A2B] focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => handlePartySizeChange(1)}
-                className="rounded-lg border border-[#E2D4B7] bg-[#F8F5F0] px-4 py-2 text-lg font-bold text-[#C87A55] hover:bg-[#E2D4B7]"
+                className="rounded-lg border border-[#E8D4B8] bg-[#FDFBF7] px-4 py-2 text-lg font-bold text-[#E8956B] hover:bg-[#F5EFEA]"
               >
                 +
               </button>
@@ -199,8 +199,8 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-              📝 Notas especiales (opcional)
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              🗓️ Notas especiales (opcional)
             </label>
             <textarea
               name="notes"
@@ -208,7 +208,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
               onChange={handleInputChange}
               placeholder="Cumpleaños, preferencias dietéticas, etc."
               rows="3"
-              className="w-full rounded-lg border border-[#E2D4B7] bg-[#F8F5F0] px-4 py-2 text-[#1A1A1A] placeholder:text-[#B59070] focus:border-[#C49A2B] focus:outline-none"
+              className="w-full rounded-lg border border-[#E8D4B8] bg-[#FDFBF7] px-4 py-2 text-gray-800 placeholder:text-gray-500 focus:border-[#C49A2B] focus:outline-none"
             />
           </div>
 
@@ -216,7 +216,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
-              className="flex-1 rounded-lg bg-gradient-to-r from-[#C87A55] to-[#C49A2B] px-6 py-3 font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
+              className="flex-1 rounded-lg bg-gradient-to-r from-[#E8956B] to-[#C49A2B] px-6 py-3 font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
               disabled={isLoading}
             >
               {isLoading ? 'Cargando...' : 'Siguiente: Seleccionar Mesa'}
@@ -230,7 +230,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
   // STEP 2: Seleccionar mesa
   if (step === 2) {
     return (
-      <div className="space-y-6 rounded-2xl border border-[#E2D4B7] bg-white p-6">
+      <div className="space-y-6 rounded-2xl border border-[#E8D4B8] bg-[#FDFBF7] p-6">
         <div>
           <h3 className="mb-1 font-['Playfair_Display'] text-xl font-bold text-[#1A1A1A]">
             Seleccionar Mesa
@@ -241,10 +241,10 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
         </div>
 
         {availableTables.length === 0 ? (
-          <div className="rounded-lg border border-[#E2D4B7] bg-[#F8F5F0] p-8 text-center">
+          <div className="rounded-lg border border-[#E8D4B8] bg-[#FDFBF7] p-8 text-center">
             <div className="text-4xl mb-3">😔</div>
-            <p className="font-semibold text-[#1A1A1A]">No hay mesas disponibles</p>
-            <p className="text-sm text-[#5A5146] mt-2">
+            <p className="font-semibold text-gray-800">No hay mesas disponibles</p>
+            <p className="text-sm text-gray-600 mt-2">
               Para esta fecha y horario no hay mesas disponibles. Por favor, elige otro horario.
             </p>
             <button
@@ -252,7 +252,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
                 setStep(1);
                 setSelectedTable(null);
               }}
-              className="mt-4 rounded-lg border border-[#2C4035] bg-white px-6 py-2 font-semibold text-[#2C4035] hover:bg-[#E2D4B7]"
+              className="mt-4 rounded-lg border border-[#2D4F4F] bg-white px-6 py-2 font-semibold text-[#2D4F4F] hover:bg-gray-200"
             >
               ← Cambiar fecha/hora
             </button>
@@ -267,16 +267,16 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
                   className={`rounded-lg border-2 p-4 text-center transition ${
                     selectedTable?._id === table._id
                       ? 'border-[#C49A2B] bg-[#FFF8E7]'
-                      : 'border-[#E2D4B7] bg-[#F8F5F0] hover:border-[#C87A55]'
+                      : 'border-gray-200 bg-[#FAF9F6] hover:border-[#E8956B]'
                   }`}
                 >
                   <div className="text-2xl mb-2">
                     {table.capacity <= 2 ? '🪑' : table.capacity <= 4 ? '🪑🪑' : '🪑🪑🪑'}
                   </div>
-                  <div className="font-semibold text-[#1A1A1A]">Mesa {table.numero}</div>
-                  <div className="text-sm text-[#5A5146]">{table.capacity} personas</div>
+                  <div className="font-semibold text-gray-800">Mesa {table.numero}</div>
+                  <div className="text-sm text-gray-600">{table.capacity} personas</div>
                   {table.ubicacion && (
-                    <div className="text-xs text-[#B59070] mt-1">{table.ubicacion}</div>
+                    <div className="text-xs text-gray-500 mt-1">{table.ubicacion}</div>
                   )}
                 </button>
               ))}
@@ -288,14 +288,14 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
                   setStep(1);
                   setSelectedTable(null);
                 }}
-                className="flex-1 rounded-lg border border-[#C87A55] bg-white px-6 py-3 font-semibold text-[#C87A55] transition hover:bg-[#E2D4B7]"
+                className="flex-1 rounded-lg border border-[#E8956B] bg-[#FDFBF7] px-6 py-3 font-semibold text-[#E8956B] transition hover:bg-[#F5EFEA]"
               >
                 ← Atrás
               </button>
               <button
                 onClick={handleStep2Submit}
                 disabled={isLoading}
-                className="flex-1 rounded-lg bg-gradient-to-r from-[#C87A55] to-[#C49A2B] px-6 py-3 font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
+                className="flex-1 rounded-lg bg-gradient-to-r from-[#E8956B] to-[#C49A2B] px-6 py-3 font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
               >
                 {isLoading ? 'Cargando...' : 'Siguiente: Confirmar'}
               </button>
@@ -309,7 +309,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
   // STEP 3: Confirmación
   if (step === 3) {
     return (
-      <div className="space-y-6 rounded-2xl border border-[#E2D4B7] bg-white p-6">
+      <div className="space-y-6 rounded-2xl border border-[#E8D4B8] bg-[#FDFBF7] p-6">
         <div>
           <h3 className="mb-1 font-['Playfair_Display'] text-xl font-bold text-[#1A1A1A]">
             Confirmar Reserva
@@ -318,7 +318,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
         </div>
 
         {/* Resumen */}
-        <div className="space-y-3 rounded-lg bg-[#F8F5F0] p-4">
+        <div className="space-y-3 rounded-lg bg-[#FDFBF7] border border-[#E8D4B8] p-4">
           <div className="flex items-center justify-between">
             <span className="text-[#5A5146]">📅 Fecha:</span>
             <span className="font-semibold text-[#1A1A1A]">
@@ -351,7 +351,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
           </div>
 
           {formData.notes && (
-            <div className="flex items-start justify-between border-t border-[#E2D4B7] pt-3">
+            <div className="flex items-start justify-between border-t border-[#E8D4B8] pt-3">
               <span className="text-[#5A5146]">📝 Notas:</span>
               <span className="font-semibold text-[#1A1A1A] text-right max-w-xs">{formData.notes}</span>
             </div>
@@ -370,7 +370,7 @@ export const ReservationForm = ({ restaurant, onSubmit, isLoading, availableTabl
         <div className="flex gap-3 pt-4">
           <button
             onClick={() => setStep(2)}
-            className="flex-1 rounded-lg border border-[#C87A55] bg-white px-6 py-3 font-semibold text-[#C87A55] transition hover:bg-[#E2D4B7]"
+            className="flex-1 rounded-lg border border-[#E8956B] bg-white px-6 py-3 font-semibold text-[#E8956B] transition hover:bg-gray-200"
           >
             ← Cambiar Mesa
           </button>

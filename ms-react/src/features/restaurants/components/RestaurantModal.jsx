@@ -16,7 +16,11 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 };
 
 const RestaurantModalContent = ({ onClose, restaurant = null }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       name: restaurant?.name || '',
       email: restaurant?.email || '',
@@ -32,7 +36,9 @@ const RestaurantModalContent = ({ onClose, restaurant = null }) => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [photoPreviews, setPhotoPreviews] = useState(restaurant?.photos ? [...restaurant.photos] : []);
+  const [photoPreviews, setPhotoPreviews] = useState(
+    restaurant?.photos ? [...restaurant.photos] : []
+  );
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const createRestaurantAction = useRestaurantStore((s) => s.createRestaurantAction);
   const updateRestaurantAction = useRestaurantStore((s) => s.updateRestaurantAction);
@@ -41,8 +47,6 @@ const RestaurantModalContent = ({ onClose, restaurant = null }) => {
   const onPhotoChange = (e) => {
     const files = Array.from(e.target.files || []);
     setSelectedPhotos((prev) => [...prev, ...files]);
-    
-    // Create previews for new files
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -54,7 +58,6 @@ const RestaurantModalContent = ({ onClose, restaurant = null }) => {
 
   const removePhoto = (index) => {
     setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
-    // If it's a new photo, also remove it from selectedPhotos
     if (index >= (restaurant?.photos?.length || 0)) {
       const newPhotoIndex = index - (restaurant?.photos?.length || 0);
       setSelectedPhotos((prev) => prev.filter((_, i) => i !== newPhotoIndex));
@@ -78,13 +81,6 @@ const RestaurantModalContent = ({ onClose, restaurant = null }) => {
         photos: selectedPhotos,
       };
 
-      console.log('📤 [MODAL] Enviando formulario:', {
-        nombre: payload.name,
-        email: payload.email,
-        fotosCount: selectedPhotos.length,
-        esEdicion: !!restaurant,
-      });
-
       let result;
       if (restaurant && restaurant._id) {
         result = await updateRestaurantAction(restaurant._id, payload);
@@ -93,209 +89,237 @@ const RestaurantModalContent = ({ onClose, restaurant = null }) => {
       }
 
       if (result.success) {
-        console.log('✅ [MODAL] Operación exitosa:', {
-          tipo: restaurant ? 'actualización' : 'creación',
-          restaurante: result.data?.name,
-        });
         notyfSuccess(
-          restaurant ? 'Restaurante actualizado correctamente' : 'Restaurante creado correctamente'
+          restaurant
+            ? 'Restaurante actualizado correctamente'
+            : 'Restaurante creado correctamente'
         );
         setPhotoPreviews([]);
         setSelectedPhotos([]);
         onClose();
       } else {
-        console.error('❌ [MODAL] Error en operación:', result.error);
         notyfError(result.error || 'Error al guardar restaurante');
       }
     } catch (err) {
-      console.error('❌ [MODAL] Error desconocido:', err);
       notyfError(err.message || 'Error al guardar restaurante');
     } finally {
       setLoading(false);
     }
   };
 
-  const fieldClassName =
-    'w-full p-2.5 rounded-md bg-[var(--gf-green)]/75 text-[var(--gf-cream)] placeholder:text-[var(--gf-beige)]/60 border border-[var(--gf-beige)]/35 focus:border-[var(--gf-beige)] focus:outline-none transition-colors duration-200';
+  const inputClassName =
+    'w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm outline-none transition focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20';
+
+  const labelClassName = 'block text-sm font-medium text-[#2D4F4F] mb-1.5';
 
   return (
-    <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-[var(--gf-green)] to-[var(--gf-green)]/95 rounded-xl border border-[var(--gf-beige)]/35 max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-[0_30px_70px_rgba(26,26,26,0.45)]">
-        <h2 className="text-2xl font-semibold mb-6 text-[var(--gf-cream)]">
-          {restaurant ? 'Editar Restaurante' : 'Crear Nuevo Restaurante'}
-        </h2>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-[#FDFBF7] text-gray-800 border border-[#E8D4B8] rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-[0_30px_70px_rgba(26,26,26,0.45)]">
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Nombre */}
-          <div>
-            <label className="text-sm font-medium text-[var(--gf-beige)]">Nombre *</label>
-            <input
-              {...register('name', { required: 'El nombre es obligatorio' })}
-              className={fieldClassName}
-              placeholder="Nombre del restaurante"
-            />
-            {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>}
-          </div>
+        {/* Header */}
+        <div className="border-b border-[#E8D4B8] px-6 py-5 bg-[#F5EFEA]">
+          <h2 className="text-xl font-semibold text-[#2D4F4F]">
+            {restaurant ? 'Editar Restaurante' : 'Crear Nuevo Restaurante'}
+          </h2>
+        </div>
 
-          {/* Email */}
-          <div>
-            <label className="text-sm font-medium text-[var(--gf-beige)]">Email *</label>
-            <input
-              {...register('email', {
-                required: 'El email es obligatorio',
-                pattern: {
-                  value: /^\S+@\S+\.\S+$/,
-                  message: 'El email debe ser válido',
-                },
-              })}
-              className={fieldClassName}
-              placeholder="restaurante@email.com"
-              type="email"
-            />
-            {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
-          </div>
+        {/* Body */}
+        <div className="px-6 py-5 overflow-y-auto max-h-[75vh]">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-          {/* Teléfono */}
-          <div>
-            <label className="text-sm font-medium text-[var(--gf-beige)]">Teléfono *</label>
-            <input
-              {...register('phone', { required: 'El teléfono es obligatorio' })}
-              className={fieldClassName}
-              placeholder="23456789"
-            />
-            {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone.message}</p>}
-          </div>
+            {/* Nombre */}
+            <div>
+              <label className={labelClassName}>Nombre *</label>
+              <input
+                {...register('name', { required: 'El nombre es obligatorio' })}
+                className={inputClassName}
+                placeholder="Nombre del restaurante"
+              />
+              {errors.name && (
+                <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+              )}
+            </div>
 
-          {/* Dirección */}
-          <div>
-            <label className="text-sm font-medium text-[var(--gf-beige)]">Dirección *</label>
-            <input
-              {...register('address', { required: 'La dirección es obligatoria' })}
-              className={fieldClassName}
-              placeholder="Calle Principal 123"
-            />
-            {errors.address && <p className="text-red-400 text-xs mt-1">{errors.address.message}</p>}
-          </div>
+            {/* Email */}
+            <div>
+              <label className={labelClassName}>Email *</label>
+              <input
+                {...register('email', {
+                  required: 'El email es obligatorio',
+                  pattern: {
+                    value: /^\S+@\S+\.\S+$/,
+                    message: 'El email debe ser válido',
+                  },
+                })}
+                className={inputClassName}
+                placeholder="restaurante@email.com"
+                type="email"
+              />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+              )}
+            </div>
 
-          {/* Ciudad */}
-          <div>
-            <label className="text-sm font-medium text-[var(--gf-beige)]">Ciudad *</label>
-            <input
-              {...register('city', { required: 'La ciudad es obligatoria' })}
-              className={fieldClassName}
-              placeholder="Ciudad de Guatemala"
-            />
-            {errors.city && <p className="text-red-400 text-xs mt-1">{errors.city.message}</p>}
-          </div>
+            {/* Teléfono */}
+            <div>
+              <label className={labelClassName}>Teléfono *</label>
+              <input
+                {...register('phone', { required: 'El teléfono es obligatorio' })}
+                className={inputClassName}
+                placeholder="23456789"
+              />
+              {errors.phone && (
+                <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
+              )}
+            </div>
 
-          {/* Horario de apertura */}
-          <div>
-            <label className="text-sm font-medium text-[var(--gf-beige)]">Horario de apertura *</label>
-            <input
-              {...register('openingHours', { required: 'El horario es obligatorio' })}
-              className={fieldClassName}
-              placeholder="Lun-Vie 9:00-18:00"
-            />
-            {errors.openingHours && <p className="text-red-400 text-xs mt-1">{errors.openingHours.message}</p>}
-          </div>
+            {/* Dirección */}
+            <div>
+              <label className={labelClassName}>Dirección *</label>
+              <input
+                {...register('address', { required: 'La dirección es obligatoria' })}
+                className={inputClassName}
+                placeholder="Calle Principal 123"
+              />
+              {errors.address && (
+                <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
+              )}
+            </div>
 
-          {/* Aforo máximo */}
-          <div>
-            <label className="text-sm font-medium text-[var(--gf-beige)]">Aforo máximo *</label>
-            <input
-              {...register('aforoMaximo', { required: 'El aforo máximo es obligatorio' })}
-              className={fieldClassName}
-              placeholder="100"
-              type="number"
-            />
-            {errors.aforoMaximo && <p className="text-red-400 text-xs mt-1">{errors.aforoMaximo.message}</p>}
-          </div>
+            {/* Ciudad */}
+            <div>
+              <label className={labelClassName}>Ciudad *</label>
+              <input
+                {...register('city', { required: 'La ciudad es obligatoria' })}
+                className={inputClassName}
+                placeholder="Ciudad de Guatemala"
+              />
+              {errors.city && (
+                <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>
+              )}
+            </div>
 
-          {/* Categoría */}
-          <div>
-            <label className="text-sm font-medium text-[var(--gf-beige)]">Categoría</label>
-            <input
-              {...register('category')}
-              className={fieldClassName}
-              placeholder="Italiana, Mexicana, etc."
-            />
-          </div>
+            {/* Horario */}
+            <div>
+              <label className={labelClassName}>Horario de apertura *</label>
+              <input
+                {...register('openingHours', { required: 'El horario es obligatorio' })}
+                className={inputClassName}
+                placeholder="Lun-Vie 9:00-18:00"
+              />
+              {errors.openingHours && (
+                <p className="text-red-500 text-xs mt-1">{errors.openingHours.message}</p>
+              )}
+            </div>
 
-          {/* Descripción */}
-          <div>
-            <label className="text-sm font-medium text-[var(--gf-beige)]">Descripción</label>
-            <textarea
-              {...register('description')}
-              className={fieldClassName}
-              placeholder="Descripción del restaurante"
-              rows="3"
-            />
-          </div>
+            {/* Aforo máximo */}
+            <div>
+              <label className={labelClassName}>Aforo máximo *</label>
+              <input
+                {...register('aforoMaximo', { required: 'El aforo máximo es obligatorio' })}
+                className={inputClassName}
+                placeholder="100"
+                type="number"
+              />
+              {errors.aforoMaximo && (
+                <p className="text-red-500 text-xs mt-1">{errors.aforoMaximo.message}</p>
+              )}
+            </div>
 
-          {/* Precio promedio */}
-          <div>
-            <label className="text-sm font-medium text-[var(--gf-beige)]">Precio promedio</label>
-            <input
-              {...register('averagePrice')}
-              className={fieldClassName}
-              placeholder="50.00"
-              type="number"
-              step="0.01"
-            />
-          </div>
+            {/* Categoría */}
+            <div>
+              <label className={labelClassName}>Categoría</label>
+              <input
+                {...register('category')}
+                className={inputClassName}
+                placeholder="Italiana, Mexicana, etc."
+              />
+            </div>
 
-          {/* Fotos */}
-          <div>
-            <label className="text-sm font-medium text-[var(--gf-beige)]">Fotos (cualquier imagen)</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={onPhotoChange}
-              className="w-full p-2.5 rounded-md bg-[var(--gf-green)]/75 text-[var(--gf-cream)] border border-[var(--gf-beige)]/35"
-            />
-            
-            {/* Preview de fotos */}
-            {photoPreviews.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 mt-3">
-                {photoPreviews.map((preview, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={preview}
-                      alt={`Preview ${index}`}
-                      className="w-full h-24 object-cover rounded-md border border-[var(--gf-beige)]/35"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(index)}
-                      className="absolute top-1 right-1 bg-[var(--gf-terracotta)] text-white px-2 py-1 text-xs rounded-md"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+            {/* Descripción */}
+            <div>
+              <label className={labelClassName}>Descripción</label>
+              <textarea
+                {...register('description')}
+                className={inputClassName}
+                placeholder="Descripción del restaurante"
+                rows="3"
+              />
+            </div>
 
-          {/* Botones */}
-          <div className="flex gap-3 justify-end pt-4 border-t border-[var(--gf-beige)]/35">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-md bg-[var(--gf-graphite)]/70 hover:bg-[var(--gf-graphite)] text-[var(--gf-cream)] transition-colors duration-200"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading || storeLoading}
-              className="px-4 py-2 rounded-md bg-[var(--gf-beige)] hover:bg-[var(--gf-terracotta)] text-[var(--gf-graphite)] hover:text-[var(--gf-cream)] shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
-            >
-              {loading || storeLoading ? 'Guardando...' : 'Guardar'}
-            </button>
-          </div>
-        </form>
+            {/* Precio promedio */}
+            <div>
+              <label className={labelClassName}>Precio promedio</label>
+              <input
+                {...register('averagePrice')}
+                className={inputClassName}
+                placeholder="50.00"
+                type="number"
+                step="0.01"
+              />
+            </div>
+
+            {/* Fotos */}
+            <div>
+              <label className={labelClassName}>Fotos (cualquier imagen)</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={onPhotoChange}
+                className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-2.5 text-gray-900 shadow-sm outline-none transition file:mr-3 file:rounded file:border-0 file:bg-[#2D4F4F] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white hover:file:bg-[#3A6B6B]"
+              />
+
+              {/* Preview de fotos */}
+              {photoPreviews.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mt-3">
+                  {photoPreviews.map((preview, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index}`}
+                        className="w-full h-24 object-cover rounded-md border border-[#E8D4B8]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white px-1.5 py-0.5 text-xs rounded leading-none hover:bg-red-600 transition"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-[#E8D4B8] flex justify-end gap-3 px-6 py-4 bg-[#F5EFEA]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-md border border-[#E8D4B8] text-gray-700 bg-[#FDFBF7] hover:bg-[#F5EFEA] transition-colors duration-200 text-sm font-medium"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit(onSubmit)}
+            disabled={loading || storeLoading}
+            className="px-4 py-2 rounded-md bg-[#2D4F4F] text-white hover:bg-[#3A6B6B] shadow-md hover:shadow-lg transition-all duration-200 text-sm font-medium disabled:opacity-50"
+          >
+            {loading || storeLoading ? 'Guardando...' : 'Guardar'}
+          </button>
+        </div>
+
       </div>
     </div>
   );

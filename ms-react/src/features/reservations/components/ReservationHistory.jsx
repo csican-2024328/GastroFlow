@@ -15,7 +15,7 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
     switch (status?.toUpperCase()) {
       case 'CONFIRMADA':
         return {
-          bg: 'bg-[#2C4035]',
+          bg: 'bg-[#2D4F4F]',
           text: 'text-white',
           label: 'Confirmada',
           icon: '✓',
@@ -29,7 +29,7 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
         };
       case 'COMPLETADA':
         return {
-          bg: 'bg-[#2C4035]',
+          bg: 'bg-[#2D4F4F]',
           text: 'text-white',
           label: 'Completada',
           icon: '✓',
@@ -97,7 +97,7 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
             className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${
               filterStatus === filter.value
                 ? 'bg-[#C49A2B] text-white'
-                : 'border border-[#E2D4B7] bg-white text-[#5A5146] hover:border-[#C49A2B]'
+                : 'border border-[#E8D4B8] bg-[#FDFBF7] text-gray-600 hover:border-[#C49A2B]'
             }`}
           >
             {filter.label}
@@ -107,7 +107,7 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
 
       {/* Lista de reservas */}
       {filteredReservations.length === 0 ? (
-        <div className="rounded-2xl border border-[#E2D4B7] bg-white p-10 text-center">
+        <div className="rounded-2xl border border-[#E8D4B8] bg-[#FDFBF7] p-10 text-center">
           <div className="text-5xl mb-4">📭</div>
           <p className="font-semibold text-[#1A1A1A]">No hay reservas</p>
           <p className="text-sm text-[#5A5146] mt-2">
@@ -127,13 +127,13 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
               <div
                 key={reservation._id}
                 className={`rounded-2xl border transition ${
-                  isExpanded ? 'border-[#C49A2B] bg-white shadow-lg' : 'border-[#E2D4B7] bg-white'
+                  isExpanded ? 'border-[#C49A2B] bg-[#FDFBF7] shadow-lg' : 'border-[#E8D4B8] bg-[#FDFBF7]'
                 }`}
               >
                 {/* Header */}
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : reservation._id)}
-                  className="w-full px-6 py-4 text-left hover:bg-[#F8F5F0]"
+                  className="w-full px-6 py-4 text-left hover:bg-[#F5EFEA]"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -156,7 +156,7 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
                           {statusBadge.icon} {statusBadge.label}
                         </span>
                         {timeStatus === 'soon' && (
-                          <span className="inline-flex items-center rounded-full bg-[#C87A55] px-3 py-1 text-xs font-semibold text-white">
+                          <span className="inline-flex items-center rounded-full bg-[#E8956B] px-3 py-1 text-xs font-semibold text-white">
                             ⏰ Próximamente
                           </span>
                         )}
@@ -170,9 +170,9 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
 
                 {/* Expanded Content */}
                 {isExpanded && (
-                  <div className="border-t border-[#E2D4B7] px-6 py-4 space-y-4">
+                  <div className="border-t border-[#E8D4B8] px-6 py-4 space-y-4">
                     {/* Detalles */}
-                    <div className="space-y-2 bg-[#F8F5F0] rounded-lg p-4">
+                    <div className="space-y-2 bg-[#FDFBF7] border border-[#E8D4B8] rounded-lg p-4">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-[#5A5146]">🔔 Número de reserva:</span>
                         <span className="font-mono font-semibold text-[#1A1A1A]">
@@ -221,7 +221,7 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
                     )}
 
                     {/* Acciones */}
-                    <div className="flex gap-2 pt-4 border-t border-[#E2D4B7]">
+                    <div className="flex gap-2 pt-4 border-t border-[#E8D4B8]">
                       {reservation.estado?.toUpperCase() === 'CONFIRMADA' &&
                         getTimeStatus(reservation.fecha, reservation.horaInicio) !== 'passed' && (
                           <button
@@ -233,7 +233,7 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
                           </button>
                         )}
                       {reservation.estado?.toUpperCase() === 'COMPLETADA' && (
-                        <button className="flex-1 rounded-lg border border-[#2C4035] bg-white px-4 py-2 text-sm font-semibold text-[#2C4035] transition hover:bg-[#E2D4B7]">
+                        <button className="flex-1 rounded-lg border border-[#2D4F4F] bg-[#FDFBF7] px-4 py-2 text-sm font-semibold text-[#2D4F4F] transition hover:bg-[#F5EFEA]">
                           ⭐ Dejar Reseña
                         </button>
                       )}

@@ -1,10 +1,6 @@
 import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import {
-  Button,
-  Input,
-  Typography,
-} from '@material-tailwind/react';
+import { Button, Input, Typography } from '@material-tailwind/react';
 import { useTableStore } from '../store/useTableStore.js';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
 
@@ -48,7 +44,11 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
         numero: mesa?.numero ?? '',
         capacidad: mesa?.capacidad ?? '',
         ubicacion: mesa?.ubicacion ?? '',
-        restaurantID: mesa?.restaurantID?._id || mesa?.restaurantID || selectedRestaurantId || '',
+        restaurantID:
+          mesa?.restaurantID?._id ||
+          mesa?.restaurantID ||
+          selectedRestaurantId ||
+          '',
       });
     }
   }, [mesa, open, reset, selectedRestaurantId]);
@@ -74,7 +74,11 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
         notyfError(result.error || 'No fue posible guardar la mesa');
       }
     } catch (error) {
-      notyfError(error?.response?.data?.message || error.message || 'No fue posible guardar la mesa');
+      notyfError(
+        error?.response?.data?.message ||
+          error.message ||
+          'No fue posible guardar la mesa'
+      );
     }
   };
 
@@ -87,106 +91,133 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="bg-gradient-to-br from-[var(--gf-green)] to-[var(--gf-green)]/95 text-[var(--gf-cream)] border border-[var(--gf-beige)]/35 rounded-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-[0_30px_70px_rgba(26,26,26,0.45)]">
-      <div className="border-b border-[var(--gf-beige)]/25 px-6 py-5">
-        <Typography variant="h5" className="text-[var(--gf-cream)]">
-          {mesa ? 'Editar mesa' : 'Nueva mesa'}
-        </Typography>
-      </div>
-      <div className="space-y-4 overflow-y-auto max-h-[75vh] px-6 py-5">
-        <form id="table-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Typography variant="small" className="mb-2 text-[var(--gf-beige)]">
-              Número de mesa *
-            </Typography>
-            <Input
-              type="number"
-              min="1"
-              {...register('numero', {
-                required: 'El número de mesa es obligatorio',
-                valueAsNumber: true,
-                validate: (value) => Number(value) > 0 || 'El número debe ser mayor a 0',
-              })}
-              className="!border-[var(--gf-beige)]/40 text-[var(--gf-cream)] rounded-md"
-              labelProps={{ className: 'hidden' }}
-            />
-            {errors.numero && <p className="mt-1 text-xs text-red-400">{errors.numero.message}</p>}
-          </div>
+      <div className="bg-[#FDFBF7] text-gray-800 border border-[#E8D4B8] rounded-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-[0_30px_70px_rgba(26,26,26,0.45)]">
 
-          <div>
-            <Typography variant="small" className="mb-2 text-[var(--gf-beige)]">
-              Capacidad de personas *
-            </Typography>
-            <Input
-              type="number"
-              min="1"
-              {...register('capacidad', {
-                required: 'La capacidad es obligatoria',
-                valueAsNumber: true,
-                validate: (value) => Number(value) > 0 || 'La capacidad debe ser mayor a 0',
-              })}
-              className="!border-[var(--gf-beige)]/40 text-[var(--gf-cream)] rounded-md"
-              labelProps={{ className: 'hidden' }}
-            />
-            {errors.capacidad && <p className="mt-1 text-xs text-red-400">{errors.capacidad.message}</p>}
-          </div>
+        {/* Header */}
+        <div className="border-b border-[#E8D4B8] px-6 py-5 bg-[#F5EFEA]\">
+          <Typography variant="h5" className="text-[#2D4F4F]\">
+            {mesa ? 'Editar mesa' : 'Nueva mesa'}
+          </Typography>
+        </div>
 
-          <div>
-            <Typography variant="small" className="mb-2 text-[var(--gf-beige)]">
-              Identificador visual / Ubicación *
-            </Typography>
-            <Input
-              type="text"
-              {...register('ubicacion', {
-                required: 'El identificador visual es obligatorio',
-              })}
-              placeholder="Terraza, Ventana, Sala 1"
-              className="!border-[var(--gf-beige)]/40 text-[var(--gf-cream)] rounded-md"
-              labelProps={{ className: 'hidden' }}
-            />
-            {errors.ubicacion && <p className="mt-1 text-xs text-red-400">{errors.ubicacion.message}</p>}
-          </div>
+        {/* Body */}
+        <div className="space-y-4 overflow-y-auto max-h-[75vh] px-6 py-5">
+          <form id="table-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-          <div>
-            <Typography variant="small" className="mb-2 text-[var(--gf-beige)]">
-              Restaurante *
-            </Typography>
-            <Controller
-              name="restaurantID"
-              control={control}
-              rules={{ required: 'El restaurante es obligatorio' }}
-              render={({ field }) => (
-                <select
-                  {...field}
-                  value={field.value || ''}
-                  disabled={restaurantOptionsLoading}
-                  className="w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-3 text-stone-900 shadow-sm outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2C4035]/20 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  <option value="">Selecciona un restaurante</option>
-                  {restaurantOptions.map((restaurant) => (
-                    <option key={restaurant._id} value={restaurant._id}>
-                      {restaurant.name}
-                    </option>
-                  ))}
-                </select>
+            {/* Número de mesa */}
+            <div>
+              <Typography variant="small" className="mb-2 text-[#2D4F4F]">
+                Número de mesa *
+              </Typography>
+              <Input
+                type="number"
+                min="1"
+                {...register('numero', {
+                  required: 'El número de mesa es obligatorio',
+                  valueAsNumber: true,
+                  validate: (value) =>
+                    Number(value) > 0 || 'El número debe ser mayor a 0',
+                })}
+                className="!border-[#E8D4B8] text-gray-800 rounded-md"
+                labelProps={{ className: 'hidden' }}
+              />
+              {errors.numero && (
+                <p className="mt-1 text-xs text-red-500">{errors.numero.message}</p>
               )}
-            />
-            {errors.restaurantID && <p className="mt-1 text-xs text-red-400">{errors.restaurantID.message}</p>}
-          </div>
-        </form>
-      </div>
-      <div className="border-t border-[var(--gf-beige)]/25 gap-2 flex justify-end px-6 py-4">
-        <Button variant="text" onClick={onClose} className="text-[var(--gf-beige)] hover:bg-[var(--gf-beige)]/10 rounded-md transition-colors duration-200">
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleSubmit(onSubmit)}
-          disabled={loading}
-          className="bg-[var(--gf-beige)] text-[var(--gf-graphite)] hover:bg-[var(--gf-terracotta)] hover:text-[var(--gf-cream)] rounded-md shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          {loading ? 'Guardando...' : 'Guardar'}
-        </Button>
-      </div>
+            </div>
+
+            {/* Capacidad */}
+            <div>
+              <Typography variant="small" className="mb-2 text-[#2D4F4F]">
+                Capacidad de personas *
+              </Typography>
+              <Input
+                type="number"
+                min="1"
+                {...register('capacidad', {
+                  required: 'La capacidad es obligatoria',
+                  valueAsNumber: true,
+                  validate: (value) =>
+                    Number(value) > 0 || 'La capacidad debe ser mayor a 0',
+                })}
+                className="!border-[#E8D4B8] text-gray-800 rounded-md"
+                labelProps={{ className: 'hidden' }}
+              />
+              {errors.capacidad && (
+                <p className="mt-1 text-xs text-red-500">{errors.capacidad.message}</p>
+              )}
+            </div>
+
+            {/* Ubicación */}
+            <div>
+              <Typography variant="small" className="mb-2 text-[#2D4F4F]">
+                Identificador visual / Ubicación *
+              </Typography>
+              <Input
+                type="text"
+                {...register('ubicacion', {
+                  required: 'El identificador visual es obligatorio',
+                })}
+                placeholder="Terraza, Ventana, Sala 1"
+                className="!border-[#E8D4B8] text-gray-800 rounded-md"
+                labelProps={{ className: 'hidden' }}
+              />
+              {errors.ubicacion && (
+                <p className="mt-1 text-xs text-red-500">{errors.ubicacion.message}</p>
+              )}
+            </div>
+
+            {/* Restaurante */}
+            <div>
+              <Typography variant="small" className="mb-2 text-[#2D4F4F]">
+                Restaurante *
+              </Typography>
+              <Controller
+                name="restaurantID"
+                control={control}
+                rules={{ required: 'El restaurante es obligatorio' }}
+                render={({ field }) => (
+                  <select
+                    {...field}
+                    value={field.value || ''}
+                    disabled={restaurantOptionsLoading}
+                    className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-3 text-gray-900 shadow-sm outline-none transition focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    <option value="">Selecciona un restaurante</option>
+                    {restaurantOptions.map((restaurant) => (
+                      <option key={restaurant._id} value={restaurant._id}>
+                        {restaurant.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              {errors.restaurantID && (
+                <p className="mt-1 text-xs text-red-500">{errors.restaurantID.message}</p>
+              )}
+            </div>
+
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-[#E8D4B8] gap-2 flex justify-end px-6 py-4 bg-[#F5EFEA]">
+          <Button
+            variant="text"
+            onClick={onClose}
+            className="text-[#2D4F4F] hover:bg-[#FDFBF7] rounded-md transition-colors duration-200"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSubmit(onSubmit)}
+            disabled={loading}
+            className="bg-[#2D4F4F] text-white hover:bg-[#3A6B6B] rounded-md shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
+          >
+            {loading ? 'Guardando...' : 'Guardar'}
+          </Button>
+        </div>
+
       </div>
     </div>
   );

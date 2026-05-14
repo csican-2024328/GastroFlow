@@ -176,7 +176,7 @@ export const ProfilePage = () => {
 
                 <div className="flex gap-2 pt-2">
                   <button type="submit" disabled={loading} className="px-4 py-2 rounded bg-[#2C4035] text-[#F8F5F0] hover:bg-[#24362d]">{loading ? 'Guardando...' : 'Guardar cambios'}</button>
-                  <button type="button" onClick={cancelEdit} className="px-4 py-2 rounded bg-[#C87A55] text-[#F8F5F0] hover:opacity-90">Cancelar</button>
+                  <button type="button" onClick={cancelEdit} className="px-4 py-2 rounded bg-[#D97065] text-white hover:opacity-90">Cancelar</button>
                 </div>
               </form>
             )}

@@ -16,7 +16,7 @@ export const Sidebar = () => {
         {label: "Usuarios", to: "/dashboard/Usuarios"},
     ]
   return (
-        <aside className='w-60 bg-[#1A1A1A] min-h-[calc(100vh-4rem)] p-4'>
+        <aside className='w-60 bg-[#2D4F4F] min-h-[calc(100vh-4rem)] p-4'>
         <ul className='space-y-2'>
             {items.map((item) => {
                 const active = location.pathname === item.to
@@ -25,8 +25,7 @@ export const Sidebar = () => {
                     <li key={item.to}>
                         <Link
                             to={item.to}
-                           className={`block px-4 py-2 rounded-lg font-medium transition-colors text-[#F8F5F0] ${active ? '' : 'hover:bg-[#2C4035] hover:text-[#F8F5F0]'}`}
-                            style={active ? {fontWeight: 700, backgroundColor: '#2C4035', color: '#F8F5F0'} : {}}
+                           className={`block px-4 py-2 rounded-lg font-medium transition-colors text-white ${active ? 'bg-[#1A3A3A]' : 'hover:bg-[#3A6B6B]'}`}
                             >
                                 {item.label}
                         </Link>

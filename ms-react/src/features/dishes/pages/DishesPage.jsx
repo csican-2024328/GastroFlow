@@ -97,7 +97,7 @@ export const DishesPage = () => {
   if (loading && dishes.length === 0) {
     return (
       <div className="p-6">
-        <p className="text-[#2C4035]">Cargando platos...</p>
+        <p className="text-[#2D4F4F]">Cargando platos...</p>
       </div>
     );
   }
@@ -106,14 +106,14 @@ export const DishesPage = () => {
     <div className="p-6 md:p-8">
       <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
         <div>
-          <Typography variant="h3" className="text-[#1A1A1A]">Platos</Typography>
-          <Typography variant="small" className="text-[#2C4035]">
+          <Typography variant="h3" className="text-gray-800">Platos</Typography>
+          <Typography variant="small" className="text-[#2D4F4F]">
             Gestiona el catálogo de platos y subida de imágenes.
           </Typography>
         </div>
         <Button
           onClick={handleCreateDish}
-          className="bg-[#2C4035] text-white rounded-lg shadow-[0_10px_22px_rgba(44,64,53,0.3)] hover:shadow-[0_14px_30px_rgba(44,64,53,0.35)] transition-all duration-200"
+          className="bg-[#2D4F4F] text-white rounded-lg shadow-[0_10px_22px_rgba(45,79,79,0.3)] hover:shadow-[0_14px_30px_rgba(45,79,79,0.35)] transition-all duration-200"
         >
           + Nuevo plato
         </Button>
@@ -126,7 +126,7 @@ export const DishesPage = () => {
           {filteredDishes.map((dish) => (
             <Card
               key={dish._id}
-              className="bg-white border border-[#E2D4B7] shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden rounded-xl flex flex-col h-full"
+              className="bg-[#FDFBF7] border border-[#E8D4B8] shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden rounded-xl flex flex-col h-full"
             >
               {/* Imagen del plato */}
               <CardHeader floated={false} shadow={false} className="m-0 rounded-none h-48 overflow-hidden bg-stone-100">
@@ -147,7 +147,7 @@ export const DishesPage = () => {
 
               {/* Contenido */}
               <CardBody className="flex-grow px-4 py-3">
-                <Typography variant="h6" className="text-[#1A1A1A] mb-1 line-clamp-2">
+                <Typography variant="h6" className="text-gray-800 mb-1 line-clamp-2">
                   {dish.nombre}
                 </Typography>
 
@@ -158,15 +158,15 @@ export const DishesPage = () => {
                 )}
 
                 <div className="flex items-center justify-between mb-3">
-                  <Typography variant="h5" className="text-[#2C4035] font-bold">
+                  <Typography variant="h5" className="text-[#2D4F4F] font-bold">
                     Q {dish.precio.toFixed(2)}
                   </Typography>
-                  <span className="inline-block px-2 py-1 bg-[#E2D4B7] text-[#2C4035] text-xs font-semibold rounded-full">
+                  <span className="inline-block px-2 py-1 bg-gray-200 text-[#2D4F4F] text-xs font-semibold rounded-full">
                     {getCategoryLabel(dish.categoria)}
                   </span>
                 </div>
 
-                <Typography variant="small" className="text-[#2C4035] mb-2">
+                <Typography variant="small" className="text-[#2D4F4F] mb-2">
                   Restaurante: {getRestaurantName(dish.restaurantId, restaurantOptions)}
                 </Typography>
 
@@ -178,11 +178,11 @@ export const DishesPage = () => {
               </CardBody>
 
               {/* Acciones */}
-              <div className="border-t border-[#E2D4B7] px-4 py-3 flex gap-2 bg-stone-50">
+              <div className="border-t border-[#E8D4B8] px-4 py-3 flex gap-2 bg-[#FDFBF7]">
                 <IconButton
                   size="sm"
                   onClick={() => handleEditDish(dish)}
-                  className="bg-[#2C4035] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200 flex-1"
+                  className="bg-[#2D4F4F] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200 flex-1"
                   title="Editar plato"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
@@ -193,7 +193,7 @@ export const DishesPage = () => {
                 <IconButton
                   size="sm"
                   onClick={() => handleRequestDeleteDish(dish)}
-                  className="bg-[#C87A55] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200 flex-1"
+                  className="bg-[#D97065] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200 flex-1"
                   title="Eliminar plato"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
@@ -209,9 +209,9 @@ export const DishesPage = () => {
           ))}
         </div>
       ) : (
-        <Card className="bg-gradient-to-b from-white to-[#F8F5F0] border border-[#E2D4B7] shadow-[0_16px_34px_rgba(26,26,26,0.08)] rounded-xl">
+        <Card className="bg-[#FDFBF7] border border-[#E8D4B8] shadow-[0_16px_34px_rgba(26,26,26,0.08)] rounded-xl">
           <CardBody className="flex items-center justify-center py-12">
-            <Typography className="text-center text-[#2C4035]">
+            <Typography className="text-center text-[#2D4F4F]">
               {searchTerm.trim() ? 'No hay platos que coincidan con la búsqueda.' : 'No hay platos registrados para este filtro.'}
             </Typography>
           </CardBody>
@@ -227,25 +227,25 @@ export const DishesPage = () => {
       {/* Modal de confirmación de eliminación */}
       {dishToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl border border-stone-200 bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-xl border border-[#E8D4B8] bg-[#FDFBF7] p-6 shadow-2xl">
             <Typography variant="h5" className="text-[#1A1A1A]">
               Confirmar eliminación
             </Typography>
-            <Typography variant="small" className="mt-2 text-[#2C4035]">
+            <Typography variant="small" className="mt-2 text-[#2D4F4F]">
               ¿Estás seguro de que deseas eliminar este plato?
             </Typography>
             <div className="mt-6 flex justify-end gap-2">
               <Button
                 variant="text"
                 onClick={handleCloseDeleteDialog}
-                className="rounded-md text-[#2C4035] transition-colors duration-200 hover:bg-[#F8F5F0]"
+                className="rounded-md text-[#2D4F4F] transition-colors duration-200 hover:bg-[#F5EFEA]"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={handleConfirmDeleteDish}
                 disabled={loading}
-                className="rounded-md bg-[#C87A55] text-white shadow-md transition-all duration-200 hover:shadow-lg"
+                className="rounded-md bg-[#D97065] text-white shadow-md transition-all duration-200 hover:shadow-lg"
               >
                 {loading ? 'Eliminando...' : 'Eliminar'}
               </Button>

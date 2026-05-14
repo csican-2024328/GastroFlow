@@ -18,6 +18,7 @@ import { ClientMakeOrderPage } from '../../features/orders/pages/ClientMakeOrder
 import { ClientMyOrdersPage } from '../../features/orders/pages/ClientMyOrdersPage.jsx';
 import { EventsPage } from '../../features/events/pages/EventsPage.jsx';
 import { ReservationsPage } from '../../features/reservations/pages/ReservationsPage.jsx';
+import ReservationManagement from '../../features/reservations/pages/ReservationManagement.jsx';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -48,6 +49,7 @@ export const AppRoutes = () => {
                  <Route path="ingredientes" element={<IngredientsPage />} />
                  <Route path="platos" element={<DishesPage />} />
                  <Route path="pedidos" element={<OrderManagement />} />
+                 <Route path="reservas" element={<ReservationManagement />} />
             </Route>
             {/* Profile is shown as an in-app modal (ProfileModal) — no standalone route to avoid redirecting users to a separate page. */}
         </Routes>

@@ -39,9 +39,9 @@ export const EventCard = ({ event, onEventUsed }) => {
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#E2D4B7] bg-white shadow-[0_10px_24px_rgba(61,44,30,0.10)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(61,44,30,0.14)]">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_10px_24px_rgba(61,44,30,0.10)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(61,44,30,0.14)]">
       {/* Image container */}
-      <div className="relative h-48 bg-gradient-to-br from-[#E2D4B7] to-[#F8F5F0]">
+      <div className="relative h-48 bg-gradient-to-br from-gray-200 to-[#FAF9F6]">
         {event.imagen && event.imagen !== '' ? (
           <img
             src={event.imagen}
@@ -49,7 +49,7 @@ export const EventCard = ({ event, onEventUsed }) => {
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#C87A55] to-[#C49A2B] text-5xl">
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#E8956B] to-[#C49A2B] text-5xl">
             🎉
           </div>
         )}
@@ -57,7 +57,7 @@ export const EventCard = ({ event, onEventUsed }) => {
         {/* Status badge */}
         <div className="absolute right-3 top-3">
           {isActive && (
-            <span className="inline-flex items-center rounded-full bg-[#2C4035] px-3 py-1 text-xs font-semibold text-white">
+            <span className="inline-flex items-center rounded-full bg-[#2D4F4F] px-3 py-1 text-xs font-semibold text-white">
               ✓ Activo
             </span>
           )}
@@ -77,28 +77,28 @@ export const EventCard = ({ event, onEventUsed }) => {
       {/* Content container */}
       <div className="flex flex-col p-4">
         {/* Title */}
-        <h3 className="mb-2 line-clamp-2 font-['Playfair_Display'] text-lg font-bold text-[#1A1A1A]">
+        <h3 className="mb-2 line-clamp-2 font-['Playfair_Display'] text-lg font-bold text-gray-800">
           {event.nombre}
         </h3>
 
         {/* Description */}
-        <p className="mb-4 line-clamp-2 text-sm text-[#5A5146]">
+        <p className="mb-4 line-clamp-2 text-sm text-gray-600">
           {event.descripcion || 'Sin descripción disponible'}
         </p>
 
         {/* Dates */}
-        <div className="mb-4 space-y-1 text-xs text-[#5A5146]">
+        <div className="mb-4 space-y-1 text-xs text-gray-600">
           <div className="flex items-start gap-2">
-            <span className="mt-0.5 text-[#C87A55]">📅</span>
+            <span className="mt-0.5 text-[#E8956B]">📅</span>
             <div className="flex-1">
-              <div className="font-semibold text-[#1A1A1A]">Inicio:</div>
+              <div className="font-semibold text-gray-800">Inicio:</div>
               <div>{formatDate(event.fechaInicio)}</div>
             </div>
           </div>
           <div className="flex items-start gap-2">
-            <span className="mt-0.5 text-[#C87A55]">📅</span>
+            <span className="mt-0.5 text-[#E8956B]">📅</span>
             <div className="flex-1">
-              <div className="font-semibold text-[#1A1A1A]">Fin:</div>
+              <div className="font-semibold text-gray-800">Fin:</div>
               <div>{formatDate(event.fechaFin)}</div>
             </div>
           </div>
@@ -109,14 +109,14 @@ export const EventCard = ({ event, onEventUsed }) => {
           <button
             onClick={handleUseEvent}
             disabled={isLoading}
-            className="w-full rounded-lg bg-gradient-to-r from-[#C87A55] to-[#C49A2B] px-4 py-2 text-sm font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
+            className="w-full rounded-lg bg-gradient-to-r from-[#E8956B] to-[#C49A2B] px-4 py-2 text-sm font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
           >
             {isLoading ? 'Procesando...' : 'Usar evento'}
           </button>
         )}
 
         {hasBeenUsed && (
-          <div className="w-full rounded-lg bg-[#E2D4B7] px-4 py-2 text-center text-sm font-semibold text-[#3D2C1E]">
+          <div className="w-full rounded-lg bg-gray-200 px-4 py-2 text-center text-sm font-semibold text-gray-800">
             Evento ya utilizado
           </div>
         )}
