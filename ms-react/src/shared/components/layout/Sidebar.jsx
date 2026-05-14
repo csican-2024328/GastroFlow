@@ -10,6 +10,7 @@ export const Sidebar = () => {
         {label: "Platos", to: "/dashboard/platos"},
         {label: "Pedidos", to: "/dashboard/pedidos"},
         {label: "Reservas", to: "/dashboard/reservas"},
+        {label: "Facturas", to: "/dashboard/facturas"},
         {label: "Cupones", to: "/dashboard/cupones"},
         {label: "Eventos", to: "/dashboard/eventos"},
         {label: "Usuarios", to: "/dashboard/Usuarios"},
