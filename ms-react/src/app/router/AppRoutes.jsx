@@ -59,6 +59,7 @@ export const AppRoutes = () => {
                 <Route path="reservas" element={<ReservationManagement />} />
                 <Route path="facturas" element={<InvoicesPage />} />
                 <Route path="cupones" element={<CouponsPage />} />
+                <Route path="eventos" element={<EventsPage />} />
                 <Route path="asignacion" element={<AssignmentsPage />} />
                 <Route
                     path="users"

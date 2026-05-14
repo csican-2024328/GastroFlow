@@ -12,6 +12,7 @@ import { findUserById, softDeleteUser, updateUserProfile } from '../../helper/us
 import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
 import { generateJWT } from '../../helper/generate-jwt.js';
 import { revokeTokenByJti } from '../../helper/session-token-store.js';
+import { buildUserResponse } from '../../utils/user-helpers.js';
 import { User, UserRole } from '../User/User.model.js';
 
 export const register = asyncHandler(async (req, res) => {
