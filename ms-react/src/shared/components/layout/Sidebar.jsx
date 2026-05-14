@@ -1,7 +1,9 @@
-import {Link, useLocation} from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuthStore } from '../../../features/auth/store/authStore.js';
 
 export const Sidebar = () => {
     const location = useLocation();
+    const userRole = useAuthStore((state) => (state.user?.role || '').toString().trim().toUpperCase());
 
     const items = [
         {label: "Mesas", to: "/dashboard/mesas"},
@@ -20,6 +22,9 @@ export const Sidebar = () => {
         <aside className='w-60 bg-[#2D4F4F] min-h-[calc(100vh-4rem)] p-4'>
         <ul className='space-y-2'>
             {items.map((item) => {
+                if (item.adminOnly && userRole !== 'PLATFORM_ADMIN') {
+                    return null;
+                }
                 const active = location.pathname === item.to
 
                 return (

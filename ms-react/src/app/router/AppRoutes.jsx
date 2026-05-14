@@ -11,6 +11,7 @@ import { TablesPage } from '../../features/tables/pages/TablesPage.jsx';
 import { IngredientsPage } from '../../features/ingredients/pages/IngredientsPage.jsx';
 import { DishesPage } from '../../features/dishes/pages/DishesPage.jsx';
 import OrderManagement  from '../../features/orders/views/OrderManagement.jsx';
+import { Users } from '../../features/users/components/Users.jsx';
 import { ProtectedRoute } from '../../shared/components/auth/ProtectedRoute.jsx';
 import { RoleGuard } from '../../shared/components/auth/RoleGuard.jsx';
 import { ClientOrdersPage } from '../../features/orders/pages/ClientOrdersPage.jsx';
@@ -40,8 +41,8 @@ export const AppRoutes = () => {
             <Route path="/cliente/eventos" element={<EventsPage />} />
             <Route path="/cliente/reservaciones" element={<ReservationsPage />} />
             <Route path="/cliente/cupones" element={<CouponsPage />} />
-            <Route 
-                path="/dashboard" 
+            <Route
+                path="/dashboard"
                 element={
                     <ProtectedRoute>
                         <RoleGuard allowedRoles={['PLATFORM_ADMIN', 'RESTAURANT_ADMIN']}>
@@ -52,13 +53,21 @@ export const AppRoutes = () => {
             >
                 <Route path="mesas" element={<TablesPage />} />
                 <Route path="restaurantes" element={<RestaurantsPage />} />
-                 <Route path="ingredientes" element={<IngredientsPage />} />
-                 <Route path="platos" element={<DishesPage />} />
-                 <Route path="pedidos" element={<OrderManagement />} />
-                 <Route path="reservas" element={<ReservationManagement />} />
-                 <Route path="facturas" element={<InvoicesPage />} />
+                <Route path="ingredientes" element={<IngredientsPage />} />
+                <Route path="platos" element={<DishesPage />} />
+                <Route path="pedidos" element={<OrderManagement />} />
+                <Route path="reservas" element={<ReservationManagement />} />
+                <Route path="facturas" element={<InvoicesPage />} />
                 <Route path="cupones" element={<CouponsPage />} />
                 <Route path="asignacion" element={<AssignmentsPage />} />
+                <Route
+                    path="users"
+                    element={
+                        <RoleGuard allowedRoles={['PLATFORM_ADMIN']}>
+                            <Users />
+                        </RoleGuard>
+                    }
+                />
             </Route>
             {/* Profile is shown as an in-app modal (ProfileModal) — no standalone route to avoid redirecting users to a separate page. */}
         </Routes>
