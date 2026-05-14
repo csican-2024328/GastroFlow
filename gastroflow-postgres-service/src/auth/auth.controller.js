@@ -12,7 +12,7 @@ import { findUserById, softDeleteUser, updateUserProfile } from '../../helper/us
 import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
 import { generateJWT } from '../../helper/generate-jwt.js';
 import { revokeTokenByJti } from '../../helper/session-token-store.js';
-import { buildUserResponse } from '../../utils/user-helpers.js';
+import { User, UserRole } from '../User/User.model.js';
 
 export const register = asyncHandler(async (req, res) => {
   try {
@@ -347,4 +347,73 @@ export const assignRole = asyncHandler(async (req, res) => {
       error: error.message,
     });
   }
+});
+
+/**
+ * Controlador para asignar un restaurante a un usuario (PLATFORM_ADMIN)
+ * Solo PLATFORM_ADMIN puede asignar restaurantes
+ */
+export const assignRestaurantToUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { restaurantId } = req.body;
+  const requestingUserId = req.usuario?.sub || req.usuario?.userId;
+
+  // 1. Validar que quien solicita sea PLATFORM_ADMIN
+  const requestingUser = await User.findByPk(requestingUserId);
+  if (!requestingUser || requestingUser.UserRoles?.[0]?.Role?.Name !== 'PLATFORM_ADMIN') {
+    return res.status(401).json({
+      success: false,
+      message: 'Solo administradores de plataforma pueden asignar restaurantes'
+    });
+  }
+
+  // 2. Validar restaurantId formato
+  if (!restaurantId || typeof restaurantId !== 'string') {
+    return res.status(400).json({
+      success: false,
+      message: 'restaurantId es requerido y debe ser texto'
+    });
+  }
+
+  // 3. Validar que restaurante existe en MongoDB
+  // TODO: Implementar checkRestaurantInMongo(restaurantId)
+
+  // 4. Obtener usuario target
+  const targetUser = await User.findByPk(userId, {
+    include: [
+      {
+        model: UserRole,
+        as: 'UserRoles',
+        include: [{ model: Role, as: 'Role' }]
+      }
+    ]
+  });
+  if (!targetUser) {
+    return res.status(404).json({
+      success: false,
+      message: 'Usuario no encontrado'
+    });
+  }
+
+  // 5. Guardar restaurantId anterior
+  const previousRestaurantId = targetUser.RestaurantId;
+
+  // 6. Actualizar usuario
+  targetUser.RestaurantId = restaurantId;
+  await targetUser.save();
+
+  // 7. Retornar datos
+  res.status(200).json({
+    success: true,
+    message: 'Restaurante asignado exitosamente',
+    data: {
+      userId: targetUser.Id,
+      name: targetUser.Name,
+      surname: targetUser.Surname,
+      email: targetUser.Email,
+      restaurantId: targetUser.RestaurantId,
+      previousRestaurantId,
+      updatedAt: targetUser.UpdatedAt
+    }
+  });
 });

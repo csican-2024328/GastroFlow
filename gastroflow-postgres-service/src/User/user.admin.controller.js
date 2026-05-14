@@ -64,6 +64,12 @@ export const getProfile = [
 ];
 
 export const getUsers = asyncHandler(async (req, res) => {
+  const { role } = req.query;
+  
+  const roleInclude = role 
+    ? { where: { Name: role }, required: true }
+    : { required: false };
+
   const users = await User.findAll({
     attributes: { exclude: ['Password'] },
     include: [
@@ -72,9 +78,18 @@ export const getUsers = asyncHandler(async (req, res) => {
       {
         model: UserRole,
         as: 'UserRoles',
-        include: [{ model: Role, as: 'Role' }],
+        required: role ? true : false,
+        include: [
+          { 
+            model: Role, 
+            as: 'Role',
+            ...roleInclude
+          },
+        ],
       },
     ],
+    subQuery: false,
+    distinct: true,
     order: [['CreatedAt', 'DESC']],
   });
 

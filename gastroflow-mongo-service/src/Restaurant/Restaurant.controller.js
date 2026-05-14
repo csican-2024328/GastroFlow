@@ -1,5 +1,7 @@
 import Restaurant from './Restaurant.model.js';
 import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
+import axios from 'axios';
+import { config } from '../../configs/config.js';
 
 export const createRestaurant = asyncHandler(async (req, res) => {
   try {
@@ -14,6 +16,7 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       category,
       description,
       averagePrice,
+      adminId,
     } = req.body;
 
     console.log('📝 [CREATE RESTAURANT] Datos recibidos:', {
@@ -28,14 +31,15 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       category,
       description,
       averagePrice,
+      adminId,
       filesCount: req.files?.length || 0,
     });
     
-    if (!name || !email || !phone || !address || !city || !openingHours || !aforoMaximo) {
+    if (!name || !email || !phone || !address || !city || !openingHours || !aforoMaximo || !adminId) {
       console.warn('⚠️  [CREATE RESTAURANT] Campos requeridos faltantes');
       return res.status(400).json({
         success: false,
-        message: 'Todos los campos son requeridos',
+        message: 'Todos los campos son requeridos, incluyendo adminId',
       });
     }
 
@@ -68,6 +72,7 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       description,
       averagePrice,
       photos,
+      adminId,
       isActive: true,
     });
 
@@ -76,6 +81,18 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       name: restaurant.name,
       isActive: restaurant.isActive,
     });
+
+    // Asignar restaurante al admin
+    try {
+      const assignResponse = await axios.put(
+        `${config.postgresApi.baseUrl}/users/${adminId}/assign-restaurant`,
+        { restaurantId: restaurant._id.toString() }
+      );
+      console.log('✅ [ASSIGN RESTAURANT] Asignación exitosa:', assignResponse.data);
+    } catch (assignError) {
+      console.error('❌ [ASSIGN RESTAURANT] Error en asignación:', assignError.message);
+      // No fallar la creación si la asignación falla, pero loggear
+    }
 
     res.status(201).json({
       success: true,

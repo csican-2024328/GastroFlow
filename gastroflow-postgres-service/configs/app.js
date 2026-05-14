@@ -18,6 +18,7 @@ import staffRoutes from '../src/Staff/staff.routes.js';
 import { errorMiddleware } from '../middlewares/error.middleware.js';
 import { initializeEmailService, verificarConexionSMTP } from '../helper/email-service.js';
 import { createPlatformAdmin } from '../helper/createPlatformAdmin.js';
+import { createRestaurantAdmin } from '../helper/createRestaurantAdmin.js';
 import { setupSwagger } from './swagger.js';
 
 const BASE_PATH = '/api/v1';
@@ -65,6 +66,7 @@ export const initServer = async () => {
     // Conectar PostgreSQL (usuarios, auth)
     await dbConnection();
     await createPlatformAdmin();
+    await createRestaurantAdmin();
 
     middlewares(app);
     routes(app);

@@ -121,4 +121,9 @@ router.put(
   authController.assignRole
 );
 
+router.put(
+  '/:userId/assign-restaurant',
+  authController.assignRestaurantToUser
+);
+
 export default router;

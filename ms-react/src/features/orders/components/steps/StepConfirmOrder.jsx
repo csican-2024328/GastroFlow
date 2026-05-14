@@ -99,7 +99,7 @@ export const StepConfirmOrder = ({ onClose }) => {
     setIsCreatingOrder(false);
 
     if (response.success) {
-      notyfSuccess(`Pedido creado: ${response.data.numeroOrden}`);
+      notyfSuccess('✓ Su pedido fue hecho exitosamente');
       cart.resetCart();
       setTimeout(() => onClose(), 1500);
     } else {

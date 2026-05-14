@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRestaurantStore } from '../store/useRestaurantStore.js';
 import { notyfSuccess, notyfError } from '../../../shared/utils/notyf.js';
+import { getPlatformAdmins } from '../../../shared/api/assignmentService.js';
 
 export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
   if (!isOpen) return null;
@@ -16,6 +17,9 @@ export const RestaurantModal = ({ isOpen, onClose, restaurant = null }) => {
 };
 
 const RestaurantModalContent = ({ onClose, restaurant = null }) => {
+  const [availableAdmins, setAvailableAdmins] = useState([]);
+  const [loadingAdmins, setLoadingAdmins] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -32,8 +36,31 @@ const RestaurantModalContent = ({ onClose, restaurant = null }) => {
       category: restaurant?.category || '',
       description: restaurant?.description || '',
       averagePrice: restaurant?.averagePrice || '',
+      adminId: restaurant?.adminId || '',
     },
   });
+
+  // Cargar admins disponibles al montar el componente
+  useEffect(() => {
+    const loadAvailableAdmins = async () => {
+      if (restaurant) return; // Solo para creación
+
+      setLoadingAdmins(true);
+      try {
+        const response = await getPlatformAdmins();
+        // Filtrar admins que no tienen restaurante asignado
+        const available = response.data?.filter(admin => !admin.RestaurantId) || [];
+        setAvailableAdmins(available);
+      } catch (error) {
+        console.error('Error loading available admins:', error);
+        notyfError('Error al cargar administradores disponibles');
+      } finally {
+        setLoadingAdmins(false);
+      }
+    };
+
+    loadAvailableAdmins();
+  }, [restaurant]);
 
   const [loading, setLoading] = useState(false);
   const [photoPreviews, setPhotoPreviews] = useState(
@@ -78,6 +105,7 @@ const RestaurantModalContent = ({ onClose, restaurant = null }) => {
         category: data.category || undefined,
         description: data.description || undefined,
         averagePrice: data.averagePrice ? parseFloat(data.averagePrice) : undefined,
+        adminId: data.adminId || undefined,
         photos: selectedPhotos,
       };
 
@@ -263,6 +291,39 @@ const RestaurantModalContent = ({ onClose, restaurant = null }) => {
                 step="0.01"
               />
             </div>
+
+            {/* Admin ID */}
+            {!restaurant && (
+              <div>
+                <label className={labelClassName}>Administrador *</label>
+                {loadingAdmins ? (
+                  <div className="flex items-center justify-center py-2">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#2D4F4F]"></div>
+                    <span className="ml-2 text-[#5A5146]">Cargando administradores...</span>
+                  </div>
+                ) : (
+                  <select
+                    {...register('adminId', { required: 'Debe seleccionar un administrador' })}
+                    className={inputClassName}
+                  >
+                    <option value="">Seleccionar administrador...</option>
+                    {availableAdmins.map(admin => (
+                      <option key={admin.Id} value={admin.Id}>
+                        {admin.Name} {admin.Surname} - {admin.Email}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {errors.adminId && (
+                  <p className="text-red-500 text-xs mt-1">{errors.adminId.message}</p>
+                )}
+                {availableAdmins.length === 0 && !loadingAdmins && (
+                  <p className="text-amber-600 text-xs mt-1">
+                    No hay administradores disponibles sin restaurante asignado
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Fotos */}
             <div>

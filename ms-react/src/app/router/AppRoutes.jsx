@@ -22,6 +22,7 @@ import ReservationManagement from '../../features/reservations/pages/Reservation
 import { CouponsPage } from '../../features/coupons/pages/CouponsPage.jsx';
 import { ClientOrderTrackingPage } from '../../features/orders/pages/ClientOrderTrackingPage.jsx';
 import InvoicesPage from '../../features/invoices/pages/InvoicesPage.jsx';
+import { AssignmentsPage } from '../../features/assignments/pages/AssignmentsPage.jsx';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -57,6 +58,7 @@ export const AppRoutes = () => {
                  <Route path="reservas" element={<ReservationManagement />} />
                  <Route path="facturas" element={<InvoicesPage />} />
                 <Route path="cupones" element={<CouponsPage />} />
+                <Route path="asignacion" element={<AssignmentsPage />} />
             </Route>
             {/* Profile is shown as an in-app modal (ProfileModal) — no standalone route to avoid redirecting users to a separate page. */}
         </Routes>

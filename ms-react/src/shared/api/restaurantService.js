@@ -29,6 +29,7 @@ export const createRestaurant = async (data) => {
   if (data.category) formData.append('category', data.category);
   if (data.description) formData.append('description', data.description);
   if (data.averagePrice) formData.append('averagePrice', data.averagePrice);
+  if (data.adminId) formData.append('adminId', data.adminId);
   
   // Agregar múltiples fotos si existen
   if (data.photos && data.photos.length > 0) {

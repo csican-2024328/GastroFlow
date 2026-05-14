@@ -61,6 +61,10 @@ const restaurantSchema = mongoose.Schema(
       required: [true, 'El aforo máximo del restaurante es obligatorio'],
       min: [1, 'El aforo máximo debe ser al menos 1'],
     },
+    adminId: {
+      type: String,
+      required: false, // Opcional por ahora, pero requerido en creación
+    },
     isActive: {
       type: Boolean,
       default: true,

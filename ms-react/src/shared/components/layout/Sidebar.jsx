@@ -14,6 +14,7 @@ export const Sidebar = () => {
         {label: "Cupones", to: "/dashboard/cupones"},
         {label: "Eventos", to: "/dashboard/eventos"},
         {label: "Usuarios", to: "/dashboard/Usuarios"},
+        {label: "Asignacion", to: "/dashboard/asignacion"},
     ]
   return (
         <aside className='w-60 bg-[#2D4F4F] min-h-[calc(100vh-4rem)] p-4'>

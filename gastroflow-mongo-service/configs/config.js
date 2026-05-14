@@ -21,4 +21,7 @@ export const config = {
     emailExpiryHours: parseInt(process.env.VERIFICATION_EMAIL_EXPIRY_HOURS || '24'),
     passwordResetExpiryHours: parseInt(process.env.PASSWORD_RESET_EXPIRY_HOURS || '1'),
   },
+  postgresApi: {
+    baseUrl: process.env.POSTGRES_API_URL || 'http://localhost:3006/api/v1',
+  },
 };

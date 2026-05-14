@@ -172,6 +172,12 @@ export const User = sequelize.define(
       defaultValue: DataTypes.NOW,
       field: 'updated_at',
     },
+    RestaurantId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: 'restaurant_id',
+      defaultValue: null,
+    },
   },
   {
     tableName: 'users',
