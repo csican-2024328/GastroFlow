@@ -7,12 +7,14 @@
 import Event from './event.model.js';
 import Restaurant from '../Restaurant/Restaurant.model.js';
 import Menu from '../Menu/menu.model.js';
+import Plato from '../Platos/platos-model.js';
 
 const validarStaffAsignado = async (staffAsignados) => {
-    if (!Array.isArray(staffAsignados) || staffAsignados.length === 0) {
+    // Si no hay staff asignado, es válido (opcional)
+    if (!staffAsignados || !Array.isArray(staffAsignados) || staffAsignados.length === 0) {
         return {
-            valido: false,
-            message: 'Debe asignar al menos un miembro del staff'
+            valido: true,
+            idsValidados: []
         };
     }
 
@@ -79,12 +81,20 @@ export const createEvent = async (req, res) => {
             fechaInicio,
             fechaFin,
             menusAplicables,
+            platosAplicables,
             condiciones,
             musica,
             tematica,
             staffAsignados,
             cantidadMaximaUsos
         } = req.body;
+
+        if (!restaurantID) {
+            return res.status(400).json({
+                success: false,
+                message: 'El ID del restaurante es obligatorio'
+            });
+        }
 
         // Validar que el restaurante existe
         const restaurante = await Restaurant.findById(restaurantID);
@@ -102,6 +112,17 @@ export const createEvent = async (req, res) => {
                 return res.status(404).json({
                     success: false,
                     message: 'Uno o más menús no fueron encontrados'
+                });
+            }
+        }
+
+        // Validar que los platos existen
+        if (platosAplicables && platosAplicables.length > 0) {
+            const platos = await Plato.find({ _id: { $in: platosAplicables } });
+            if (platos.length !== platosAplicables.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Uno o más platos no fueron encontrados'
                 });
             }
         }
@@ -124,6 +145,7 @@ export const createEvent = async (req, res) => {
             fechaInicio: new Date(fechaInicio),
             fechaFin: new Date(fechaFin),
             menusAplicables,
+            platosAplicables,
             condiciones,
             musica,
             tematica,
@@ -137,7 +159,8 @@ export const createEvent = async (req, res) => {
         // Poblar referencias para la respuesta
         await nuevoEvento.populate([
             { path: 'restaurantID', select: 'nombre' },
-            { path: 'menusAplicables', select: 'nombre precio' }
+            { path: 'menusAplicables', select: 'nombre precio' },
+            { path: 'platosAplicables', select: 'nombre precio' }
         ]);
 
         res.status(201).json({
@@ -147,6 +170,7 @@ export const createEvent = async (req, res) => {
         });
 
     } catch (error) {
+        console.error('Error al crear evento:', error);
         res.status(500).json({
             success: false,
             message: 'Error al crear evento',
@@ -298,6 +322,33 @@ export const updateEvent = async (req, res) => {
         delete actualizaciones.restaurantID;
         delete actualizaciones.creadoPor;
 
+        if (actualizaciones.fechaInicio !== undefined) {
+            actualizaciones.fechaInicio = new Date(actualizaciones.fechaInicio);
+        }
+        if (actualizaciones.fechaFin !== undefined) {
+            actualizaciones.fechaFin = new Date(actualizaciones.fechaFin);
+        }
+
+        if (actualizaciones.menusAplicables !== undefined && actualizaciones.menusAplicables.length > 0) {
+            const menus = await Menu.find({ _id: { $in: actualizaciones.menusAplicables } });
+            if (menus.length !== actualizaciones.menusAplicables.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Uno o más menús aplicables no fueron encontrados'
+                });
+            }
+        }
+
+        if (actualizaciones.platosAplicables !== undefined && actualizaciones.platosAplicables.length > 0) {
+            const platos = await Plato.find({ _id: { $in: actualizaciones.platosAplicables } });
+            if (platos.length !== actualizaciones.platosAplicables.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Uno o más platos aplicables no fueron encontrados'
+                });
+            }
+        }
+
         if (actualizaciones.staffAsignados !== undefined) {
             const validacionStaff = await validarStaffAsignado(
                 actualizaciones.staffAsignados,
@@ -314,13 +365,11 @@ export const updateEvent = async (req, res) => {
             actualizaciones.staffAsignados = validacionStaff.idsValidados;
         }
 
-        const evento = await Event.findByIdAndUpdate(
-            id,
-            actualizaciones,
-            { new: true, runValidators: true }
-        )
-            .populate('restaurantID', 'nombre')
-            .populate('menusAplicables', 'nombre precio');
+        eventoExistente.set(actualizaciones);
+        const evento = await eventoExistente.save();
+        await evento.populate('restaurantID', 'nombre');
+        await evento.populate('menusAplicables', 'nombre precio');
+        await evento.populate('platosAplicables', 'nombre precio');
 
         res.status(200).json({
             success: true,
@@ -329,10 +378,13 @@ export const updateEvent = async (req, res) => {
         });
 
     } catch (error) {
+        console.error('Error updating event:', error);
+        const errorMessage = error?.message || 'Error al actualizar evento';
+
         res.status(500).json({
             success: false,
             message: 'Error al actualizar evento',
-            error: error.message
+            error: errorMessage
         });
     }
 };
@@ -355,7 +407,7 @@ export const activateEvent = async (req, res) => {
 
         const evento = await Event.findByIdAndUpdate(
             id,
-            { isActive: true },
+            { isActive: true, estado: 'ACTIVA' },
             { new: true }
         ).populate('restaurantID', 'nombre');
 
@@ -399,7 +451,7 @@ export const deactivateEvent = async (req, res) => {
 
         const evento = await Event.findByIdAndUpdate(
             id,
-            { isActive: false },
+            { isActive: false, estado: 'INACTIVA' },
             { new: true }
         ).populate('restaurantID', 'nombre');
 

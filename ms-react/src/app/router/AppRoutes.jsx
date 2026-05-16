@@ -18,6 +18,7 @@ import { ClientOrdersPage } from '../../features/orders/pages/ClientOrdersPage.j
 import { ClientMakeOrderPage } from '../../features/orders/pages/ClientMakeOrderPage.jsx';
 import { ClientMyOrdersPage } from '../../features/orders/pages/ClientMyOrdersPage.jsx';
 import { EventsPage } from '../../features/events/pages/EventsPage.jsx';
+import { EventsAdminPage } from '../../features/events/pages/EventsAdminPage.jsx';
 import { ReservationsPage } from '../../features/reservations/pages/ReservationsPage.jsx';
 import ReservationManagement from '../../features/reservations/pages/ReservationManagement.jsx';
 import { CouponsPage } from '../../features/coupons/pages/CouponsPage.jsx';
@@ -59,7 +60,7 @@ export const AppRoutes = () => {
                 <Route path="reservas" element={<ReservationManagement />} />
                 <Route path="facturas" element={<InvoicesPage />} />
                 <Route path="cupones" element={<CouponsPage />} />
-                <Route path="eventos" element={<EventsPage />} />
+                <Route path="eventos" element={<EventsAdminPage />} />
                 <Route path="asignacion" element={<AssignmentsPage />} />
                 <Route
                     path="users"

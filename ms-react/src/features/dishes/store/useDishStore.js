@@ -48,7 +48,7 @@ export const useDishStore = create((set, get) => ({
   fetchDishes: async (restaurantId = get().selectedRestaurantId) => {
     try {
       set({ loading: true, error: null });
-      const response = await getDishes({ restaurantId: restaurantId || undefined });
+      const response = await getDishes({ restaurantId: restaurantId || undefined, limit: 1000 });
       const data = response.data.data || [];
 
       set({

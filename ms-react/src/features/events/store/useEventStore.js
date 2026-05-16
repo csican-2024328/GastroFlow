@@ -4,6 +4,11 @@ import {
   getRestaurantEvents,
   getEventById,
   useEvent,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  activateEvent,
+  deactivateEvent,
 } from '../../../shared/api/eventService.js';
 
 export const useEventStore = create((set) => ({
@@ -101,6 +106,117 @@ export const useEventStore = create((set) => ({
       return { success: true, data: response.data };
     } catch (error) {
       const message = error.response?.data?.message || 'Error al usar evento';
+      set({ error: message, loading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Create event
+  createEventAction: async (data) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await createEvent(data);
+      const newEvent = response.data.data;
+
+      set((state) => ({
+        events: [newEvent, ...state.events],
+        loading: false,
+      }));
+
+      return { success: true, data: newEvent };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Error al crear evento';
+      const detailedErrors = error.response?.data?.errors || null;
+      set({ error: message, loading: false });
+      return { success: false, error: message, errors: detailedErrors };
+    }
+  },
+
+  // Update event
+  updateEventAction: async (eventId, data) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await updateEvent(eventId, data);
+      const updatedEvent = response.data.data;
+
+      set((state) => ({
+        events: state.events.map((e) =>
+          e._id === eventId ? updatedEvent : e
+        ),
+        selectedEvent: state.selectedEvent?._id === eventId ? updatedEvent : state.selectedEvent,
+        loading: false,
+      }));
+
+      return { success: true, data: updatedEvent };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Error al actualizar evento';
+      const detailedError = error.response?.data?.error || message;
+      set({ error: detailedError, loading: false });
+      return { success: false, error: detailedError };
+    }
+  },
+
+  // Delete event
+  deleteEventAction: async (eventId) => {
+    try {
+      set({ loading: true, error: null });
+      await deleteEvent(eventId);
+
+      set((state) => ({
+        events: state.events.filter((e) => e._id !== eventId),
+        selectedEvent: state.selectedEvent?._id === eventId ? null : state.selectedEvent,
+        loading: false,
+      }));
+
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Error al eliminar evento';
+      set({ error: message, loading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Activate event
+  activateEventAction: async (eventId) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await activateEvent(eventId);
+      const updatedEvent = response.data.data;
+
+      set((state) => ({
+        events: state.events.map((e) =>
+          e._id === eventId ? updatedEvent : e
+        ),
+        selectedEvent: state.selectedEvent?._id === eventId ? updatedEvent : state.selectedEvent,
+        loading: false,
+      }));
+
+      return { success: true, data: updatedEvent };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Error al activar evento';
+      set({ error: message, loading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Deactivate event
+  deactivateEventAction: async (eventId) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await deactivateEvent(eventId);
+      const updatedEvent = response.data.data;
+
+      set((state) => ({
+        events: state.events.map((e) =>
+          e._id === eventId ? updatedEvent : e
+        ),
+        selectedEvent: state.selectedEvent?._id === eventId ? updatedEvent : state.selectedEvent,
+        loading: false,
+      }));
+
+      return { success: true, data: updatedEvent };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Error al desactivar evento';
       set({ error: message, loading: false });
       return { success: false, error: message };
     }

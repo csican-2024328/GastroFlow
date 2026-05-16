@@ -91,12 +91,22 @@ export const validateCreateEvent = [
         .withMessage('La fecha de fin debe ser válida'),
 
     check('menusAplicables')
-        .isArray({ min: 1 })
-        .withMessage('Debe seleccionar al menos un menú'),
+        .optional()
+        .isArray()
+        .withMessage('menusAplicables debe ser un array'),
 
     check('menusAplicables.*')
         .isMongoId()
         .withMessage('Cada menú debe tener un ID válido'),
+
+    check('platosAplicables')
+        .optional()
+        .isArray()
+        .withMessage('platosAplicables debe ser un array'),
+
+    check('platosAplicables.*')
+        .isMongoId()
+        .withMessage('Cada plato debe tener un ID válido'),
 
     check('condiciones')
         .optional()
@@ -114,10 +124,12 @@ export const validateCreateEvent = [
         .withMessage('La temática no puede exceder 100 caracteres'),
 
     check('staffAsignados')
-        .isArray({ min: 1 })
-        .withMessage('Debe asignar al menos un miembro del staff'),
+        .optional()
+        .isArray()
+        .withMessage('Staff asignados debe ser un array'),
 
     check('staffAsignados.*')
+        .optional()
         .isString()
         .withMessage('Cada ID de staff debe ser texto válido')
         .notEmpty()
@@ -129,7 +141,13 @@ export const validateCreateEvent = [
         .withMessage('La cantidad de usos debe ser un número entero positivo'),
 
     body().custom(async (value, { req }) => {
-        const { restaurantID, fechaInicio, fechaFin } = req.body;
+        const { restaurantID, fechaInicio, fechaFin, menusAplicables, platosAplicables } = req.body;
+        
+        // Validar que hay al menos un menú o plato aplicable
+        if ((!menusAplicables || menusAplicables.length === 0) && 
+            (!platosAplicables || platosAplicables.length === 0)) {
+            throw new Error('Debes seleccionar al menos un plato o menú aplicable');
+        }
         
         if (restaurantID && fechaInicio && fechaFin) {
             const noHaySolapamiento = await validarNoHayEventosSolapados(
@@ -190,13 +208,23 @@ export const validateUpdateEvent = [
 
     check('menusAplicables')
         .optional()
-        .isArray({ min: 1 })
-        .withMessage('Debe seleccionar al menos un menú'),
+        .isArray()
+        .withMessage('menusAplicables debe ser un array'),
 
     check('menusAplicables.*')
         .optional()
         .isMongoId()
         .withMessage('Cada menú debe tener un ID válido'),
+
+    check('platosAplicables')
+        .optional()
+        .isArray()
+        .withMessage('platosAplicables debe ser un array'),
+
+    check('platosAplicables.*')
+        .optional()
+        .isMongoId()
+        .withMessage('Cada plato debe tener un ID válido'),
 
     check('condiciones')
         .optional()
@@ -215,8 +243,8 @@ export const validateUpdateEvent = [
 
     check('staffAsignados')
         .optional()
-        .isArray({ min: 1 })
-        .withMessage('Debe asignar al menos un miembro del staff'),
+        .isArray()
+        .withMessage('Staff asignados debe ser un array'),
 
     check('staffAsignados.*')
         .optional()

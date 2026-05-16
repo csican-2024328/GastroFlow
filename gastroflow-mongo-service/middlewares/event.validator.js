@@ -1,4 +1,5 @@
 import { check, param, body } from 'express-validator';
+import mongoose from 'mongoose';
 import Event from '../src/Event/event.model.js';
 
 /**
@@ -11,8 +12,9 @@ import Event from '../src/Event/event.model.js';
  */
 const validarNoHayEventosSolapados = async (restaurantID, fechaInicio, fechaFin, excludeEventId = null) => {
     try {
+        const rid = new mongoose.Types.ObjectId(restaurantID);
         const filtro = {
-            restaurantID,
+            restaurantID: rid,
             isActive: true,
             estado: { $in: ['ACTIVA', 'INACTIVA'] }, // Excluir FINALIZADA
             $or: [
@@ -25,6 +27,17 @@ const validarNoHayEventosSolapados = async (restaurantID, fechaInicio, fechaFin,
         }
 
         const eventosConflicto = await Event.findOne(filtro);
+        if (eventosConflicto) {
+            console.warn('⚠️ [OVERLAP DETECTED]', {
+                restaurantID,
+                new: { fechaInicio, fechaFin },
+                existing: {
+                    _id: eventosConflicto._id,
+                    fechaInicio: eventosConflicto.fechaInicio,
+                    fechaFin: eventosConflicto.fechaFin
+                }
+            });
+        }
         return !eventosConflicto;
     } catch (error) {
         console.error('Error validando eventos solapados:', error);
@@ -36,112 +49,120 @@ const validarNoHayEventosSolapados = async (restaurantID, fechaInicio, fechaFin,
  * Validaciones para crear un nuevo evento
  */
 export const validateCreateEvent = [
-    check('nombre')
-        .not()
-        .isEmpty()
+    body('nombre')
+        .trim()
+        .notEmpty()
         .withMessage('El nombre del evento es obligatorio')
         .isLength({ min: 3, max: 100 })
         .withMessage('El nombre debe tener entre 3 y 100 caracteres'),
 
-    check('descripcion')
-        .not()
-        .isEmpty()
+    body('descripcion')
+        .trim()
+        .notEmpty()
         .withMessage('La descripción es obligatoria')
         .isLength({ min: 10, max: 500 })
         .withMessage('La descripción debe tener entre 10 y 500 caracteres'),
 
-    check('tipo')
-        .not()
-        .isEmpty()
+    body('tipo')
+        .notEmpty()
         .withMessage('El tipo de evento es obligatorio')
         .isIn(['PROMOCION', 'DESCUENTO', 'COMBO', 'HAPPY_HOUR', 'EVENTO_ESPECIAL', 'OFERTA_TEMPORAL'])
         .withMessage('Tipo de evento no válido'),
 
-    check('restaurantID')
-        .not()
-        .isEmpty()
+    body('restaurantID')
+        .notEmpty()
         .withMessage('El ID del restaurante es obligatorio')
         .isMongoId()
-        .withMessage('ID de restaurante inválido'),
+        .withMessage('ID de restaurante inválido')
+        .bail(),
 
-    check('descuentoTipo')
+    body('descuentoTipo')
         .optional()
         .isIn(['PORCENTAJE', 'CANTIDAD_FIJA'])
         .withMessage('Tipo de descuento debe ser PORCENTAJE o CANTIDAD_FIJA'),
 
-    check('descuentoValor')
-        .not()
-        .isEmpty()
+    body('descuentoValor')
+        .notEmpty()
         .withMessage('El valor del descuento es obligatorio')
         .isFloat({ min: 0 })
         .withMessage('El descuento debe ser un número válido mayor o igual a 0'),
 
-    check('fechaInicio')
+    body('fechaInicio')
         .not()
         .isEmpty()
         .withMessage('La fecha de inicio es obligatoria')
         .isISO8601()
         .withMessage('La fecha de inicio debe ser válida'),
 
-    check('fechaFin')
+    body('fechaFin')
         .not()
         .isEmpty()
         .withMessage('La fecha de fin es obligatoria')
         .isISO8601()
         .withMessage('La fecha de fin debe ser válida'),
 
-    check('menusAplicables')
-        .isArray({ min: 1 })
-        .withMessage('Debe seleccionar al menos un menú'),
+    body('menusAplicables')
+        .optional()
+        .isArray()
+        .withMessage('menusAplicables debe ser un array'),
 
-    check('menusAplicables.*')
+    body('menusAplicables.*')
+        .optional()
         .isMongoId()
         .withMessage('Cada menú debe tener un ID válido'),
 
-    check('condiciones')
+    body('platosAplicables')
+        .optional()
+        .isArray()
+        .withMessage('platosAplicables debe ser un array'),
+
+    body('platosAplicables.*')
+        .optional()
+        .isMongoId()
+        .withMessage('Cada plato debe tener un ID válido'),
+
+    body('condiciones')
         .optional()
         .isLength({ max: 500 })
         .withMessage('Las condiciones no pueden exceder 500 caracteres'),
 
-    check('musica')
+    body('musica')
         .optional()
         .isLength({ max: 100 })
         .withMessage('El tipo de música no puede exceder 100 caracteres'),
 
-    check('tematica')
+    body('tematica')
         .optional()
         .isLength({ max: 100 })
         .withMessage('La temática no puede exceder 100 caracteres'),
 
-    check('staffAsignados')
-        .isArray({ min: 1 })
-        .withMessage('Debe asignar al menos un miembro del staff'),
+    body('staffAsignados')
+        .optional()
+        .isArray()
+        .withMessage('Staff asignados debe ser un array'),
 
-    check('staffAsignados.*')
+    body('staffAsignados.*')
+        .optional()
         .isString()
         .withMessage('Cada ID de staff debe ser texto válido')
         .notEmpty()
         .withMessage('Cada ID de staff es obligatorio'),
 
-    check('cantidadMaximaUsos')
+    body('cantidadMaximaUsos')
         .optional()
         .isInt({ min: 1 })
         .withMessage('La cantidad de usos debe ser un número entero positivo'),
 
     body().custom(async (value, { req }) => {
-        const { restaurantID, fechaInicio, fechaFin } = req.body;
+        const { restaurantID, fechaInicio, fechaFin, menusAplicables, platosAplicables } = req.body;
         
-        if (restaurantID && fechaInicio && fechaFin) {
-            const noHaySolapamiento = await validarNoHayEventosSolapados(
-                restaurantID,
-                fechaInicio,
-                fechaFin
-            );
-            
-            if (!noHaySolapamiento) {
-                throw new Error('Ya existe un evento activo en este restaurante con fechas que se superponen');
-            }
+        // Validar que hay al menos un menú o plato aplicable
+        if ((!menusAplicables || (Array.isArray(menusAplicables) && menusAplicables.length === 0)) && 
+            (!platosAplicables || (Array.isArray(platosAplicables) && platosAplicables.length === 0))) {
+            throw new Error('Debes seleccionar al menos un plato o menú aplicable');
         }
+        
+        return true;
     })
 ];
 
@@ -174,7 +195,8 @@ export const validateUpdateEvent = [
         .withMessage('Tipo de descuento debe ser PORCENTAJE o CANTIDAD_FIJA'),
 
     check('descuentoValor')
-        .optional()
+        .notEmpty()
+        .withMessage('El valor del descuento es obligatorio')
         .isFloat({ min: 0 })
         .withMessage('El descuento debe ser un número válido mayor o igual a 0'),
 
@@ -190,13 +212,23 @@ export const validateUpdateEvent = [
 
     check('menusAplicables')
         .optional()
-        .isArray({ min: 1 })
-        .withMessage('Debe seleccionar al menos un menú'),
+        .isArray()
+        .withMessage('menusAplicables debe ser un array'),
 
     check('menusAplicables.*')
         .optional()
         .isMongoId()
         .withMessage('Cada menú debe tener un ID válido'),
+
+    check('platosAplicables')
+        .optional()
+        .isArray()
+        .withMessage('platosAplicables debe ser un array'),
+
+    check('platosAplicables.*')
+        .optional()
+        .isMongoId()
+        .withMessage('Cada plato debe tener un ID válido'),
 
     check('condiciones')
         .optional()
@@ -215,8 +247,8 @@ export const validateUpdateEvent = [
 
     check('staffAsignados')
         .optional()
-        .isArray({ min: 1 })
-        .withMessage('Debe asignar al menos un miembro del staff'),
+        .isArray()
+        .withMessage('Staff asignados debe ser un array'),
 
     check('staffAsignados.*')
         .optional()
@@ -231,21 +263,7 @@ export const validateUpdateEvent = [
         .withMessage('La cantidad de usos debe ser un número entero positivo'),
 
     body().custom(async (value, { req }) => {
-        const { id } = req.params;
-        const { restaurantID, fechaInicio, fechaFin } = req.body;
-        
-        if (restaurantID && fechaInicio && fechaFin) {
-            const noHaySolapamiento = await validarNoHayEventosSolapados(
-                restaurantID,
-                fechaInicio,
-                fechaFin,
-                id
-            );
-            
-            if (!noHaySolapamiento) {
-                throw new Error('Ya existe un evento activo en este restaurante con fechas que se superponen');
-            }
-        }
+        return true;
     })
 ];
 

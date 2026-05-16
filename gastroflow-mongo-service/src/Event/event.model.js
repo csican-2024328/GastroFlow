@@ -69,12 +69,12 @@ const eventSchema = mongoose.Schema(
         menusAplicables: {
             type: [mongoose.Schema.Types.ObjectId],
             ref: 'Menu',
-            validate: {
-                validator: function(v) {
-                    return v.length > 0;
-                },
-                message: 'Debe seleccionar al menos un menú para la promoción'
-            }
+            default: []
+        },
+        platosAplicables: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: 'Plato',
+            default: []
         },
         condiciones: {
             type: String,
@@ -154,6 +154,12 @@ eventSchema.index({ createdAt: -1 });
 // Pre-save hook para validar fechas
 eventSchema.pre('save', function() {
     const ahora = new Date();
+    
+    // Validar que al menos un menú o plato esté seleccionado
+    if ((!this.menusAplicables || this.menusAplicables.length === 0) &&
+        (!this.platosAplicables || this.platosAplicables.length === 0)) {
+        throw new Error('Debe seleccionar al menos un menú o un plato para la promoción');
+    }
     
     // Si la fecha de fin pasó, marcar como FINALIZADA
     if (this.fechaFin < ahora && this.estado !== 'FINALIZADA') {

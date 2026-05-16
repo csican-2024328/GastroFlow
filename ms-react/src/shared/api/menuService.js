@@ -4,6 +4,9 @@ export const getMenus = async (params = {}) => {
   const queryParams = new URLSearchParams();
 
   if (params.restaurantId) queryParams.append('restaurantId', params.restaurantId);
+  if (params.limit) queryParams.append('limit', params.limit);
+  if (params.page) queryParams.append('page', params.page);
+  if (params.isActive !== undefined) queryParams.append('isActive', params.isActive);
 
   const queryString = queryParams.toString();
   return axiosClient.get(`/menu/get${queryString ? `?${queryString}` : ''}`);

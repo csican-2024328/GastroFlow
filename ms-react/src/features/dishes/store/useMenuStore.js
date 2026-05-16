@@ -48,7 +48,7 @@ export const useMenuStore = create((set, get) => ({
   fetchMenus: async (restaurantId = get().selectedRestaurantId) => {
     try {
       set({ loading: true, error: null });
-      const response = await getMenus({ restaurantId: restaurantId || undefined });
+      const response = await getMenus({ restaurantId: restaurantId || undefined, limit: 1000 });
       const data = response.data.data || [];
 
       set({
