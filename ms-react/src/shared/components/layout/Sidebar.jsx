@@ -9,6 +9,7 @@ export const Sidebar = () => {
         {label: "Mesas", to: "/dashboard/mesas"},
         {label: "Restaurantes", to: "/dashboard/restaurantes"},
         {label: "Ingredientes", to: "/dashboard/ingredientes"},
+        {label: "Auditoría Inv.", to: "/dashboard/auditoria-inventario"},
         {label: "Platos", to: "/dashboard/platos"},
         {label: "Pedidos", to: "/dashboard/pedidos"},
         {label: "Reservas", to: "/dashboard/reservas"},

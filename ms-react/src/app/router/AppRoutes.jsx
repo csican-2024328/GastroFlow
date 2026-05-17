@@ -9,6 +9,7 @@ import { DashboardPage } from '../layouts/DashboardPage.jsx';
 import { RestaurantsPage } from '../../features/restaurants/pages/RestaurantsPage.jsx';
 import { TablesPage } from '../../features/tables/pages/TablesPage.jsx';
 import { IngredientsPage } from '../../features/ingredients/pages/IngredientsPage.jsx';
+import { InventoryAuditPage } from '../../features/inventory-audit/pages/InventoryAuditPage.jsx';
 import { DishesPage } from '../../features/dishes/pages/DishesPage.jsx';
 import OrderManagement  from '../../features/orders/views/OrderManagement.jsx';
 import { Users } from '../../features/users/components/Users.jsx';
@@ -55,6 +56,7 @@ export const AppRoutes = () => {
                 <Route path="mesas" element={<TablesPage />} />
                 <Route path="restaurantes" element={<RestaurantsPage />} />
                 <Route path="ingredientes" element={<IngredientsPage />} />
+                <Route path="auditoria-inventario" element={<InventoryAuditPage />} />
                 <Route path="platos" element={<DishesPage />} />
                 <Route path="pedidos" element={<OrderManagement />} />
                 <Route path="reservas" element={<ReservationManagement />} />
