@@ -91,7 +91,7 @@ export const checkUserExists = async (email, username) => {
   }
 };
 
-export const createNewUser = async (userData) => {
+export const createNewUser = async (userData, roleName) => {
   const transaction = await User.sequelize.transaction();
 
   try {
@@ -137,16 +137,17 @@ export const createNewUser = async (userData) => {
       { transaction }
     );
 
-    const defaultRole = await Role.findOne({
-      where: { Name: USER_ROLE },
+    const targetRoleName = roleName ? roleName.toString().trim() : USER_ROLE;
+    const targetRole = await Role.findOne({
+      where: { Name: targetRoleName },
       transaction,
     });
 
-    if (defaultRole) {
+    if (targetRole) {
       await UserRole.create(
         {
           UserId: user.Id,
-          RoleId: defaultRole.Id,
+          RoleId: targetRole.Id,
         },
         { transaction }
       );

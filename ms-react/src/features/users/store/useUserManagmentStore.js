@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { getUsers } from '../../../shared/api/users.js';
+import { getUsers, getUserById, updateUserRole, createUser } from '../../../shared/api/users.js';
 
 const normalizeRole = (role) => (role || '').toString().trim().toUpperCase();
 
 export const useUserManagmentStore = create((set, get) => ({
     users: [],
     loading: false,
+    creatingUser: false,
     error: null,
     filters: {
         search: '',
@@ -44,6 +45,63 @@ export const useUserManagmentStore = create((set, get) => ({
         } catch (error) {
             const message = error?.response?.data?.message || error?.message || 'Error al cargar usuarios';
             set({ error: message, loading: false, users: [] });
+            return { success: false, error: message };
+        }
+    },
+
+    fetchUserById: async (userId) => {
+        try {
+            const response = await getUserById(userId);
+            return { success: true, user: response?.data?.data || null };
+        } catch (error) {
+            const message = error?.response?.data?.message || error?.message || 'Error al cargar usuario';
+            return { success: false, error: message };
+        }
+    },
+
+    updateUserRole: async (userId, role) => {
+        try {
+            const response = await updateUserRole(userId, role);
+            const updatedUser = response?.data?.data || null;
+
+            set((state) => ({
+                users: state.users.map((user) =>
+                    (user.id === userId || user.Id === userId || user._id === userId)
+                        ? { ...user, role }
+                        : user
+                ),
+            }));
+
+            return { success: true, user: updatedUser };
+        } catch (error) {
+            const message = error?.response?.data?.message || error?.message || 'Error al actualizar el rol';
+            return { success: false, error: message };
+        }
+    },
+
+    createUser: async (userData, role = 'CLIENT') => {
+        try {
+            set({ creatingUser: true, error: null });
+            const response = await createUser({ ...userData, role });
+            const newUser = response?.data?.data || response?.data?.user || null;
+
+            if (!newUser) {
+                throw new Error('No se pudo crear el usuario');
+            }
+
+            set((state) => ({
+                users: [newUser, ...state.users],
+                creatingUser: false,
+            }));
+
+            return {
+                success: true,
+                user: newUser,
+                message: response?.data?.message || 'Usuario creado exitosamente',
+            };
+        } catch (error) {
+            const message = error?.response?.data?.message || error?.message || 'Error al crear el usuario';
+            set({ creatingUser: false, error: message });
             return { success: false, error: message };
         }
     },

@@ -7,7 +7,10 @@ import {
 } from '../../helper/user-db.js';
 import { buildUserResponse } from '../../utils/user-helpers.js';
 import { Role, User, UserEmail, UserProfile, UserRole } from './User.model.js';
-import { assignRoleHelper } from '../../helper/auth-operations.js';
+import {
+  assignRoleHelper,
+  registerUserHelper,
+} from '../../helper/auth-operations.js';
 
 const buildRoleResponse = (role) => ({
   id: role.Id,
@@ -133,7 +136,7 @@ export const getRolesCatalog = asyncHandler(async (req, res) => {
 export const changeUserRole = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const { roleName } = req.body;
+    const roleName = req.body.roleName || req.body.role;
     const requestingUserId = req.usuario?.sub || req.usuario?.userId || req.usuario?.id;
 
     if (!requestingUserId) {
@@ -160,6 +163,39 @@ export const changeUserRole = asyncHandler(async (req, res) => {
     return res.status(statusCode).json({
       success: false,
       message: error.message || 'Error al actualizar rol',
+    });
+  }
+});
+
+export const createUserAdmin = asyncHandler(async (req, res) => {
+  const { name, surname, username, email, phone, password, role } = req.body;
+
+  try {
+    const result = await registerUserHelper({
+      name,
+      surname,
+      username,
+      email,
+      phone,
+      password,
+      role,
+      skipVerification: true,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: result.message,
+      data: result.user,
+    });
+  } catch (error) {
+    console.error('Error creando usuario admin:', error);
+    let statusCode = 400;
+    if (error.message.includes('ya existe') || error.message.includes('en uso')) {
+      statusCode = 409;
+    }
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || 'Error al crear usuario',
     });
   }
 });

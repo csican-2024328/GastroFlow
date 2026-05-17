@@ -15,7 +15,7 @@ export const Sidebar = () => {
         {label: "Facturas", to: "/dashboard/facturas"},
         {label: "Cupones", to: "/dashboard/cupones"},
         {label: "Eventos", to: "/dashboard/eventos"},
-        {label: "Usuarios", to: "/dashboard/Usuarios"},
+        {label: "Usuarios", to: "/dashboard/users", adminOnly: true},
         {label: "Asignacion", to: "/dashboard/asignacion"},
     ]
   return (
