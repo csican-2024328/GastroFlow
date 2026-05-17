@@ -6,6 +6,11 @@ const reviewSchema = mongoose.Schema({
     ref: 'Restaurant',
     required: true,
   },
+  platoID: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Plato',
+    default: null,
+  },
   userID: {
     type: String,
     required: true,

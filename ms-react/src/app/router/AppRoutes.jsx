@@ -25,6 +25,8 @@ import { CouponsPage } from '../../features/coupons/pages/CouponsPage.jsx';
 import { ClientOrderTrackingPage } from '../../features/orders/pages/ClientOrderTrackingPage.jsx';
 import InvoicesPage from '../../features/invoices/pages/InvoicesPage.jsx';
 import { AssignmentsPage } from '../../features/assignments/pages/AssignmentsPage.jsx';
+import { ClientRestaurantReviewsPage, ClientDishReviewsPage, AdminReviewsPage } from '../../features/reviews/pages/index.js';
+import { ClientReviewsHistoryPage } from '../../features/reviews/pages/index.js';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -42,6 +44,9 @@ export const AppRoutes = () => {
             <Route path="/cliente/eventos" element={<EventsPage />} />
             <Route path="/cliente/reservaciones" element={<ReservationsPage />} />
             <Route path="/cliente/cupones" element={<CouponsPage />} />
+            <Route path="/cliente/resenas" element={<ClientReviewsHistoryPage />} />
+            <Route path="/cliente/restaurante/:restaurantId/resenas" element={<ClientRestaurantReviewsPage />} />
+            <Route path="/cliente/restaurante/:restaurantId/plato/:dishId/resenas" element={<ClientDishReviewsPage />} />
             <Route
                 path="/dashboard"
                 element={
@@ -62,6 +67,7 @@ export const AppRoutes = () => {
                 <Route path="cupones" element={<CouponsPage />} />
                 <Route path="eventos" element={<EventsAdminPage />} />
                 <Route path="asignacion" element={<AssignmentsPage />} />
+                <Route path="resenas" element={<AdminReviewsPage />} />
                 <Route
                     path="users"
                     element={

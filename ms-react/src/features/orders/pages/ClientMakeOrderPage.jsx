@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../auth/store/authStore.js';
 import { useRestaurantStore } from '../../restaurants/store/useRestaurantStore.js';
+import { ReviewRatingWidget } from '../../reviews/index.js';
 import { OrderFlowModal } from '../components/OrderFlowModal.jsx';
 
 export const ClientMakeOrderPage = () => {
@@ -82,6 +83,10 @@ export const ClientMakeOrderPage = () => {
                 <div className="space-y-3 p-5">
                   <h3 className="text-xl font-bold text-[#1A1A1A]">{restaurant.name}</h3>
                   <p className="line-clamp-2 text-sm text-[#5A5146]">{restaurant.description || 'Cocina especial para todos los gustos.'}</p>
+
+                  <div className="py-2 border-t border-b border-[#E2D4B7]">
+                    <ReviewRatingWidget restaurantID={restaurant._id} showCount={true} />
+                  </div>
 
                   <div className="space-y-1 text-sm text-[#5A5146]">
                     <p>📍 {restaurant.address}</p>
