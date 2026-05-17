@@ -7,6 +7,7 @@ import {
 	getUsers,
 	toggleUserStatus,
 } from './user.admin.controller.js';
+import { assignRestaurantToUser } from '../auth/auth.controller.js';
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 import { validarCampos } from '../../middlewares/validator.middleware.js';
 
@@ -43,6 +44,15 @@ router.patch(
 	body('status').isBoolean().withMessage('El status debe ser booleano'),
 	validarCampos,
 	toggleUserStatus
+);
+
+router.put(
+  '/:id/assign-restaurant',
+  autenticar,
+  autorizarRole('PLATFORM_ADMIN'),
+  param('id').trim().notEmpty().withMessage('ID de usuario requerido'),
+  validarCampos,
+  assignRestaurantToUser
 );
 
 export default router;

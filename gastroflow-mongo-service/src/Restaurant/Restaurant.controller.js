@@ -35,11 +35,11 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       filesCount: req.files?.length || 0,
     });
     
-    if (!name || !email || !phone || !address || !city || !openingHours || !aforoMaximo || !adminId) {
+    if (!name || !email || !phone || !address || !city || !openingHours || !aforoMaximo) {
       console.warn('⚠️  [CREATE RESTAURANT] Campos requeridos faltantes');
       return res.status(400).json({
         success: false,
-        message: 'Todos los campos son requeridos, incluyendo adminId',
+        message: 'Todos los campos obligatorios del restaurante son requeridos',
       });
     }
 
@@ -60,7 +60,7 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       console.log('📸 [CREATE RESTAURANT] Fotos procesadas:', photos);
     }
 
-    const restaurant = await Restaurant.create({
+    const restaurantPayload = {
       name,
       email,
       phone,
@@ -72,26 +72,33 @@ export const createRestaurant = asyncHandler(async (req, res) => {
       description,
       averagePrice,
       photos,
-      adminId,
       isActive: true,
-    });
+    };
+
+    if (adminId) {
+      restaurantPayload.adminId = adminId;
+    }
+
+    const restaurant = await Restaurant.create(restaurantPayload);
 
     console.log('✅ [CREATE RESTAURANT] Restaurante creado exitosamente:', {
       id: restaurant._id,
       name: restaurant.name,
       isActive: restaurant.isActive,
+      adminId: restaurant.adminId || null,
     });
 
-    // Asignar restaurante al admin
-    try {
-      const assignResponse = await axios.put(
-        `${config.postgresApi.baseUrl}/users/${adminId}/assign-restaurant`,
-        { restaurantId: restaurant._id.toString() }
-      );
-      console.log('✅ [ASSIGN RESTAURANT] Asignación exitosa:', assignResponse.data);
-    } catch (assignError) {
-      console.error('❌ [ASSIGN RESTAURANT] Error en asignación:', assignError.message);
-      // No fallar la creación si la asignación falla, pero loggear
+    if (adminId) {
+      try {
+        const assignResponse = await axios.put(
+          `${config.postgresApi.baseUrl}/users/${adminId}/assign-restaurant`,
+          { restaurantId: restaurant._id.toString() }
+        );
+        console.log('✅ [ASSIGN RESTAURANT] Asignación exitosa:', assignResponse.data);
+      } catch (assignError) {
+        console.error('❌ [ASSIGN RESTAURANT] Error en asignación:', assignError.message);
+        // No fallar la creación si la asignación falla, pero loggear
+      }
     }
 
     res.status(201).json({

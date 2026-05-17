@@ -72,24 +72,27 @@ export const useAssignmentStore = create((set, get) => ({
    * Asignar restaurante a admin
    */
   assignRestaurant: async (userId, restaurantId) => {
-    set({ loading: true, error: null });
+    set({ error: null });
     try {
       const result = await assignRestaurantToAdmin(userId, restaurantId);
       console.log('✅ [STORE] Asignación exitosa:', result);
       
-      // Actualizar estado
-      await get().fetchAllData();
-      
-      set({ 
-        selectedAdmin: null, 
-        selectedRestaurant: null,
-        loading: false 
-      });
-      
-      return result;
+      const updatedAdmins = get().platformAdmins.map((admin) =>
+        admin.Id === userId || admin.id === userId
+          ? { ...admin, RestaurantId: restaurantId }
+          : admin
+      );
+
+      set({ platformAdmins: updatedAdmins });
+
+      const updatedAdmin = updatedAdmins.find(
+        (admin) => admin.Id === userId || admin.id === userId
+      );
+
+      return { result, updatedAdmin };
     } catch (error) {
       console.error('❌ [STORE] Error assigning restaurant:', error);
-      set({ error: error.message, loading: false });
+      set({ error: error.message });
       throw error;
     }
   },

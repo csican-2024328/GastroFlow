@@ -13,7 +13,7 @@ import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
 import { generateJWT } from '../../helper/generate-jwt.js';
 import { revokeTokenByJti } from '../../helper/session-token-store.js';
 import { buildUserResponse } from '../../utils/user-helpers.js';
-import { User, UserRole } from '../User/User.model.js';
+import { Role, User, UserRole } from '../User/User.model.js';
 
 export const register = asyncHandler(async (req, res) => {
   try {
@@ -360,7 +360,16 @@ export const assignRestaurantToUser = asyncHandler(async (req, res) => {
   const requestingUserId = req.usuario?.sub || req.usuario?.userId;
 
   // 1. Validar que quien solicita sea PLATFORM_ADMIN
-  const requestingUser = await User.findByPk(requestingUserId);
+  const requestingUser = await User.findByPk(requestingUserId, {
+    include: [
+      {
+        model: UserRole,
+        as: 'UserRoles',
+        include: [{ model: Role, as: 'Role' }],
+      },
+    ],
+  });
+
   if (!requestingUser || requestingUser.UserRoles?.[0]?.Role?.Name !== 'PLATFORM_ADMIN') {
     return res.status(401).json({
       success: false,
