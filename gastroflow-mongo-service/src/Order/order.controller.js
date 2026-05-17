@@ -6,6 +6,9 @@ import Coupon from '../Coupon/coupon.model.js';
 import Event from '../Event/event.model.js';
 import Invoice from '../Invoice/invoice.model.js';
 import { notifyNewOrder, notifyOrderStatusChange } from '../../configs/socket.js';
+import Restaurant from '../Restaurant/Restaurant.model.js';
+import Notification from '../Notifications/notification.model.js';
+import { enviarEmailPedidoCreado, enviarEmailCambioEstadoPedido, enviarEmailPINEntrega } from '../../helper/email-service.js';
 import {
     buildOrderIngredientRequirements,
     getStockShortages,
@@ -454,6 +457,39 @@ export const createOrder = async (req, res) => {
             mesa: newOrder.mesaID
         });
 
+        // Crear notificación persistente para el admin del restaurante (si existe)
+        try {
+            const restaurant = await Restaurant.findById(resolvedRestaurantId).select('adminId nombre');
+            if (restaurant && restaurant.adminId) {
+                await Notification.create({
+                    userId: String(restaurant.adminId),
+                    type: 'NUEVO_PEDIDO',
+                    message: `Nuevo pedido ${newOrder.numeroOrden}`,
+                    data: { orderId: newOrder._id, restaurantId: resolvedRestaurantId }
+                });
+            }
+        } catch (notifErr) {
+            console.error('❌ Error creando notificación persistente para admin:', notifErr.message);
+        }
+
+        // Enviar email de confirmación al cliente si disponemos de su email
+        try {
+            const clientEmail = req.body.clienteEmail || req.usuario?.email || null;
+            if (clientEmail) {
+                await enviarEmailPedidoCreado({
+                    email: clientEmail,
+                    nombre: newOrder.clienteNombre,
+                    numeroOrden: newOrder.numeroOrden,
+                    restaurante: newOrder.restaurantID?.nombre || '',
+                    total: newOrder.total
+                });
+            } else {
+                console.warn('⚠️ No se encontró email del cliente para enviar confirmación de pedido');
+            }
+        } catch (emailErr) {
+            console.error('❌ Error enviando email de pedido creado:', emailErr.message);
+        }
+
         res.status(201).json({
             success: true,
             message: 'Pedido creado exitosamente',
@@ -822,6 +858,38 @@ export const updateOrderStatus = async (req, res) => {
             });
         }
 
+        // Crear notificación persistente para admin del restaurante (si existe)
+        try {
+            const restaurant = await Restaurant.findById(order.restaurantID?.toString()).select('adminId nombre');
+            if (restaurant && restaurant.adminId) {
+                await Notification.create({
+                    userId: String(restaurant.adminId),
+                    type: 'CAMBIO_ESTADO_PEDIDO',
+                    message: `Pedido ${order.numeroOrden} cambió a ${order.estado}`,
+                    data: { orderId: order._id, estado: order.estado }
+                });
+            }
+        } catch (notifErr) {
+            console.error('❌ Error creando notificación persistente para admin tras cambio de estado:', notifErr.message);
+        }
+
+        // Enviar email de cambio de estado al cliente (si se proporciona email en body)
+        try {
+            const clientEmail = req.body.clienteEmail || null;
+            if (clientEmail) {
+                await enviarEmailCambioEstadoPedido({
+                    email: clientEmail,
+                    nombre: order.clienteNombre,
+                    numeroOrden: order.numeroOrden,
+                    nuevoEstado: order.estado
+                });
+            } else {
+                console.warn('⚠️ No se proporcionó clienteEmail en request; no se envió email de estado');
+            }
+        } catch (emailErr) {
+            console.error('❌ Error enviando email de cambio de estado:', emailErr.message);
+        }
+
         res.status(200).json({
             success: true,
             message: 'Estado del pedido actualizado exitosamente',
@@ -971,6 +1039,128 @@ export const updateOrder = async (req, res) => {
             message: 'Error al actualizar el pedido',
             error: error.message
         });
+    }
+};
+
+// Generar PIN de entrega para pedido (envía email al cliente)
+export const generateDeliveryPIN = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const order = await Order.findById(id);
+        if (!order || !order.isActive) {
+            return res.status(404).json({ success: false, message: 'Pedido no encontrado' });
+        }
+
+        // Generar PIN numérico de 6 dígitos
+        const pin = Math.floor(100000 + Math.random() * 900000).toString();
+        order.deliveryPIN = pin;
+        order.pinValidated = false;
+        order.pinExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+        await order.save();
+
+        // Envío de email con el PIN
+        const clientEmail = req.body.clienteEmail || req.usuario?.email || null;
+        if (clientEmail) {
+            try {
+                await enviarEmailPINEntrega({
+                    email: clientEmail,
+                    nombre: order.clienteNombre,
+                    numeroOrden: order.numeroOrden,
+                    pin
+                });
+            } catch (emailErr) {
+                console.error('❌ Error enviando email PIN:', emailErr.message);
+            }
+        }
+
+        // Notificar al admin del restaurante en la sala socket
+        try {
+            notifyNewOrder(order.restaurantID?.toString(), {
+                _id: order._id,
+                numeroOrden: order.numeroOrden,
+                mensaje: 'PIN de entrega generado'
+            });
+        } catch (err) {
+            console.error('❌ Error notificando generación de PIN via socket:', err.message);
+        }
+
+        return res.status(200).json({ success: true, message: 'PIN generado y enviado (si hay email disponible)' });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error generando PIN', error: error.message });
+    }
+};
+
+// Confirmar entrega mediante PIN (admin/repartidor valida el PIN y se marca ENTREGADO)
+export const confirmDeliveryWithPIN = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { pin } = req.body;
+
+        if (!pin) {
+            return res.status(400).json({ success: false, message: 'PIN es requerido' });
+        }
+
+        const order = await Order.findById(id);
+        if (!order || !order.isActive) {
+            return res.status(404).json({ success: false, message: 'Pedido no encontrado' });
+        }
+
+        if (!order.deliveryPIN || !order.pinExpiresAt) {
+            return res.status(400).json({ success: false, message: 'No se ha generado un PIN para este pedido' });
+        }
+
+        if (new Date() > new Date(order.pinExpiresAt)) {
+            return res.status(400).json({ success: false, message: 'El PIN ha expirado' });
+        }
+
+        if (String(pin).trim() !== String(order.deliveryPIN).trim()) {
+            return res.status(400).json({ success: false, message: 'PIN inválido' });
+        }
+
+        // Validado: marcar pedido como ENTREGADO
+        order.pinValidated = true;
+        order.deliveryPIN = null;
+        order.pinExpiresAt = null;
+        order.estado = 'ENTREGADO';
+        if (order.tipoPedido === 'A_DOMICILIO') {
+            order.horaEntregaDomicilio = new Date();
+        } else {
+            order.horaEntrega = new Date();
+        }
+
+        await order.save();
+
+        // Notificar al cliente y al admin
+        try {
+            if (order.clienteId) {
+                notifyOrderStatusChange(String(order.clienteId), {
+                    _id: order._id,
+                    numeroOrden: order.numeroOrden,
+                    estado: order.estado
+                });
+            }
+        } catch (err) {
+            console.error('❌ Error notificando estado ENTREGADO vía socket:', err.message);
+        }
+
+        // Intentar enviar email de confirmación al cliente si se dispone
+        try {
+            const clientEmail = req.body.clienteEmail || req.usuario?.email || null;
+            if (clientEmail) {
+                await enviarEmailCambioEstadoPedido({
+                    email: clientEmail,
+                    nombre: order.clienteNombre,
+                    numeroOrden: order.numeroOrden,
+                    nuevoEstado: order.estado
+                });
+            }
+        } catch (emailErr) {
+            console.error('❌ Error enviando email de confirmación de entrega:', emailErr.message);
+        }
+
+        return res.status(200).json({ success: true, message: 'Entrega confirmada correctamente', data: order });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error confirmando entrega', error: error.message });
     }
 };
 

@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../features/auth/store/authStore.js';
 import { useOrderStore } from '../../features/orders/store/useOrderStore.js';
 import { useRestaurantStore } from '../../features/restaurants/store/useRestaurantStore.js';
 import { ProfileModal } from '../../features/auth/components/ProfileModal.jsx';
 import defaultAvatar from '../../assets/img/Icono.png';
+import { io } from 'socket.io-client';
+import { axiosClient } from '../../shared/api/api.js';
 
 export const ClientPage = () => {
   const navigate = useNavigate();
@@ -29,6 +31,52 @@ export const ClientPage = () => {
   useEffect(() => {
     fetchRestaurants(1, 12);
   }, [fetchRestaurants]);
+
+  // Socket for client notifications
+  useEffect(() => {
+    if (!user || !token) return undefined;
+
+    const socket = io(getSocketUrl(), { transports: ['websocket'], withCredentials: true });
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      try {
+        const clientId = user._id || user.id || user.sub;
+        if (clientId) socket.emit('join-client', clientId);
+      } catch (err) {
+        // ignore
+      }
+    });
+
+    const handleIncoming = (payload) => {
+      const notif = {
+        _id: `evt-${Date.now()}`,
+        type: payload.type || 'EVENT',
+        message: payload.message || 'Notificación',
+        data: payload.data || {},
+        isRead: false,
+        createdAt: payload.timestamp || new Date().toISOString(),
+      };
+      setNotifications((cur) => [notif, ...cur].slice(0, 20));
+      setUnreadCount((c) => c + 1);
+    };
+
+    socket.on('cambio-estado-pedido', handleIncoming);
+    socket.on('cambio-estado-reserva', handleIncoming);
+
+    // initial fetch
+    fetchNotifications();
+
+    return () => {
+      try {
+        socket.off('cambio-estado-pedido', handleIncoming);
+        socket.off('cambio-estado-reserva', handleIncoming);
+        socket.disconnect();
+      } catch (err) {
+        // ignore
+      }
+    };
+  }, [user, token]);
 
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? 'Buenos dias' : currentHour < 19 ? 'Buenas tardes' : 'Buenas noches';
@@ -102,6 +150,49 @@ export const ClientPage = () => {
   const avatarSrc = [user?.profilePicture, user?.profileImage].find(
     (value) => typeof value === 'string' && value.trim() !== ''
   ) || defaultAvatar;
+
+  const socketRef = useRef(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const getSocketUrl = () => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3006/api/v1';
+    return import.meta.env.VITE_SOCKET_URL || apiUrl.replace(/\/api\/v1\/?$/, '');
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await axiosClient.get('/notifications', { params: { page: 1, limit: 8 } });
+      if (res?.data?.success) {
+        setNotifications(res.data.data || []);
+        const unread = (res.data.data || []).filter((n) => !n.isRead).length;
+        setUnreadCount(unread);
+      }
+    } catch (err) {
+      // silent
+    }
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      await axiosClient.patch(`/notifications/${id}/read`);
+      setNotifications((cur) => cur.map((n) => (n._id === id ? { ...n, isRead: true, readAt: new Date() } : n)));
+      setUnreadCount((c) => Math.max(0, c - 1));
+    } catch (err) {
+      // ignore
+    }
+  };
+
+  const markAllRead = async () => {
+    try {
+      await axiosClient.patch('/notifications/read-all');
+      setNotifications((cur) => cur.map((n) => ({ ...n, isRead: true, readAt: new Date() })));
+      setUnreadCount(0);
+    } catch (err) {
+      // ignore
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#3D2C1E]">
@@ -183,7 +274,7 @@ export const ClientPage = () => {
       <main className="space-y-5 px-4 py-5 md:ml-[220px] md:px-7 md:py-7">
         <section className="flex flex-col gap-3 rounded-2xl border border-[#E8D9C4] bg-white px-4 py-3 md:flex-row md:items-center md:justify-between">
           <h2 className="text-2xl font-semibold text-[#3D2C1E]">{currentTitle}</h2>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 relative">
             <input
               type="text"
               value={search}
@@ -191,12 +282,43 @@ export const ClientPage = () => {
               placeholder="Buscar restaurantes..."
               className="w-56 rounded-xl border border-[#E8D9C4] bg-[#FAF7F2] px-3 py-2 text-sm text-[#3D2C1E] outline-none placeholder:text-[#B59070] focus:border-[#C49A2B]"
             />
-            <button className="relative rounded-xl border border-[#E8D9C4] bg-[#FAF7F2] px-3 py-2 text-lg">
+            <button
+              onClick={() => {
+                setShowNotifications((s) => !s);
+                if (!showNotifications) fetchNotifications();
+              }}
+              className="relative rounded-xl border border-[#E8D9C4] bg-[#FAF7F2] px-3 py-2 text-lg"
+            >
               🔔
               <span className="absolute -right-1 -top-1 rounded-full bg-[#C49A2B] px-[6px] text-[10px] font-bold text-white">
-                {stats.activeOrders}
+                {unreadCount || stats.activeOrders}
               </span>
             </button>
+
+            {showNotifications && (
+              <div className="absolute right-0 top-12 z-50 w-80 rounded-xl border border-[#E8D9C4] bg-white p-3 shadow-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <strong>Notificaciones</strong>
+                  <button onClick={markAllRead} className="text-xs text-[#8A7060]">Marcar todas como leídas</button>
+                </div>
+                <div className="max-h-64 overflow-auto">
+                  {notifications.length === 0 && (
+                    <p className="text-sm text-[#8A7060]">No hay notificaciones</p>
+                  )}
+                  {notifications.map((n) => (
+                    <div key={n._id} className={`mb-2 flex items-start gap-2 rounded p-2 ${n.isRead ? 'bg-white' : 'bg-[#F5EDE0]'}`}>
+                      <div className="flex-1">
+                        <div className="text-sm text-[#3D2C1E]">{n.message}</div>
+                        <div className="text-xs text-[#8A7060]">{new Date(n.createdAt).toLocaleString()}</div>
+                      </div>
+                      {!n.isRead && (
+                        <button onClick={() => markAsRead(n._id)} className="text-xs text-[#1A3D25]">Marcar</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

@@ -19,6 +19,7 @@ import {
     cancelOrder,
     deleteOrderPermanent
 } from './order.controller.js';
+import { generateDeliveryPIN, confirmDeliveryWithPIN } from './order.controller.js';
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 import { validarCampos } from '../../middlewares/validator.middleware.js';
 import { validateStockAvailability, validateUpdateOrderStock } from '../../middlewares/stock.middleware.js';
@@ -181,6 +182,26 @@ router.delete(
     validateOrderId,
     validarCampos,
     deleteOrderPermanent
+);
+
+// Generar PIN de entrega (envía PIN al cliente)
+router.post(
+    '/:id/generate-pin',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateOrderId,
+    validarCampos,
+    generateDeliveryPIN
+);
+
+// Confirmar entrega con PIN (admin/repartidor valida PIN y marca ENTREGADO)
+router.post(
+    '/:id/confirm-delivery',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateOrderId,
+    validarCampos,
+    confirmDeliveryWithPIN
 );
 
 export default router;

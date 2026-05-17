@@ -716,3 +716,130 @@ export const enviarEmailReservacionRechazada = async ({ email, nombre, restauran
         return { success: false, message: error.message };
     }
 };
+
+export const enviarEmailPedidoCreado = async ({ email, nombre, numeroOrden, restaurante, total }) => {
+    if (!initialized) initializeEmailService();
+    if (!email) return { success: false, message: 'Email destino requerido' };
+
+    if (!transporter || !smtpConfigured) {
+        if (process.env.NODE_ENV === 'development') {
+            console.log('\n📧 [DEVELOPMENT] EMAIL DE PEDIDO CREADO');
+            console.log(`   Para: ${email}`);
+            console.log(`   Cliente: ${nombre}`);
+            console.log(`   Orden: ${numeroOrden}`);
+            console.log(`   Restaurante: ${restaurante}`);
+            console.log(`   Total: ${total}`);
+            return { success: true, isDevelopment: true };
+        }
+        return { success: false, message: 'SMTP no configurado' };
+    }
+
+    try {
+        const mailOptions = {
+            from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
+            to: email,
+            subject: `✅ Confirmación de pedido ${numeroOrden}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>✅ Pedido recibido</h2>
+                    <p>Hola <strong>${nombre}</strong>,</p>
+                    <p>Hemos recibido tu pedido <strong>${numeroOrden}</strong> en <strong>${restaurante}</strong>.</p>
+                    <p><strong>Total:</strong> ${total}</p>
+                    <p>Puedes seguir el estado de tu pedido desde la sección <strong>Mis Pedidos</strong>.</p>
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                    <p style="font-size: 12px; color: #666;">Este es un email automático.</p>
+                </div>
+            `
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log(`✅ Email de pedido creado enviado a ${email}`);
+        return { success: true, messageId: result.messageId };
+    } catch (error) {
+        console.error('❌ Error enviando email de pedido creado:', error.message);
+        return { success: false, message: error.message };
+    }
+};
+
+export const enviarEmailCambioEstadoPedido = async ({ email, nombre, numeroOrden, nuevoEstado }) => {
+    if (!initialized) initializeEmailService();
+    if (!email) return { success: false, message: 'Email destino requerido' };
+
+    if (!transporter || !smtpConfigured) {
+        if (process.env.NODE_ENV === 'development') {
+            console.log('\n📧 [DEVELOPMENT] EMAIL CAMBIO ESTADO PEDIDO');
+            console.log(`   Para: ${email}`);
+            console.log(`   Orden: ${numeroOrden}`);
+            console.log(`   Nuevo estado: ${nuevoEstado}`);
+            return { success: true, isDevelopment: true };
+        }
+        return { success: false, message: 'SMTP no configurado' };
+    }
+
+    try {
+        const mailOptions = {
+            from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
+            to: email,
+            subject: `📣 Actualización pedido ${numeroOrden}: ${nuevoEstado}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>📣 Estado actualizado</h2>
+                    <p>Hola <strong>${nombre}</strong>,</p>
+                    <p>El estado de tu pedido <strong>${numeroOrden}</strong> ha cambiado a: <strong>${nuevoEstado}</strong>.</p>
+                    <p>Si tienes preguntas, contacta con el restaurante.</p>
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                    <p style="font-size: 12px; color: #666;">Este es un email automático.</p>
+                </div>
+            `
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log(`✅ Email cambio de estado enviado a ${email}`);
+        return { success: true, messageId: result.messageId };
+    } catch (error) {
+        console.error('❌ Error enviando email de cambio de estado:', error.message);
+        return { success: false, message: error.message };
+    }
+};
+
+export const enviarEmailPINEntrega = async ({ email, nombre, numeroOrden, pin, minutosValidez = 15 }) => {
+    if (!initialized) initializeEmailService();
+    if (!email) return { success: false, message: 'Email destino requerido' };
+
+    if (!transporter || !smtpConfigured) {
+        if (process.env.NODE_ENV === 'development') {
+            console.log('\n📧 [DEVELOPMENT] EMAIL PIN ENTREGA');
+            console.log(`   Para: ${email}`);
+            console.log(`   Orden: ${numeroOrden}`);
+            console.log(`   PIN: ${pin}`);
+            return { success: true, isDevelopment: true };
+        }
+        return { success: false, message: 'SMTP no configurado' };
+    }
+
+    try {
+        const mailOptions = {
+            from: `${process.env.EMAIL_FROM_NAME || 'GastroFlow'} <${process.env.EMAIL_FROM || process.env.SMTP_USERNAME}>`,
+            to: email,
+            subject: `🔐 PIN de entrega para tu pedido ${numeroOrden}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; text-align: center;">
+                    <h2>🔐 PIN de Entrega</h2>
+                    <p>Hola <strong>${nombre}</strong>,</p>
+                    <p>Tu pedido <strong>${numeroOrden}</strong> requiere un PIN para confirmar la entrega.</p>
+                    <div style="margin: 20px 0; font-size: 24px; font-weight: bold;">${pin}</div>
+                    <p>El PIN expira en ${minutosValidez} minutos.</p>
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                    <p style="font-size: 12px; color: #666;">Este es un email automático.</p>
+                </div>
+            `
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log(`✅ Email PIN de entrega enviado a ${email}`);
+        return { success: true, messageId: result.messageId };
+    } catch (error) {
+        console.error('❌ Error enviando email PIN de entrega:', error.message);
+        return { success: false, message: error.message };
+    }
+};

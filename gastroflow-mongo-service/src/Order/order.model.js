@@ -220,6 +220,21 @@ const orderSchema = mongoose.Schema(
         horaEntregaDomicilio: {
             type: Date
         },
+        // PIN para confirmar entrega a domicilio
+        deliveryPIN: {
+            type: String,
+            default: null,
+            trim: true,
+            select: false
+        },
+        pinValidated: {
+            type: Boolean,
+            default: false
+        },
+        pinExpiresAt: {
+            type: Date,
+            default: null
+        },
         horaCancelacion: {
             type: Date
         },
