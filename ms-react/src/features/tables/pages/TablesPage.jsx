@@ -4,6 +4,7 @@ import { useTableStore } from '../store/useTableStore.js';
 import { TableFilters } from '../components/TableFilters.jsx';
 import { TableModal } from '../components/TableModal.jsx';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
+import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
 
 export const TablesPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,19 +25,30 @@ export const TablesPage = () => {
   const deleteMesaAction = useTableStore((state) => state.deleteMesaAction);
   const clearSelectedMesa = useTableStore((state) => state.clearSelectedMesa);
 
+  const { restaurantId } = useRestaurantScope();
+
   const filteredMesas = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
-    if (!normalizedSearch) return mesas;
 
-    return mesas.filter((mesa) => {
-      const ubicacion = mesa.ubicacion?.toLowerCase() || '';
-      const numero = String(mesa.numero ?? '').toLowerCase();
-      const restaurantName = mesa.restaurantID?.name?.toLowerCase() || '';
-      return ubicacion.includes(normalizedSearch)
-        || numero.includes(normalizedSearch)
-        || restaurantName.includes(normalizedSearch);
-    });
-  }, [mesas, searchTerm]);
+    return mesas
+      .filter((mesa) => {
+        if (restaurantId) {
+          const rid = mesa.restaurantID?._id || mesa.restaurantID;
+          if (!rid) return false;
+          if (String(rid) !== String(restaurantId)) return false;
+        }
+        return true;
+      })
+      .filter((mesa) => {
+        if (!normalizedSearch) return true;
+        const ubicacion = mesa.ubicacion?.toLowerCase() || '';
+        const numero = String(mesa.numero ?? '').toLowerCase();
+        const restaurantName = mesa.restaurantID?.name?.toLowerCase() || '';
+        return ubicacion.includes(normalizedSearch)
+          || numero.includes(normalizedSearch)
+          || restaurantName.includes(normalizedSearch);
+      });
+  }, [mesas, searchTerm, restaurantId]);
 
   useEffect(() => {
     if (restaurantOptions.length === 0) {
@@ -59,7 +71,7 @@ export const TablesPage = () => {
       setCurrentPage(1);
     }
 
-    fetchMesas(1, 10, selectedRestaurantId);
+    fetchMesas(1, 10, restaurantId || selectedRestaurantId);
   }, [fetchMesas, selectedRestaurantId]);
 
   useEffect(() => {
@@ -68,7 +80,7 @@ export const TablesPage = () => {
       return;
     }
 
-    fetchMesas(currentPage, 10, selectedRestaurantId);
+    fetchMesas(currentPage, 10, restaurantId || selectedRestaurantId);
   }, [currentPage, fetchMesas, selectedRestaurantId]);
 
   const handleCreateMesa = () => {

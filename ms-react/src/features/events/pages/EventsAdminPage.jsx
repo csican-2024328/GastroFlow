@@ -3,8 +3,9 @@ import { Button, Card, CardBody, CardHeader, IconButton, Typography } from '@mat
 import { EventFilters } from '../components/EventFilters.jsx';
 import { EventFormModal } from '../components/EventFormModal.jsx';
 import { useEventStore } from '../store/useEventStore.js';
-import { useAuthStore } from '../../auth/store/authStore.js';
 import { useRestaurantStore } from '../../restaurants/store/useRestaurantStore.js';
+import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
+import { NoRestaurantAssigned } from '../../../shared/components/layout/NoRestaurantAssigned.jsx';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
 
 const getEventTypeLabel = (type) => {
@@ -42,14 +43,12 @@ const getEventStatusBadge = (fechaInicio, fechaFin) => {
 };
 
 export const EventsAdminPage = () => {
-  const user = useAuthStore((state) => state.user);
-  
+  const { restaurantId, role, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
+
   const restaurants = useRestaurantStore((s) => s.restaurants);
   const fetchRestaurants = useRestaurantStore((s) => s.fetchRestaurants);
   
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState(
-    user?.role === 'RESTAURANT_ADMIN' ? (user?.restaurantId || user?.RestaurantId) : null
-  );
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState(restaurantId || null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -93,16 +92,26 @@ export const EventsAdminPage = () => {
   }, [events, searchTerm, statusFilter, typeFilter]);
 
   useEffect(() => {
-    if (user?.role === 'PLATFORM_ADMIN') {
+    if (role === 'PLATFORM_ADMIN') {
       fetchRestaurants(1, 50);
     }
-  }, [fetchRestaurants, user?.role]);
+  }, [fetchRestaurants, role]);
+
+  useEffect(() => {
+    if (restaurantId) {
+      setSelectedRestaurantId(restaurantId);
+    }
+  }, [restaurantId]);
 
   useEffect(() => {
     if (selectedRestaurantId) {
       fetchRestaurantEvents(selectedRestaurantId);
     }
   }, [fetchRestaurantEvents, selectedRestaurantId]);
+
+  if (isRestaurantAdmin && !hasRestaurantAssigned) {
+    return <NoRestaurantAssigned />;
+  }
 
   const handleCreateEvent = () => {
     clearSelectedEvent();
@@ -156,7 +165,7 @@ export const EventsAdminPage = () => {
     }
   };
 
-  if (!selectedRestaurantId && user?.role === 'PLATFORM_ADMIN') {
+  if (!selectedRestaurantId && role === 'PLATFORM_ADMIN') {
     return (
       <div className="min-h-screen bg-[#FDFBF7] text-gray-800 p-6 md:p-8 fade-in">
         <div className="mb-6">
@@ -225,7 +234,7 @@ export const EventsAdminPage = () => {
           </Typography>
         </div>
         <div className="flex gap-2">
-          {user?.role === 'PLATFORM_ADMIN' && (
+          {role === 'PLATFORM_ADMIN' && (
             <Button
               onClick={() => setSelectedRestaurantId(null)}
               className="border border-[#2D4F4F] text-[#2D4F4F] bg-transparent rounded-lg hover:bg-[#F5EFEA] transition-all duration-200"

@@ -3,21 +3,23 @@ import { AuditFilters } from '../components/AuditFilters.jsx';
 import { AuditTable } from '../components/AuditTable.jsx';
 import { AuditDetailModal } from '../components/AuditDetailModal.jsx';
 import { useInventoryAuditStore } from '../store/useInventoryAuditStore.js';
-import { useAuthStore } from '../../../features/auth/store/authStore.js';
+import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
+import { NoRestaurantAssigned } from '../../../shared/components/layout/NoRestaurantAssigned.jsx';
 
 export const InventoryAuditPage = () => {
   const fetchMovements = useInventoryAuditStore(state => state.fetchMovements);
-  const userRole = useAuthStore(state => state.user?.role);
-  const userRestaurantId = useAuthStore(state => state.user?.restaurantId);
+  const { restaurantId, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
 
   useEffect(() => {
-    // Platform Admins fetch all movements (passing null/undefined for restaurantId)
-    // Restaurant Admins fetch only their own
-    const restId = userRole === 'PLATFORM_ADMIN' ? null : userRestaurantId;
-    if (userRole === 'PLATFORM_ADMIN' || userRestaurantId) {
-      fetchMovements(restId);
+    if (isRestaurantAdmin && !restaurantId) {
+      return;
     }
-  }, [userRole, userRestaurantId, fetchMovements]);
+    fetchMovements(restaurantId || null);
+  }, [fetchMovements, isRestaurantAdmin, restaurantId]);
+
+  if (isRestaurantAdmin && !hasRestaurantAssigned) {
+    return <NoRestaurantAssigned />;
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

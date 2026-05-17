@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useReservationStore } from '../store/useReservationStore.js';
+import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
+import { NoRestaurantAssigned } from '../../../shared/components/layout/NoRestaurantAssigned.jsx';
 
 /* ─── helpers ─────────────────────────────────────────── */
 const formatFecha = (val) => {
@@ -204,6 +206,7 @@ const RejectModal = ({ isOpen, onClose, onConfirm, reservation, loading }) => {
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════ */
 const ReservationManagement = () => {
+  const { restaurantId, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
   const {
     reservations,
     loading,
@@ -219,12 +222,16 @@ const ReservationManagement = () => {
 
   /* fetch on mount and page change */
   useEffect(() => {
-    fetchUserReservations(pagination.currentPage, pagination.limit);
-  }, [pagination.currentPage]);
+    fetchUserReservations(pagination.currentPage, pagination.limit, null, restaurantId || undefined);
+  }, [pagination.currentPage, pagination.limit, fetchUserReservations, restaurantId]);
+
+  if (isRestaurantAdmin && !hasRestaurantAssigned) {
+    return <NoRestaurantAssigned />;
+  }
 
   const handlePageChange = (page) => {
     if (page < 1 || page > pagination.totalPages) return;
-    fetchUserReservations(page, pagination.limit);
+    fetchUserReservations(page, pagination.limit, null, restaurantId || undefined);
   };
 
   /* stats */
@@ -251,7 +258,7 @@ const ReservationManagement = () => {
     if (result.success) {
       toast.success('Reservación confirmada correctamente');
       setConfirmModal({ open: false, reservation: null });
-      fetchUserReservations(pagination.currentPage, pagination.limit);
+      fetchUserReservations(pagination.currentPage, pagination.limit, null, restaurantId || undefined);
     } else {
       toast.error(result.error || 'Error al confirmar reservación');
     }
@@ -269,7 +276,7 @@ const ReservationManagement = () => {
     if (result.success) {
       toast.success('Reservación rechazada');
       setRejectModal({ open: false, reservation: null });
-      fetchUserReservations(pagination.currentPage, pagination.limit);
+      fetchUserReservations(pagination.currentPage, pagination.limit, null, restaurantId || undefined);
     } else {
       toast.error(result.error || 'Error al rechazar reservación');
     }

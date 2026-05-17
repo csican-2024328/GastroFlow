@@ -6,12 +6,15 @@ import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx';
 import { ResetPasswordPage } from '../../features/auth/pages/ResetPasswordPage.jsx';
 import { ClientPage } from '../layouts/ClientPage.jsx';
 import { DashboardPage } from '../layouts/DashboardPage.jsx';
+import { RestaurantDashboardPage } from '../layouts/RestaurantDashboardPage.jsx';
 import { RestaurantsPage } from '../../features/restaurants/pages/RestaurantsPage.jsx';
 import { TablesPage } from '../../features/tables/pages/TablesPage.jsx';
 import { IngredientsPage } from '../../features/ingredients/pages/IngredientsPage.jsx';
+import { RestaurantIngredientsPage } from '../../features/ingredients/pages/RestaurantIngredientsPage.jsx';
 import { InventoryAuditPage } from '../../features/inventory-audit/pages/InventoryAuditPage.jsx';
 import { DishesPage } from '../../features/dishes/pages/DishesPage.jsx';
 import OrderManagement  from '../../features/orders/views/OrderManagement.jsx';
+import RestaurantReportsPage from '../../features/reports/pages/RestaurantReportsPage.jsx';
 import { Users } from '../../features/users/components/Users.jsx';
 import { ProtectedRoute } from '../../shared/components/auth/ProtectedRoute.jsx';
 import { RoleGuard } from '../../shared/components/auth/RoleGuard.jsx';
@@ -44,10 +47,31 @@ export const AppRoutes = () => {
             <Route path="/cliente/reservaciones" element={<ReservationsPage />} />
             <Route path="/cliente/cupones" element={<CouponsPage />} />
             <Route
+                path="/restaurant-dashboard"
+                element={
+                    <ProtectedRoute>
+                        <RoleGuard allowedRoles={['RESTAURANT_ADMIN']}>
+                            <RestaurantDashboardPage />
+                        </RoleGuard>
+                    </ProtectedRoute>
+                }
+            >
+                <Route path="pedidos" element={<OrderManagement />} />
+                <Route path="reservaciones" element={<ReservationManagement />} />
+                <Route path="mesas" element={<TablesPage />} />
+                <Route path="ingredientes" element={<RestaurantIngredientsPage />} />
+                <Route path="inventario" element={<InventoryAuditPage />} />
+                <Route path="platos" element={<DishesPage />} />
+                <Route path="reportes" element={<RestaurantReportsPage />} />
+                <Route path="facturas" element={<InvoicesPage />} />
+                <Route path="cupones" element={<CouponsPage />} />
+                <Route path="eventos" element={<EventsAdminPage />} />
+            </Route>
+            <Route
                 path="/dashboard"
                 element={
                     <ProtectedRoute>
-                        <RoleGuard allowedRoles={['PLATFORM_ADMIN', 'RESTAURANT_ADMIN']}>
+                        <RoleGuard allowedRoles={['PLATFORM_ADMIN']}>
                             <DashboardPage />
                         </RoleGuard>
                     </ProtectedRoute>

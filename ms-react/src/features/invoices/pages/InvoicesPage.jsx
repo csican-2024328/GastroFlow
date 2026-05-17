@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { createInvoice, deleteInvoice, getInvoiceById, getInvoices, updateInvoiceStatus } from '../../../shared/api/invoiceService.js';
+import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
+import { NoRestaurantAssigned } from '../../../shared/components/layout/NoRestaurantAssigned.jsx';
 
 const STATUS_OPTIONS = [
   { value: 'PENDIENTE', label: 'Pendiente', badge: 'bg-[#E2B14C] text-[#5F3A0D]' },
@@ -37,6 +39,7 @@ const getItemName = (item) => {
 };
 
 const InvoicesPage = () => {
+  const { restaurantId, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -64,7 +67,7 @@ const InvoicesPage = () => {
     try {
       setLoading(true);
       setFetchError('');
-      const response = await getInvoices({ page: pageToLoad, limit });
+      const response = await getInvoices({ page: pageToLoad, limit, restaurantID: restaurantId || undefined, restaurantId: restaurantId || undefined });
       setInvoices(response.data.data || []);
       setTotalPages(response.data.pagination?.totalPages || 1);
       setPage(response.data.pagination?.currentPage || pageToLoad);
@@ -77,7 +80,11 @@ const InvoicesPage = () => {
 
   useEffect(() => {
     loadInvoices(1);
-  }, []);
+  }, [restaurantId]);
+
+  if (isRestaurantAdmin && !hasRestaurantAssigned) {
+    return <NoRestaurantAssigned />;
+  }
 
   const handleSelectInvoice = async (invoice) => {
     if (!invoice?._id) return;

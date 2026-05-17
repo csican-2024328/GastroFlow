@@ -108,7 +108,8 @@ export const ProfilePanel = ({ initialEdit = false, onClose }) => {
                 }
 
                 const role = (user?.role || '').toString().trim().toUpperCase()
-                if (role === 'PLATFORM_ADMIN' || role === 'RESTAURANT_ADMIN') navigate('/dashboard')
+                    if (role === 'PLATFORM_ADMIN') navigate('/dashboard')
+                    else if (role === 'RESTAURANT_ADMIN') navigate('/restaurant-dashboard')
                 else navigate('/cliente')
               }} className="px-4 py-2 rounded bg-[#C97B60] text-white">Volver</button>
             </div>

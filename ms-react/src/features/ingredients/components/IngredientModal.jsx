@@ -13,7 +13,7 @@ const UNIT_OPTIONS = [
   { value: 'paquete', label: 'paquete' },
 ];
 
-export const IngredientModal = ({ open, onClose, ingredient = null }) => {
+export const IngredientModal = ({ open, onClose, ingredient = null, lockedRestaurantId = '' }) => {
   const restaurantOptions = useIngredientStore((state) => state.restaurantOptions);
   const fetchRestaurantOptions = useIngredientStore((state) => state.fetchRestaurantOptions);
   const restaurantOptionsLoading = useIngredientStore((state) => state.restaurantOptionsLoading);
@@ -50,12 +50,13 @@ export const IngredientModal = ({ open, onClose, ingredient = null }) => {
       stock: ingredient?.stock ?? '',
       unidadMedida: ingredient?.unidadMedida || '',
       restaurantId:
+        lockedRestaurantId || 
         ingredient?.restaurantId?._id ||
         ingredient?.restaurantId ||
         selectedRestaurantId ||
         '',
     });
-  }, [ingredient, open, reset, selectedRestaurantId]);
+  }, [ingredient, lockedRestaurantId, open, reset, selectedRestaurantId]);
 
   const onSubmit = async (data) => {
     try {
@@ -202,7 +203,7 @@ export const IngredientModal = ({ open, onClose, ingredient = null }) => {
                 render={({ field }) => (
                   <select
                     {...field}
-                    disabled={restaurantOptionsLoading || Boolean(ingredient?._id)}
+                    disabled={restaurantOptionsLoading || Boolean(ingredient?._id) || Boolean(lockedRestaurantId)}
                     className={selectClassName}
                   >
                     <option value="">-- Selecciona un restaurante --</option>
@@ -217,6 +218,11 @@ export const IngredientModal = ({ open, onClose, ingredient = null }) => {
               {ingredient?._id && (
                 <p className="mt-1 text-xs text-gray-500">
                   El restaurante no se puede cambiar en una edición.
+                </p>
+              )}
+              {lockedRestaurantId && !ingredient?._id && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Este ingrediente se guardará solo en el restaurante asignado.
                 </p>
               )}
               {errors.restaurantId && (
