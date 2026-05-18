@@ -289,26 +289,19 @@ export const LiveAdminDashboard = ({ restaurantId = '' }) => {
       const exportTimestamp = new Date();
       const logoDataUrl = await toDataUrl(gastroflowLogo);
 
-      const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'pt',
-        format: 'a4',
-      });
-
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
       const pageWidth = doc.internal.pageSize.getWidth();
 
+      // --- Sección 1: Portada / Resumen General ---
       doc.setFillColor(...BRAND_COLORS.cream);
-      doc.rect(0, 0, pageWidth, 130, 'F');
-
-      doc.addImage(logoDataUrl, 'PNG', 36, 24, 72, 72);
-
+      doc.rect(0, 0, pageWidth, 140, 'F');
+      doc.addImage(logoDataUrl, 'PNG', 36, 26, 72, 72);
       doc.setTextColor(...BRAND_COLORS.green);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(22);
       doc.text('GastroFlow', 118, 58);
-
       doc.setFontSize(16);
-      doc.text('Panel Central de Reporte', 118, 82);
+      doc.text('Resumen Ejecutivo', 118, 82);
 
       doc.setTextColor(...BRAND_COLORS.graphite);
       doc.setFont('helvetica', 'normal');
@@ -316,29 +309,32 @@ export const LiveAdminDashboard = ({ restaurantId = '' }) => {
       doc.text(`Rango: ${formatDate(dateStart)} - ${formatDate(dateEnd)}`, 118, 102);
       doc.text(`Exportado: ${formatDateTime(exportTimestamp)}`, 118, 118);
 
+      // Calcular métricas agregadas adicionales cuando sea posible
+      const demandaTotal = Array.isArray(demandReport) ? demandReport.reduce((s, r) => s + (r.totalPedidos || r.totalPedidos || 0), 0) : 0;
+      const pedidosPorDiaTotal = (reservationsReport?.data?.porDia || reservationsReport?.porDia || []).reduce((s, r) => s + (r.total || 0), 0);
+      const ocupacionPromedioGeneral = '-';
+      const satisfaccionPromedioGeneral = '-';
+
       autoTable(doc, {
         startY: 150,
         head: [['Indicador', 'Valor']],
         body: [
-          ['Ingresos', formatCurrency(totalIncome)],
-          ['Reservas totales', String(totalReservations)],
-          ['Reservas pendientes', String(pendingReservations)],
-          ['Reservas aceptadas', String(confirmedReservations)],
-          ['Reservas canceladas', String(cancelledReservations)],
-          ['Pedidos', String(totalOrders)],
-          ['Pagos completados', String(totalPaidInvoices)],
-          ['Pagos pendientes', String(totalPendingInvoices)],
-          ['Restaurantes activos', String(activeRestaurants)],
-          ['Usuarios registrados', String(users.length)],
+          ['Demanda total (pedidos)', String(demandaTotal)],
+          ['Platos más vendidos (global)', (Array.isArray(topPlatosReport) && topPlatosReport.length) ? topPlatosReport.slice(0,3).map(p=>p.nombre||p.nombrePlato||p.nombre_plato).join(', ') : 'Sin datos'],
+          ['Horas pico consolidadas', peakHour?.hora !== undefined ? `${String(peakHour.hora).padStart(2,'0')}:00` : 'Sin datos'],
+          ['Reservaciones totales', String(totalReservations)],
+          ['Ingresos globales', formatCurrency(totalIncome)],
+          ['Ocupación promedio (general)', ocupacionPromedioGeneral],
+          ['Pedidos por día (totales)', String(pedidosPorDiaTotal)],
+          ['Satisfacción promedio (global)', satisfaccionPromedioGeneral],
         ],
         styles: { fontSize: 10, cellPadding: 6, textColor: BRAND_COLORS.graphite },
         headStyles: { fillColor: BRAND_COLORS.green, textColor: [255, 255, 255] },
         alternateRowStyles: { fillColor: [252, 249, 243] },
-        columnStyles: {
-          0: { fontStyle: 'bold' },
-        },
+        columnStyles: { 0: { fontStyle: 'bold' } },
       });
 
+      // Agregar tablas de ejemplo (reservas/pedidos/facturas recientes) como detalle corto
       autoTable(doc, {
         startY: doc.lastAutoTable.finalY + 18,
         head: [['Reservación', 'Cliente', 'Estado', 'Fecha']],
@@ -367,20 +363,70 @@ export const LiveAdminDashboard = ({ restaurantId = '' }) => {
         alternateRowStyles: { fillColor: [252, 249, 243] },
       });
 
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 14,
-        head: [['Factura', 'Estado', 'Método pago', 'Monto']],
-        body: recentPayments.map((invoice) => [
-          invoice._id?.slice(-8).toUpperCase() || '-',
-          invoice.estado || '-',
-          invoice.metodoPago || 'PENDIENTE',
-          formatCurrency(invoice.total),
-        ]),
-        styles: { fontSize: 9, cellPadding: 5, textColor: BRAND_COLORS.graphite },
-        headStyles: { fillColor: BRAND_COLORS.graphite, textColor: [255, 255, 255] },
-        alternateRowStyles: { fillColor: [252, 249, 243] },
-      });
+      // --- Sección 2+: Fichas individuales por restaurante ---
+      // Asegurarse de mantener el mismo orden de `restaurants`
+      for (let i = 0; i < restaurants.length; i += 1) {
+        const r = restaurants[i];
+        const restaurantId = r._id || r.id || r.restaurantId || r.idRestaurante;
+        const restaurantName = r.nombre || r.name || r.restaurantName || `Restaurante ${i + 1}`;
 
+        // Fuerza nueva página para cada restaurante
+        doc.addPage();
+        doc.setFillColor(...BRAND_COLORS.cream);
+        doc.rect(0, 0, pageWidth, 60, 'F');
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...BRAND_COLORS.graphite);
+        doc.text(restaurantName, 36, 48);
+
+        // Buscar métricas por restaurante en los reportes ya cargados
+        const demandaEntry = Array.isArray(demandReport) ? demandReport.find((d) => {
+          return (d._id && String(d._id) === String(restaurantId)) || (d.restaurante && (d.restaurante === restaurantName || d.restaurante?.toString?.() === String(restaurantId)));
+        }) : null;
+
+        const ingresosR = demandaEntry?.ingresos ?? (incomeReport?.data?.porRestaurante ? (incomeReport.data.porRestaurante.find(p=>String(p._id)===String(restaurantId))?.totalIngresos) : undefined) ?? 0;
+        const pedidosTotalesR = demandaEntry?.totalPedidos ?? demandaEntry?.pedidos ?? 0;
+        const reservasR = demandaEntry?.totalReservaciones ?? demandaEntry?.reservaciones ?? 0;
+        const ocupacionPromedioR = demandaEntry?.ocupacionPromedio ?? '-';
+        const satisfaccionR = demandaEntry?.satisfaccionPromedio ?? '-';
+
+        // Pedidos por día promedio aproximado (si hay rango)
+        let dias = 1;
+        try {
+          const s = new Date(dateStart);
+          const e = new Date(dateEnd);
+          dias = Math.max(1, Math.ceil((e - s) / (1000 * 60 * 60 * 24) + 1));
+        } catch (err) {
+          dias = 1;
+        }
+        const pedidosPorDiaR = dias ? (Number(pedidosTotalesR) / dias).toFixed(2) : '-';
+
+        autoTable(doc, {
+          startY: 86,
+          head: [['Métrica', 'Valor']],
+          body: [
+            ['Ingresos', formatCurrency(ingresosR)],
+            ['Ocupación promedio', ocupacionPromedioR === '-' ? '-' : String(ocupacionPromedioR)],
+            ['Pedidos por día (promedio)', String(pedidosPorDiaR)],
+            ['Satisfacción del cliente', satisfaccionR === '-' ? '-' : String(satisfaccionR)],
+            ['Platos más vendidos', (Array.isArray(topPlatosReport) && topPlatosReport.length) ? (topPlatosReport.filter(tp=>{
+              // intentar asociar por restaurante si la info viene en el topPlatos
+              return !tp.restaurante || tp.restaurante === restaurantName || String(tp.restaurantId) === String(restaurantId) || String(tp.restauranteId) === String(restaurantId);
+            }).slice(0,5).map(p=>p.nombre||p.plato||p.nombrePlato||p.nombre_plato).join(', ')) : 'Sin datos'],
+            ['Horas pico (local)', (
+              (horasPicoReport?.data?.porRestaurante || horasPicoReport?.porRestaurante || []).find(hr => String(hr._id) === String(restaurantId))?.horaPico
+              || horasPicoReport?.data?.horaPico || horasPicoReport?.horaPico
+            ) ? (String((horasPicoReport?.data?.porRestaurante || horasPicoReport?.porRestaurante || []).find(hr => String(hr._id) === String(restaurantId))?.horaPico || horasPicoReport?.data?.horaPico || horasPicoReport?.horaPico) + ':00') : 'Sin datos'],
+            ['Reservaciones', String(reservasR)],
+          ],
+          styles: { fontSize: 10, cellPadding: 6, textColor: BRAND_COLORS.graphite },
+          headStyles: { fillColor: BRAND_COLORS.terracotta, textColor: [255, 255, 255] },
+          alternateRowStyles: { fillColor: [252, 249, 243] },
+          columnStyles: { 0: { fontStyle: 'bold' } },
+        });
+      }
+
+      // Pie de página con numeración
       const pageCount = doc.getNumberOfPages();
       for (let page = 1; page <= pageCount; page += 1) {
         doc.setPage(page);
