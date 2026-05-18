@@ -13,6 +13,7 @@ import { IngredientsPage } from '../../features/ingredients/pages/IngredientsPag
 import { RestaurantIngredientsPage } from '../../features/ingredients/pages/RestaurantIngredientsPage.jsx';
 import { InventoryAuditPage } from '../../features/inventory-audit/pages/InventoryAuditPage.jsx';
 import { DishesPage } from '../../features/dishes/pages/DishesPage.jsx';
+import { MenusPage } from '../../features/dishes/pages/MenusPage.jsx';
 import OrderManagement  from '../../features/orders/views/OrderManagement.jsx';
 import RestaurantReportsPage from '../../features/reports/pages/RestaurantReportsPage.jsx';
 import { Users } from '../../features/users/components/Users.jsx';
@@ -62,6 +63,7 @@ export const AppRoutes = () => {
                 <Route path="ingredientes" element={<RestaurantIngredientsPage />} />
                 <Route path="inventario" element={<InventoryAuditPage />} />
                 <Route path="platos" element={<DishesPage />} />
+                <Route path="menus" element={<MenusPage />} />
                 <Route path="reportes" element={<RestaurantReportsPage />} />
                 <Route path="facturas" element={<InvoicesPage />} />
                 <Route path="cupones" element={<CouponsPage />} />
@@ -82,6 +84,7 @@ export const AppRoutes = () => {
                 <Route path="ingredientes" element={<IngredientsPage />} />
                 <Route path="auditoria-inventario" element={<InventoryAuditPage />} />
                 <Route path="platos" element={<DishesPage />} />
+                <Route path="menus" element={<MenusPage />} />
                 <Route path="pedidos" element={<OrderManagement />} />
                 <Route path="reservas" element={<ReservationManagement />} />
                 <Route path="facturas" element={<InvoicesPage />} />

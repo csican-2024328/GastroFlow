@@ -11,6 +11,7 @@ export const Sidebar = () => {
         {label: "Ingredientes", to: "/dashboard/ingredientes"},
         {label: "Auditoría Inv.", to: "/dashboard/auditoria-inventario"},
         {label: "Platos", to: "/dashboard/platos"},
+        {label: "Menús", to: "/dashboard/menus"},
         {label: "Pedidos", to: "/dashboard/pedidos"},
         {label: "Reservas", to: "/dashboard/reservas"},
         {label: "Facturas", to: "/dashboard/facturas"},

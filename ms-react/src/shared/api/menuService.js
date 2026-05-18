@@ -16,6 +16,15 @@ export const getMenuById = async (id) => {
   return axiosClient.get(`/menu/${id}`);
 };
 
+export const getActiveMenusByRestaurant = async (restaurantId, date) => {
+  const queryParams = new URLSearchParams();
+
+  if (date) queryParams.append('date', date);
+
+  const queryString = queryParams.toString();
+  return axiosClient.get(`/menu/menu/${restaurantId}${queryString ? `?${queryString}` : ''}`);
+};
+
 export const createMenu = async (formData) => {
   return axiosClient.post('/menu/create', formData, {
     headers: {

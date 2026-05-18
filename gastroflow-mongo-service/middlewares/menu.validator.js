@@ -13,6 +13,28 @@ export const validateCreateMenu = [
     .withMessage('restaurantId debe ser un ID de MongoDB válido'),
   body('ingredientes')
     .optional()
+    .customSanitizer((value) => {
+      if (Array.isArray(value)) return value;
+
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (!trimmed) return [];
+
+        if (trimmed.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            return Array.isArray(parsed) ? parsed : [trimmed];
+          } catch {
+            return [trimmed];
+          }
+        }
+
+        return [trimmed];
+      }
+
+      return value;
+    })
     .isArray()
     .withMessage('Los ingredientes deben ser un arreglo'),
   body('ingredientes.*')
@@ -50,7 +72,32 @@ export const validateCreateMenu = [
     .isMongoId()
     .withMessage('Cada plato debe ser un ID de MongoDB válido'),
   // schedule: array of { dayNumber, startTime, endTime }
-  body('schedule').optional().isArray().withMessage('Schedule debe ser un arreglo'),
+  body('schedule')
+    .optional()
+    .customSanitizer((value) => {
+      if (Array.isArray(value)) return value;
+
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (!trimmed) return [];
+
+        if (trimmed.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            return Array.isArray(parsed) ? parsed : [trimmed];
+          } catch {
+            return [trimmed];
+          }
+        }
+
+        return [trimmed];
+      }
+
+      return value;
+    })
+    .isArray()
+    .withMessage('Schedule debe ser un arreglo'),
   body('schedule.*.dayNumber').optional().isInt({ min: 0, max: 6 }).withMessage('dayNumber debe estar entre 0 y 6'),
   body('schedule.*.startTime').optional().matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('startTime debe tener formato HH:MM'),
   body('schedule.*.endTime').optional().matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('endTime debe tener formato HH:MM'),
@@ -73,6 +120,28 @@ export const validateUpdateMenu = [
     .withMessage('restaurantId debe ser un ID de MongoDB válido'),
   body('ingredientes')
     .optional()
+    .customSanitizer((value) => {
+      if (Array.isArray(value)) return value;
+
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (!trimmed) return [];
+
+        if (trimmed.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            return Array.isArray(parsed) ? parsed : [trimmed];
+          } catch {
+            return [trimmed];
+          }
+        }
+
+        return [trimmed];
+      }
+
+      return value;
+    })
     .isArray()
     .withMessage('Los ingredientes deben ser un arreglo'),
   body('ingredientes.*')
@@ -109,7 +178,32 @@ export const validateUpdateMenu = [
     .optional()
     .isMongoId()
     .withMessage('Cada plato debe ser un ID de MongoDB válido'),
-  body('schedule').optional().isArray().withMessage('Schedule debe ser un arreglo'),
+  body('schedule')
+    .optional()
+    .customSanitizer((value) => {
+      if (Array.isArray(value)) return value;
+
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (!trimmed) return [];
+
+        if (trimmed.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            return Array.isArray(parsed) ? parsed : [trimmed];
+          } catch {
+            return [trimmed];
+          }
+        }
+
+        return [trimmed];
+      }
+
+      return value;
+    })
+    .isArray()
+    .withMessage('Schedule debe ser un arreglo'),
   body('schedule.*.dayNumber').optional().isInt({ min: 0, max: 6 }).withMessage('dayNumber debe estar entre 0 y 6'),
   body('schedule.*.startTime').optional().matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('startTime debe tener formato HH:MM'),
   body('schedule.*.endTime').optional().matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('endTime debe tener formato HH:MM'),

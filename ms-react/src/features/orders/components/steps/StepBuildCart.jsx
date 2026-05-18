@@ -18,7 +18,7 @@ export const StepBuildCart = () => {
 
   const menus = useMenuStore((s) => s.menus);
   const menusLoading = useMenuStore((s) => s.loading);
-  const fetchMenus = useMenuStore((s) => s.fetchMenus);
+  const fetchActiveMenus = useMenuStore((s) => s.fetchActiveMenus);
 
   const [selectedCategory, setSelectedCategory] = useState('platos');
   const [quantity, setQuantity] = useState({});
@@ -26,9 +26,9 @@ export const StepBuildCart = () => {
   useEffect(() => {
     if (restaurantId) {
       fetchDishes(restaurantId);
-      fetchMenus(restaurantId);
+      fetchActiveMenus(restaurantId);
     }
-  }, [restaurantId, fetchDishes, fetchMenus]);
+  }, [restaurantId, fetchDishes, fetchActiveMenus]);
 
   const handleAddItem = (item, tipo) => {
     const qty = quantity[`${tipo}-${item._id}`] || 1;
@@ -41,7 +41,7 @@ export const StepBuildCart = () => {
       tipo,
       id: item._id,
       nombre: item.nombre,
-      precioUnitario: tipo === 'PLATO' ? item.precio : item.precioMenu,
+      precioUnitario: tipo === 'PLATO' ? Number(item.precio || 0) : Number(item.precioMenu ?? item.precio ?? 0),
       cantidad: qty,
     });
 
@@ -155,8 +155,14 @@ export const StepBuildCart = () => {
                   <h4 className="font-semibold text-[#1A1A1A]">{menu.nombre}</h4>
                   <p className="text-xs text-[#4b4b4b] mt-1">{menu.descripcion}</p>
                 </div>
-                <span className="text-[#D4984E] font-bold">${menu.precioMenu.toFixed(2)}</span>
+                <span className="text-[#D4984E] font-bold">${Number(menu.precio ?? menu.precioMenu ?? 0).toFixed(2)}</span>
               </div>
+
+              {menu.platos?.length > 0 && (
+                <p className="text-xs text-[#5A5146] leading-5">
+                  Incluye: {menu.platos.map((plato) => plato.nombre || plato.name).filter(Boolean).join(', ')}
+                </p>
+              )}
 
               <div className="flex gap-2 items-center mt-4">
                 <input

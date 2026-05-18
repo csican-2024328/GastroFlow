@@ -5,6 +5,29 @@ import mongoose from 'mongoose';
 import { calcularPrecioYTipoDePlatos } from './menu-helpers.js';
 import { verificarStockMenu, actualizarDisponibilidadMenus } from '../../helper/inventory-helpers.js';
 
+const normalizeArrayField = (value) => {
+	if (Array.isArray(value)) return value;
+
+	if (typeof value === 'string') {
+		const trimmed = value.trim();
+		if (!trimmed) return [];
+
+		if (trimmed.startsWith('[')) {
+			try {
+				const parsed = JSON.parse(trimmed);
+				if (Array.isArray(parsed)) return parsed;
+			} catch {
+				// fallback below
+			}
+		}
+
+		return [trimmed];
+	}
+
+	if (value == null) return [];
+	return [value];
+};
+
 // Helper: verifica si una fecha (Date) cae dentro del rango availableFrom/To
 const isWithinDateRange = (menu, date) => {
 	if (menu.availableFrom && date < new Date(menu.availableFrom)) return false;
@@ -61,6 +84,12 @@ const validarPlatosPertenecenAlRestaurante = async (platosIds, restaurantId) => 
 export const createMenu = async (req, res) => {
 	try {
 		const menuData = { ...req.body };
+		if (Object.prototype.hasOwnProperty.call(req.body, 'ingredientes')) {
+			menuData.ingredientes = normalizeArrayField(menuData.ingredientes);
+		}
+		if (Object.prototype.hasOwnProperty.call(req.body, 'schedule')) {
+			menuData.schedule = normalizeArrayField(menuData.schedule);
+		}
 
 		// Validación: restaurantId es obligatorio
 		if (!menuData.restaurantId) {
@@ -80,12 +109,6 @@ export const createMenu = async (req, res) => {
 
 		// Validación: ingredientes
 		if (menuData.ingredientes) {
-			if (!Array.isArray(menuData.ingredientes)) {
-				return res.status(400).json({
-					success: false,
-					message: 'Ingredientes debe ser un array'
-				});
-			}
 			// Validar que todos los ingredientes sean ObjectIds válidos
 			for (const ingredienteId of menuData.ingredientes) {
 				if (!mongoose.Types.ObjectId.isValid(ingredienteId)) {
@@ -98,11 +121,7 @@ export const createMenu = async (req, res) => {
 		}
 
 		// Obtener los IDs de platos del body (puede venir como string o array)
-		let platosIDs = menuData.platos;
-		if (typeof platosIDs === 'string') {
-			platosIDs = [platosIDs];
-		}
-		if (!Array.isArray(platosIDs)) platosIDs = [];
+		let platosIDs = normalizeArrayField(menuData.platos);
 
 		// Validación cruzada: verificar que todos los platos pertenezcan al restaurante
 		const validacionPlatos = await validarPlatosPertenecenAlRestaurante(platosIDs, menuData.restaurantId);
@@ -208,6 +227,12 @@ export const updateMenu = async (req, res) => {
 		if (!existing) return res.status(404).json({ success: false, message: 'Menú no encontrado' });
 
 		const updateData = { ...req.body };
+		if (Object.prototype.hasOwnProperty.call(req.body, 'ingredientes')) {
+			updateData.ingredientes = normalizeArrayField(updateData.ingredientes);
+		}
+		if (Object.prototype.hasOwnProperty.call(req.body, 'schedule')) {
+			updateData.schedule = normalizeArrayField(updateData.schedule);
+		}
 
 		// Protección: NO permitir cambiar restaurantId
 		if (updateData.restaurantId && updateData.restaurantId !== existing.restaurantId.toString()) {
@@ -220,13 +245,7 @@ export const updateMenu = async (req, res) => {
 		delete updateData.restaurantId;
 
 		// Validación: ingredientes
-		if (updateData.ingredientes) {
-			if (!Array.isArray(updateData.ingredientes)) {
-				return res.status(400).json({
-					success: false,
-					message: 'Ingredientes debe ser un array'
-				});
-			}
+		if (Object.prototype.hasOwnProperty.call(updateData, 'ingredientes')) {
 			// Validar que todos los ingredientes sean ObjectIds válidos
 			for (const ingredienteId of updateData.ingredientes) {
 				if (!mongoose.Types.ObjectId.isValid(ingredienteId)) {
@@ -239,11 +258,8 @@ export const updateMenu = async (req, res) => {
 		}
 
 		// Validación cruzada: si se actualizan los platos
-		if (updateData.platos) {
-			let platosIds = updateData.platos;
-			if (typeof platosIds === 'string') {
-				platosIds = [platosIds];
-			}
+		if (Object.prototype.hasOwnProperty.call(updateData, 'platos')) {
+			let platosIds = normalizeArrayField(updateData.platos);
 			const validacionPlatos = await validarPlatosPertenecenAlRestaurante(platosIds, existing.restaurantId.toString());
 			if (!validacionPlatos.valid) {
 				return res.status(400).json({
