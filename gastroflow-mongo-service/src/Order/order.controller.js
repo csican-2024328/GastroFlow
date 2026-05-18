@@ -80,6 +80,38 @@ const buildOrderItemsFromPayload = async (items, restaurantId) => {
     return orderItems;
 };
 
+/**
+ * Parse horaProgramada value which can be:
+ * - a Date object
+ * - an ISO datetime string
+ * - a time-only string like "14:30" (interpreted as today at that time)
+ * Returns a Date instance or null if cannot parse
+ */
+const parseHoraProgramadaValue = (value) => {
+    if (!value) return null;
+    if (value instanceof Date) {
+        return isNaN(value.getTime()) ? null : value;
+    }
+    if (typeof value === 'string') {
+        // Try ISO parse first
+        const iso = new Date(value);
+        if (!isNaN(iso.getTime())) return iso;
+
+        // Try HH:MM or H:MM
+        const m = value.match(/^(\d{1,2}):(\d{2})$/);
+        if (m) {
+            const hh = Number(m[1]);
+            const mm = Number(m[2]);
+            if (hh >= 0 && hh < 24 && mm >= 0 && mm < 60) {
+                const d = new Date();
+                d.setHours(hh, mm, 0, 0);
+                return d;
+            }
+        }
+    }
+    return null;
+};
+
 const requirementsToDelta = (currentRequirements, nextRequirements) => {
     const increase = new Map();
     const release = new Map();
@@ -318,6 +350,18 @@ export const createOrder = async (req, res) => {
                     message: 'horaProgramada es requerida para pedidos PARA_LLEVAR'
                 });
             }
+
+            // parse horaProgramada safely (accept "HH:MM" or ISO)
+            const parsedHora = parseHoraProgramadaValue(horaProgramada);
+            if (!parsedHora) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Formato de horaProgramada inválido. Use HH:MM o ISO datetime'
+                });
+            }
+
+            // replace value with parsed Date for later saving
+            req.body.horaProgramada = parsedHora;
         }
 
         const orderItems = await buildOrderItemsFromPayload(items, resolvedRestaurantId);
@@ -393,7 +437,7 @@ export const createOrder = async (req, res) => {
             clienteTelefono,
             clienteDireccion: tipoPedido === 'A_DOMICILIO' ? clienteDireccion : null,
             clienteReferencia: tipoPedido === 'A_DOMICILIO' ? clienteReferencia : null,
-            horaProgramada: tipoPedido === 'PARA_LLEVAR' ? horaProgramada : null,
+            horaProgramada: tipoPedido === 'PARA_LLEVAR' ? req.body.horaProgramada : null,
             items: orderItems,
             impuesto: impuesto || 0,
             descuento: (descuento || 0) + descuentoPorCoupon + descuentoPorEvento,
