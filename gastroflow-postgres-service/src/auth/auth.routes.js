@@ -123,6 +123,8 @@ router.put(
 
 router.put(
   '/:userId/assign-restaurant',
+  autenticar,
+  autorizarRole('PLATFORM_ADMIN'),
   authController.assignRestaurantToUser
 );
 

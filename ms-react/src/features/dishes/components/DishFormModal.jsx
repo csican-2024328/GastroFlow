@@ -4,6 +4,7 @@ import { Button, Input, Typography } from '@material-tailwind/react';
 import { useDishStore } from '../store/useDishStore.js';
 import { useIngredientStore } from '../../ingredients/store/useIngredientStore.js';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
+import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
 
 const CATEGORY_OPTIONS = [
   { value: 'ENTRADA', label: 'Entrada' },
@@ -45,6 +46,8 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
     },
   });
 
+  const { restaurantId, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const watchRestaurantId = watch('restaurantId');
 
@@ -77,7 +80,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
       precio: dish?.precio ?? '',
       categoria: dish?.categoria || '',
       ingredientes: dish?.ingredientes?.map((ing) => ing._id || ing) || [],
-      restaurantId: dish?.restaurantId?._id || dish?.restaurantId || selectedRestaurantId || '',
+      restaurantId: dish?.restaurantId?._id || dish?.restaurantId || restaurantId || selectedRestaurantId || '',
     });
 
     if (dish?.foto) {
@@ -168,7 +171,7 @@ export const DishFormModal = ({ open, onClose, dish = null }) => {
                 render={({ field }) => (
                   <select
                     {...field}
-                    disabled={restaurantOptionsLoading || loading}
+                    disabled={restaurantOptionsLoading || loading || (isRestaurantAdmin && hasRestaurantAssigned)}
                     className={selectClassName}
                   >
                     <option value="">-- Selecciona un restaurante --</option>

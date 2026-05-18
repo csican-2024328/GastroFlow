@@ -91,7 +91,10 @@ const Section = ({ title, children, className = '' }) => (
   </section>
 );
 
-export const LiveAdminDashboard = () => {
+export const LiveAdminDashboard = ({ restaurantId = '' }) => {
+  const scopedRestaurantId = (restaurantId || '').toString().trim();
+  const isScoped = Boolean(scopedRestaurantId);
+
   const [dateStart, setDateStart] = useState(startOfMonth());
   const [dateEnd, setDateEnd] = useState(endOfMonth());
   const [loading, setLoading] = useState(false);
@@ -118,9 +121,10 @@ export const LiveAdminDashboard = () => {
     end: dateEnd,
     fechaInicio: dateStart,
     fechaFin: dateEnd,
-    restaurantID: undefined,
+    restaurantID: scopedRestaurantId || undefined,
+    restaurantId: scopedRestaurantId || undefined,
     limit: 8,
-  }), [dateStart, dateEnd]);
+  }), [dateStart, dateEnd, scopedRestaurantId]);
 
   const pushActivity = (message) => {
     setLiveActivity((current) => [
@@ -135,23 +139,35 @@ export const LiveAdminDashboard = () => {
       setError('');
 
       const [restaurantsRes, usersRes, ordersRes, reservationsRes, invoicesRes, demandRes, reservationsReportRes, incomeRes, topPlatosRes, horasPicoRes] = await Promise.all([
-        getRestaurants({ page: 1, limit: 1000, isActive: true }),
+        isScoped
+          ? Promise.resolve({ data: { data: [{ _id: scopedRestaurantId, id: scopedRestaurantId, isActive: true }] } })
+          : getRestaurants({ page: 1, limit: 1000, isActive: true }),
         getUsers(),
-        getOrders({ page: 1, limit: 50 }),
-        getUserReservations({ page: 1, limit: 50 }),
-        getInvoices({ page: 1, limit: 50, fechaInicio: dateStart, fechaFin: dateEnd }),
-        getDemandReport({ start: dateStart, end: dateEnd, limit: 8 }),
-        getReservationsReport({ start: dateStart, end: dateEnd, restaurantID: undefined }),
-        getIncomeReport({ start: dateStart, end: dateEnd }),
-        getTopPlatosReport({ start: dateStart, end: dateEnd, limit: 5 }),
-        getHorasPicoReport({ start: dateStart, end: dateEnd }),
+        getOrders({ page: 1, limit: 50, restaurantID: scopedRestaurantId || undefined, restaurantId: scopedRestaurantId || undefined }),
+        getUserReservations({ page: 1, limit: 50, restaurantID: scopedRestaurantId || undefined, restaurantId: scopedRestaurantId || undefined }),
+        getInvoices({ page: 1, limit: 50, fechaInicio: dateStart, fechaFin: dateEnd, restaurantID: scopedRestaurantId || undefined }),
+        getDemandReport({ start: dateStart, end: dateEnd, limit: 8, restaurantID: scopedRestaurantId || undefined, restaurantId: scopedRestaurantId || undefined }),
+        getReservationsReport({ start: dateStart, end: dateEnd, restaurantID: scopedRestaurantId || undefined, restaurantId: scopedRestaurantId || undefined }),
+        getIncomeReport({ start: dateStart, end: dateEnd, restaurantID: scopedRestaurantId || undefined, restaurantId: scopedRestaurantId || undefined }),
+        getTopPlatosReport({ start: dateStart, end: dateEnd, limit: 5, restaurantID: scopedRestaurantId || undefined, restaurantId: scopedRestaurantId || undefined }),
+        getHorasPicoReport({ start: dateStart, end: dateEnd, restaurantID: scopedRestaurantId || undefined, restaurantId: scopedRestaurantId || undefined }),
       ]);
 
-      setRestaurants(restaurantsRes?.data?.data || restaurantsRes?.data || []);
-      setUsers(usersRes?.data?.data || []);
-      setOrders(ordersRes?.data || []);
-      setReservations(reservationsRes?.data?.data || []);
-      setInvoices(invoicesRes?.data?.data || []);
+      const restaurantList = restaurantsRes?.data?.data || restaurantsRes?.data || [];
+      setRestaurants(Array.isArray(restaurantList) ? restaurantList : []);
+
+      const userList = usersRes?.data?.data || [];
+      const restaurantUsers = isScoped
+        ? userList.filter((user) => {
+            const userRestaurantId = user?.restaurantId?._id || user?.restaurantId || user?.RestaurantId?._id || user?.RestaurantId || '';
+            return userRestaurantId?.toString?.() === scopedRestaurantId;
+          })
+        : userList;
+
+      setUsers(restaurantUsers);
+      setOrders(ordersRes?.data?.data || ordersRes?.data || []);
+      setReservations(reservationsRes?.data?.data || reservationsRes?.data || []);
+      setInvoices(invoicesRes?.data?.data || invoicesRes?.data || []);
       setDemandReport(demandRes?.data?.data?.demandaPorRestaurante || demandRes?.data?.demandaPorRestaurante || []);
       setReservationsReport(reservationsReportRes?.data || null);
       setIncomeReport(incomeRes?.data || null);
@@ -159,9 +175,9 @@ export const LiveAdminDashboard = () => {
       setHorasPicoReport(horasPicoRes?.data || null);
       setLastUpdated(new Date());
 
-      const paidInvoices = invoicesRes?.data?.data?.filter((invoice) => invoice.estado === 'PAGADA')?.length || 0;
-      const pendingInvoices = invoicesRes?.data?.data?.filter((invoice) => invoice.estado !== 'PAGADA')?.length || 0;
-      pushActivity(`Tablero actualizado · ${reservationsRes?.data?.data?.length || 0} reservas · ${ordersRes?.data?.length || 0} pedidos · ${paidInvoices} pagos`);
+      const invoiceList = invoicesRes?.data?.data || invoicesRes?.data || [];
+      const paidInvoices = invoiceList.filter((invoice) => invoice.estado === 'PAGADA')?.length || 0;
+      pushActivity(`Tablero actualizado${isScoped ? ' para tu restaurante' : ''} · ${reservationsRes?.data?.data?.length || reservationsRes?.data?.length || 0} reservas · ${ordersRes?.data?.data?.length || ordersRes?.data?.length || 0} pedidos · ${paidInvoices} pagos`);
 
       return { success: true };
     } catch (err) {
@@ -236,7 +252,7 @@ export const LiveAdminDashboard = () => {
   const totalOrders = orders.length;
   const totalPaidInvoices = invoices.filter((invoice) => invoice.estado === 'PAGADA').length;
   const totalPendingInvoices = invoices.filter((invoice) => invoice.estado !== 'PAGADA').length;
-  const activeRestaurants = restaurants.filter((restaurant) => restaurant.isActive !== false).length;
+  const activeRestaurants = isScoped ? 1 : restaurants.filter((restaurant) => restaurant.isActive !== false).length;
   const totalReservations = reservationsReport?.data?.resumen?.totalReservaciones ?? reservationsReport?.resumen?.totalReservaciones ?? reservations.length;
   const pendingReservations = reservationStats.PENDIENTE || 0;
   const confirmedReservations = reservationStats.CONFIRMADA || 0;
@@ -245,6 +261,12 @@ export const LiveAdminDashboard = () => {
   const topRestaurant = demandReport?.[0];
   const topDish = topPlatosReport?.[0];
   const peakHour = horasPicoReport?.data?.horaPico || horasPicoReport?.horaPico;
+  const visibleUsers = isScoped
+    ? users.filter((user) => {
+        const userRestaurantId = user?.restaurantId?._id || user?.restaurantId || user?.RestaurantId?._id || user?.RestaurantId || '';
+        return userRestaurantId?.toString?.() === scopedRestaurantId;
+      })
+    : users;
 
   const recentReservations = [...reservations]
     .sort((a, b) => new Date(b.createdAt || b.fechaReserva) - new Date(a.createdAt || a.fechaReserva))
@@ -258,7 +280,7 @@ export const LiveAdminDashboard = () => {
     .sort((a, b) => new Date(b.fechaEmision || b.createdAt) - new Date(a.fechaEmision || a.createdAt))
     .slice(0, 6);
 
-  const recentUsers = [...users].slice(0, 6);
+  const recentUsers = [...visibleUsers].slice(0, 6);
 
   const handleExportPdf = async () => {
     try {
@@ -383,10 +405,16 @@ export const LiveAdminDashboard = () => {
     <div className="min-h-full bg-[linear-gradient(180deg,#F7F2E8_0%,#FDFBF7_45%,#F7F2E8_100%)] px-6 py-6 text-[#1A1A1A]">
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8A7A63]">Admin general</p>
-          <h1 className="font-['Playfair_Display'] text-4xl font-bold text-[#1A1A1A]">Panel central De Reporte</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8A7A63]">
+            {isScoped ? 'Admin restaurante' : 'Admin general'}
+          </p>
+          <h1 className="font-['Playfair_Display'] text-4xl font-bold text-[#1A1A1A]">
+            {isScoped ? 'Panel de tu restaurante' : 'Panel central De Reporte'}
+          </h1>
           <p className="mt-2 max-w-3xl text-sm text-[#6D6459]">
-            Reservas, pedidos, compras y pagos sincronizados con datos reales del proyecto.
+            {isScoped
+              ? 'Reservas, pedidos, inventario y reportes filtrados únicamente por el restaurante asignado.'
+              : 'Reservas, pedidos, compras y pagos sincronizados con datos reales del proyecto.'}
           </p>
         </div>
 
@@ -436,7 +464,7 @@ export const LiveAdminDashboard = () => {
         {metricCard('Reservas', String(totalReservations), `${pendingReservations} pendientes · ${confirmedReservations} aceptadas`, 'text-[#1A1A1A]')}
         {metricCard('Pedidos', String(totalOrders), 'Pedidos registrados en el sistema', 'text-[#C87A55]')}
         {metricCard('Pagos', String(totalPaidInvoices), `${totalPendingInvoices} pendientes de pago`, 'text-[#7B5D27]')}
-        {metricCard('Restaurantes', String(activeRestaurants), 'Locales activos en la plataforma', 'text-[#2D4F4F]')}
+        {metricCard('Restaurantes', String(activeRestaurants), isScoped ? 'Tu restaurante asignado' : 'Locales activos en la plataforma', 'text-[#2D4F4F]')}
       </div>
 
       <div className="mt-6 grid gap-4 xl:grid-cols-2">
@@ -559,8 +587,10 @@ export const LiveAdminDashboard = () => {
             </div>
             <div className="rounded-2xl border border-[#F0E3CF] bg-[#FBF8F2] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8A7A63]">Usuarios</p>
-              <p className="mt-2 font-['Playfair_Display'] text-2xl font-bold text-[#1A1A1A]">{users.length}</p>
-              <p className="mt-1 text-sm text-[#5A5146]">Usuarios registrados en el sistema</p>
+              <p className="mt-2 font-['Playfair_Display'] text-2xl font-bold text-[#1A1A1A]">{visibleUsers.length}</p>
+              <p className="mt-1 text-sm text-[#5A5146]">
+                {isScoped ? 'Usuarios vinculados a tu restaurante' : 'Usuarios registrados en el sistema'}
+              </p>
             </div>
           </div>
         </Section>

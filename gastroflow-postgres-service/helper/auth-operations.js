@@ -13,6 +13,7 @@ import {
   findUserById,
   assignRoleToUser,
 } from './user-db.js';
+import { USER_ROLE } from './role-constants.js';
 import {
   generateEmailVerificationToken,
   generatePasswordResetToken,
@@ -46,8 +47,17 @@ const getExpirationTime = (timeString) => {
 
 export const registerUserHelper = async (userData) => {
   try {
-    const { email, username, password, name, surname, phone, profilePicture } =
-      userData;
+    const {
+      email,
+      username,
+      password,
+      name,
+      surname,
+      phone,
+      profilePicture,
+      skipVerification = false,
+      role = USER_ROLE,
+    } = userData;
 
     const userExists = await checkUserExists(email, username);
     if (userExists) {
@@ -56,23 +66,28 @@ export const registerUserHelper = async (userData) => {
       );
     }
 
-    const newUser = await createNewUser({
-      name,
-      surname,
-      username,
-      email,
-      password,
-      phone,
-      profilePicture: profilePicture,
-    });
+    const newUser = await createNewUser(
+      {
+        name,
+        surname,
+        username,
+        email,
+        password,
+        phone,
+        profilePicture: profilePicture,
+      },
+      role
+    );
 
-    // Asignar automáticamente el rol CLIENT a nuevos usuarios
-    try {
-      await assignRoleToUser(newUser.Id, 'CLIENT');
-      console.log(`✅ Rol CLIENT asignado al usuario ${newUser.Email}`);
-    } catch (roleError) {
-      console.error(`⚠️  Error asignando rol CLIENT a ${newUser.Email}:`, roleError.message);
-      // No lanzar error si falla la asignación de rol, el usuario se crea con rol por defecto
+    if (skipVerification) {
+      await markEmailAsVerified(newUser.Id);
+
+      return {
+        success: true,
+        user: buildUserResponse(newUser),
+        message: 'Usuario creado correctamente sin verificación de email.',
+        emailVerificationRequired: false,
+      };
     }
 
     const verificationToken = await generateEmailVerificationToken();

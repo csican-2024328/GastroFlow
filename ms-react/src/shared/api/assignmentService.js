@@ -37,7 +37,7 @@ export const getAvailableRestaurants = async (params = {}) => {
 export const assignRestaurantToAdmin = async (userId, restaurantId) => {
   try {
     const response = await axiosClient.put(
-      `${AUTH_API_URL}/users/${userId}/assign-restaurant`,
+      `${AUTH_API_URL}/auth/${userId}/assign-restaurant`,
       { restaurantId }
     );
     return response.data;

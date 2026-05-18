@@ -1,4 +1,5 @@
 import Inventory from './inventory.model.js';
+import InventoryMovement from '../InventoryMovement/inventoryMovement.model.js';
 import { actualizarPlatosPorIngrediente } from '../../helper/inventory-helpers.js';
 import mongoose from 'mongoose';
 
@@ -50,6 +51,20 @@ export const crearInsumo = async (req, res, next) => {
             restaurantId,
             activo: activo === true || activo === 'true'
         });
+
+        // Registrar movimiento de creación en auditoría
+        if (stock > 0) {
+            await InventoryMovement.create({
+                inventoryId: nuevoInsumo._id,
+                restaurantId: restaurantId,
+                userId: req.usuario?.sub || req.usuario?.id || 'SISTEMA',
+                tipo: 'ENTRADA',
+                motivo: 'CREACION_INSUMO',
+                cantidad: stock,
+                stockAntes: 0,
+                stockDespues: stock
+            });
+        }
 
         // Actualizar disponibilidad de platos que usen este ingrediente
         await actualizarPlatosPorIngrediente(nuevoInsumo._id);
@@ -160,6 +175,21 @@ export const actualizarInsumo = async (req, res, next) => {
             { new: true, runValidators: true }
         );
 
+        // Registrar movimiento en auditoría si el stock cambió
+        if (stock !== undefined && insumoActual.stock !== stock) {
+            const diferencia = stock - insumoActual.stock;
+            await InventoryMovement.create({
+                inventoryId: insumo._id,
+                restaurantId: insumo.restaurantId,
+                userId: req.usuario?.sub || req.usuario?.id || 'SISTEMA',
+                tipo: diferencia > 0 ? 'ENTRADA' : 'SALIDA',
+                motivo: 'ACTUALIZACION_MANUAL',
+                cantidad: Math.abs(diferencia),
+                stockAntes: insumoActual.stock,
+                stockDespues: stock
+            });
+        }
+
         // Actualizar disponibilidad de platos que usen este ingrediente
         await actualizarPlatosPorIngrediente(insumo._id);
 
@@ -187,6 +217,22 @@ export const eliminarInsumo = async (req, res, next) => {
                 success: false,
                 message: 'Insumo no encontrado'
             });
+        }
+
+        // Registrar movimiento de baja en auditoría si tenía stock
+        if (insumo.stock > 0) {
+            await InventoryMovement.create({
+                inventoryId: insumo._id,
+                restaurantId: insumo.restaurantId,
+                userId: req.usuario?.sub || req.usuario?.id || 'SISTEMA',
+                tipo: 'SALIDA',
+                motivo: 'ELIMINACION_INSUMO',
+                cantidad: insumo.stock,
+                stockAntes: insumo.stock,
+                stockDespues: 0
+            });
+            // Update the actual document to reflect 0 stock just in case
+            await Inventory.findByIdAndUpdate(insumo._id, { stock: 0 });
         }
 
         // Actualizar disponibilidad de platos que usen este ingrediente (los marca como no disponibles)

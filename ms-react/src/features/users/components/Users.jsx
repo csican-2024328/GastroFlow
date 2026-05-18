@@ -1,7 +1,12 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
 import { Button, Card, CardBody, CardHeader, Chip, Typography } from '@material-tailwind/react';
+import Modal from '../../../shared/components/ui/Modal.jsx';
 import { notyfError } from '../../../shared/utils/notyf.js';
+import { useAuthStore } from '../../auth/store/authStore.js';
 import { useUserManagmentStore } from '../store/useUserManagmentStore.js';
+import { AuthInput } from '../../../shared/components/auth/AuthInput.jsx';
 
 const normalizeRole = (role) => (role || '').toString().trim().toUpperCase();
 
@@ -30,6 +35,10 @@ export const Users = () => {
         loading,
         error,
         fetchUsers,
+        fetchUserById,
+        updateUserRole,
+        createUser,
+        creatingUser,
         setSearch,
         setRoleFilter,
         setPage,
@@ -38,6 +47,115 @@ export const Users = () => {
         pageSize,
         getFilteredUsers,
     } = useUserManagmentStore();
+
+    const currentUser = useAuthStore((state) => state.user);
+    const currentUserId = currentUser?.id || currentUser?.Id || currentUser?._id || '';
+
+    const [selectedUserToConfirm, setSelectedUserToConfirm] = useState(null);
+    const [pendingRole, setPendingRole] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
+
+    const {
+        register,
+        handleSubmit,
+        watch,
+        reset,
+        formState: { errors },
+    } = useForm({
+        mode: 'onTouched',
+        defaultValues: {
+            name: '',
+            surname: '',
+            username: '',
+            email: '',
+            phone: '',
+            password: '',
+            passwordConfirm: '',
+            role: 'CLIENT',
+        },
+    });
+
+    const passwordToConfirm = watch('password', '');
+
+    const getUserId = (user) => user?.id || user?.Id || user?._id || '';
+
+    const handleCloseModal = () => {
+        setSelectedUserToConfirm(null);
+        setPendingRole('');
+    };
+
+    const handleRoleSelect = async (user, selectedRole) => {
+        const roleValue = (selectedRole || '').toString().trim().toUpperCase();
+        const currentRole = (user?.role || '').toString().trim().toUpperCase();
+        if (!user || !roleValue || roleValue === currentRole) return;
+
+        const userId = getUserId(user);
+        if (!userId) {
+            toast.error('No se pudo identificar el usuario');
+            return;
+        }
+
+        const response = await fetchUserById(userId);
+        if (!response.success) {
+            toast.error(response.error);
+            return;
+        }
+
+        setSelectedUserToConfirm(response.user || user);
+        setPendingRole(roleValue);
+    };
+
+    const handleConfirmRoleChange = async () => {
+        if (!selectedUserToConfirm || !pendingRole) return;
+        setIsSubmitting(true);
+
+        const userId = getUserId(selectedUserToConfirm);
+        const response = await updateUserRole(userId, pendingRole);
+
+        if (response.success) {
+            toast.success('Rol actualizado correctamente');
+            await fetchUsers(undefined, { force: true });
+            handleCloseModal();
+        } else {
+            toast.error(response.error);
+        }
+
+        setIsSubmitting(false);
+    };
+
+    const openCreateUserModal = () => {
+        setIsCreateUserModalOpen(true);
+    };
+
+    const closeCreateUserModal = () => {
+        setIsCreateUserModalOpen(false);
+        reset();
+    };
+
+    const handleCreateUserSubmit = async (formData) => {
+        const payload = {
+            name: formData.name.trim(),
+            surname: formData.surname.trim(),
+            username: formData.username.trim(),
+            email: formData.email.trim().toLowerCase(),
+            phone: formData.phone.trim(),
+            password: formData.password,
+        };
+
+        const role = formData.role || 'CLIENT';
+
+        const response = await createUser(payload, role);
+        if (response.success) {
+            toast.success(response.message || 'Usuario creado correctamente');
+            reset();
+            closeCreateUserModal();
+            setPage(1);
+            await fetchUsers(undefined, { force: true });
+        } else {
+            toast.error(response.error);
+        }
+    };
 
     useEffect(() => {
         fetchUsers(undefined, { force: true });
@@ -83,6 +201,13 @@ export const Users = () => {
                         Administra el listado de usuarios registrados.
                     </Typography>
                 </div>
+                <Button
+                    size="sm"
+                    onClick={openCreateUserModal}
+                    className="bg-[#2D4F4F] text-white rounded-md hover:bg-[#23342b] shadow-none"
+                >
+                    + Crear usuario
+                </Button>
             </div>
 
             <div className="mb-6 rounded-xl border border-stone-200 bg-[#2C4035] p-5 shadow-lg">
@@ -134,56 +259,62 @@ export const Users = () => {
                             <thead>
                                 <tr className="text-[#2C4035] uppercase tracking-wide text-xs">
                                     <th className="p-4 text-left font-semibold">Nombre</th>
-                                    <th className="p-4 text-left font-semibold">Username</th>
                                     <th className="p-4 text-left font-semibold">Email</th>
-                                    <th className="p-4 text-left font-semibold">Rol</th>
-                                    <th className="p-4 text-left font-semibold">Creado</th>
+                                    <th className="p-4 text-left font-semibold">Rol actual</th>
+                                    <th className="p-4 text-left font-semibold">Fecha de creación</th>
                                     <th className="p-4 text-left font-semibold">Estado</th>
-                                    <th className="p-4 text-left font-semibold">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {paginatedUsers.length === 0 ? (
                                     <tr>
-                                        <td className="p-6 text-center text-[#2C4035]" colSpan={7}>
+                                        <td className="p-6 text-center text-[#2C4035]" colSpan={5}>
                                             No hay usuarios para mostrar.
                                         </td>
                                     </tr>
                                 ) : (
-                                    paginatedUsers.map((user) => (
-                                        <tr key={user.id} className="border-t border-[#E2D4B7] hover:bg-[#F8F5F0]/70 transition-colors duration-200">
-                                            <td className="p-4">
-                                                <Typography variant="small" className="font-semibold text-[#1A1A1A]">
-                                                    {[user.name, user.surname].filter(Boolean).join(' ') || '-'}
-                                                </Typography>
-                                            </td>
-                                            <td className="p-4 text-[#1A1A1A]">{user.username || '-'}</td>
-                                            <td className="p-4 text-[#1A1A1A]">{user.email || '-'}</td>
-                                            <td className="p-4">
-                                                <Chip
-                                                    value={getRoleLabel(user.role)}
-                                                    className={normalizeRole(user.role) === 'PLATFORM_ADMIN' ? 'inline-flex bg-[#2C4035] text-white' : 'inline-flex bg-[#E2D4B7] text-[#1A1A1A]'}
-                                                />
-                                            </td>
-                                            <td className="p-4 text-[#1A1A1A]">{formatDate(user.createdAt)}</td>
-                                            <td className="p-4">
-                                                <Chip
-                                                    value={user.status ? 'Activo' : 'Inactivo'}
-                                                    className={user.status ? 'inline-flex bg-[#2C4035] text-white' : 'inline-flex bg-[#C87A55] text-white'}
-                                                />
-                                            </td>
-                                            <td className="p-4">
-                                                <button
-                                                    type="button"
-                                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-[#2C4035] text-white opacity-80 cursor-default"
-                                                    onClick={() => { }}
-                                                    title="Próximamente"
-                                                >
-                                                    Editar rol
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
+                                    paginatedUsers.map((user) => {
+                                        const currentRole = normalizeRole(user.role);
+                                        const isPlatformAdminUser = currentRole === 'PLATFORM_ADMIN';
+                                        const userId = getUserId(user);
+                                        const isDisabled = isPlatformAdminUser && userId !== currentUserId;
+
+                                        return (
+                                            <tr key={userId || user.email || Math.random()} className="border-t border-[#E2D4B7] hover:bg-[#F8F5F0]/70 transition-colors duration-200">
+                                                <td className="p-4">
+                                                    <Typography variant="small" className="font-semibold text-[#1A1A1A]">
+                                                        {[user.name, user.surname].filter(Boolean).join(' ') || '-'}
+                                                    </Typography>
+                                                </td>
+                                                <td className="p-4 text-[#1A1A1A]">{user.email || '-'}</td>
+                                                <td className="p-4">
+                                                    <div className="flex flex-col gap-2">
+                                                        <select
+                                                            value={currentRole || 'CLIENT'}
+                                                            onChange={(event) => handleRoleSelect(user, event.target.value)}
+                                                            disabled={isDisabled}
+                                                            title={isDisabled ? 'Solo el propio Admin Global puede cambiar su rol' : ''}
+                                                            className="w-full rounded-md border border-stone-300 bg-[#FDFBF7] px-3 py-2 text-sm text-[#2C4035] shadow-sm outline-none transition focus:border-[#2C4035] focus:ring-2 focus:ring-[#2D4F4F]/20 disabled:cursor-not-allowed disabled:bg-stone-100"
+                                                        >
+                                                            <option value="PLATFORM_ADMIN">PLATFORM_ADMIN</option>
+                                                            <option value="RESTAURANT_ADMIN">RESTAURANT_ADMIN</option>
+                                                            <option value="CLIENT">CLIENT</option>
+                                                        </select>
+                                                        {isDisabled && (
+                                                            <span className="text-xs text-[#8A7A63]">Solo el propio Admin Global puede cambiar su rol</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-[#1A1A1A]">{formatDate(user.createdAt)}</td>
+                                                <td className="p-4">
+                                                    <Chip
+                                                        value={user.status ? 'Activo' : 'Inactivo'}
+                                                        className={user.status ? 'inline-flex bg-[#2C4035] text-white' : 'inline-flex bg-[#C87A55] text-white'}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>
@@ -220,6 +351,185 @@ export const Users = () => {
                     </Button>
                 </div>
             </div>
+
+            <Modal
+                isOpen={!!selectedUserToConfirm}
+                onClose={handleCloseModal}
+                title="Confirmar cambio de rol"
+                maxWidth="max-w-lg"
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-[#2C4035]">
+                        ¿Cambiar el rol de <strong>{[selectedUserToConfirm?.name, selectedUserToConfirm?.surname].filter(Boolean).join(' ') || selectedUserToConfirm?.email || 'usuario'}</strong>
+                        {' '}de <strong>{selectedUserToConfirm ? normalizeRole(selectedUserToConfirm.role) : ''}</strong> a <strong>{pendingRole}</strong>?
+                    </p>
+                    <div className="flex flex-col gap-2 rounded-lg border border-[#E2D4B7] bg-[#FBF8F2] p-4">
+                        <div className="text-sm text-[#5A5146]"><span className="font-semibold text-[#2D4F4F]">Email:</span> {selectedUserToConfirm?.email || '-'}</div>
+                        <div className="text-sm text-[#5A5146]"><span className="font-semibold text-[#2D4F4F]">Estado:</span> {selectedUserToConfirm?.status ? 'Activo' : 'Inactivo'}</div>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={handleCloseModal}
+                            className="rounded-md border border-stone-300 bg-white px-4 py-2 text-sm text-[#2C4035] hover:bg-stone-50 transition"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleConfirmRoleChange}
+                            disabled={isSubmitting}
+                            className="rounded-md bg-[#2D4F4F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#3A6B6B] transition disabled:opacity-60"
+                        >
+                            {isSubmitting ? 'Guardando...' : 'Confirmar cambio'}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={isCreateUserModalOpen}
+                onClose={closeCreateUserModal}
+                title="Crear nuevo usuario"
+                maxWidth="max-w-2xl"
+            >
+                <form onSubmit={handleSubmit(handleCreateUserSubmit)} className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <AuthInput
+                            id="name"
+                            label="Nombre"
+                            type="text"
+                            placeholder="Nombre"
+                            register={register}
+                            rules={{
+                                required: 'El nombre es obligatorio',
+                                minLength: { value: 2, message: 'El nombre debe tener al menos 2 caracteres' },
+                            }}
+                            error={errors.name}
+                            autoComplete="given-name"
+                        />
+                        <AuthInput
+                            id="surname"
+                            label="Apellido"
+                            type="text"
+                            placeholder="Apellido"
+                            register={register}
+                            rules={{
+                                required: 'El apellido es obligatorio',
+                                minLength: { value: 2, message: 'El apellido debe tener al menos 2 caracteres' },
+                            }}
+                            error={errors.surname}
+                            autoComplete="family-name"
+                        />
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <AuthInput
+                            id="username"
+                            label="Usuario"
+                            type="text"
+                            placeholder="usuario123"
+                            register={register}
+                            rules={{
+                                required: 'El usuario es obligatorio',
+                                minLength: { value: 3, message: 'El usuario debe tener al menos 3 caracteres' },
+                            }}
+                            error={errors.username}
+                            autoComplete="username"
+                        />
+                        <AuthInput
+                            id="email"
+                            label="Email"
+                            type="email"
+                            placeholder="correo@ejemplo.com"
+                            register={register}
+                            rules={{
+                                required: 'El email es obligatorio',
+                                pattern: { value: /^\S+@\S+\.\S+$/, message: 'Ingresa un email válido' },
+                            }}
+                            error={errors.email}
+                            autoComplete="email"
+                        />
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <AuthInput
+                            id="phone"
+                            label="Teléfono"
+                            type="text"
+                            placeholder="22345678"
+                            register={register}
+                            rules={{
+                                required: 'El teléfono es obligatorio',
+                                pattern: { value: /^[0-9]{8}$/, message: 'El teléfono debe tener 8 dígitos' },
+                            }}
+                            error={errors.phone}
+                            autoComplete="tel"
+                        />
+                        <div>
+                            <label htmlFor="role" className="block text-sm font-medium text-[#1A1A1A] mb-1">
+                                Rol
+                            </label>
+                            <select
+                                id="role"
+                                {...register('role')}
+                                className="w-full px-3 py-2 text-sm text-[#1A1A1A] bg-[#F8F5F0] placeholder:text-[#6b6b6b] border border-[#c9b898] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C4035] focus:border-transparent transition-all duration-200"
+                            >
+                                <option value="CLIENT">CLIENT</option>
+                                <option value="RESTAURANT_ADMIN">RESTAURANT_ADMIN</option>
+                                <option value="PLATFORM_ADMIN">PLATFORM_ADMIN</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <AuthInput
+                            id="password"
+                            label="Contraseña"
+                            type="password"
+                            placeholder="••••••••"
+                            register={register}
+                            rules={{
+                                required: 'La contraseña es obligatoria',
+                                minLength: { value: 8, message: 'La contraseña debe tener al menos 8 caracteres' },
+                            }}
+                            error={errors.password}
+                            autoComplete="new-password"
+                        />
+                        <AuthInput
+                            id="passwordConfirm"
+                            label="Confirmar contraseña"
+                            type="password"
+                            placeholder="••••••••"
+                            register={register}
+                            rules={{
+                                required: 'Confirma la contraseña',
+                                validate: (value) =>
+                                    value === passwordToConfirm || 'Las contraseñas no coinciden',
+                            }}
+                            error={errors.passwordConfirm}
+                            autoComplete="new-password"
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={closeCreateUserModal}
+                            className="rounded-md border border-stone-300 bg-white px-4 py-2 text-sm text-[#2C4035] hover:bg-stone-50 transition"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={creatingUser}
+                            className="rounded-md bg-[#2D4F4F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#3A6B6B] transition disabled:opacity-60"
+                        >
+                            {creatingUser ? 'Creando...' : 'Crear usuario'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };

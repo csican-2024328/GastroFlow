@@ -11,7 +11,15 @@ const getRestaurantName = (restaurantId, restaurantOptions) => {
   return restaurant?.name || restaurantId?.name || 'Sin restaurante';
 };
 
-export const IngredientsPage = () => {
+const normalizeIngredientRestaurantId = (ingredient) => (
+  ingredient?.restaurantId?._id ||
+  ingredient?.restaurantId ||
+  ingredient?.RestaurantId?._id ||
+  ingredient?.RestaurantId ||
+  ''
+);
+
+export const IngredientsPage = ({ hideRestaurantFilter = false, lockedRestaurantId = '' }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIngredient, setSelectedIngredient] = useState(null);
   const [ingredientToDelete, setIngredientToDelete] = useState(null);
@@ -28,12 +36,16 @@ export const IngredientsPage = () => {
 
   const filteredIngredients = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
-    if (!normalizedSearch) return ingredients;
+    const scopedIngredients = lockedRestaurantId
+      ? ingredients.filter((ingredient) => normalizeIngredientRestaurantId(ingredient).toString() === lockedRestaurantId.toString())
+      : ingredients;
 
-    return ingredients.filter((ingredient) =>
+    if (!normalizedSearch) return scopedIngredients;
+
+    return scopedIngredients.filter((ingredient) =>
       ingredient.nombre?.toLowerCase().includes(normalizedSearch),
     );
-  }, [ingredients, searchTerm]);
+  }, [ingredients, lockedRestaurantId, searchTerm]);
 
   useEffect(() => {
     if (restaurantOptions.length === 0) {
@@ -42,8 +54,8 @@ export const IngredientsPage = () => {
   }, [fetchRestaurantOptions, restaurantOptions.length]);
 
   useEffect(() => {
-    fetchIngredients(selectedRestaurantId);
-  }, [fetchIngredients, selectedRestaurantId]);
+    fetchIngredients(lockedRestaurantId || selectedRestaurantId);
+  }, [fetchIngredients, lockedRestaurantId, selectedRestaurantId]);
 
   const handleCreateIngredient = () => {
     clearSelectedIngredient();
@@ -109,7 +121,15 @@ export const IngredientsPage = () => {
         </Button>
       </div>
 
-      <IngredientFilters searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+      {!hideRestaurantFilter ? (
+        <IngredientFilters searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+      ) : (
+        <div className="mb-6 rounded-xl border border-[#E8D4B8] bg-[#F5EFEA] px-5 py-4 shadow-sm">
+          <Typography variant="small" className="font-medium tracking-wide text-[#2D4F4F]">
+            Ingredientes restringidos al restaurante asignado
+          </Typography>
+        </div>
+      )}
 
       <Card className="bg-[#FDFBF7] border border-[#E8D4B8] shadow-[0_16px_34px_rgba(26,26,26,0.08)] rounded-xl overflow-hidden">
         <CardHeader floated={false} shadow={false} className="bg-transparent m-0 rounded-none border-b border-[#E8D4B8] px-5 py-4">
@@ -194,6 +214,7 @@ export const IngredientsPage = () => {
         open={isModalOpen}
         onClose={handleCloseModal}
         ingredient={selectedIngredient}
+        lockedRestaurantId={lockedRestaurantId}
       />
 
       {ingredientToDelete && (

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Input, Typography } from '@material-tailwind/react';
 import { useIngredientStore } from '../store/useIngredientStore.js';
 
-export const IngredientFilters = ({ searchTerm, onSearchChange }) => {
+export const IngredientFilters = ({ searchTerm, onSearchChange, hideRestaurantFilter = false }) => {
   const componentMountedRef = useRef(false);
   const restaurantOptions = useIngredientStore((state) => state.restaurantOptions);
   const fetchRestaurantOptions = useIngredientStore((state) => state.fetchRestaurantOptions);
@@ -36,7 +36,8 @@ export const IngredientFilters = ({ searchTerm, onSearchChange }) => {
           />
         </div>
 
-        <div>
+        {!hideRestaurantFilter ? (
+          <div>
           <Typography
             variant="small"
             className="mb-2 font-medium tracking-wide text-[#2D4F4F]"
@@ -56,7 +57,8 @@ export const IngredientFilters = ({ searchTerm, onSearchChange }) => {
               </option>
             ))}
           </select>
-        </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -37,7 +37,10 @@ const inventoryMovementSchema = new mongoose.Schema(
         'ORDER_EN_PREPARACION',
         'ORDER_CANCELADA',
         'ROLLBACK_DESCUENTO',
-        'AJUSTE_MANUAL'
+        'AJUSTE_MANUAL',
+        'CREACION_INSUMO',
+        'ACTUALIZACION_MANUAL',
+        'ELIMINACION_INSUMO'
       ],
       required: true,
       index: true

@@ -21,6 +21,8 @@ export const buildUserResponse = (user) => {
     Status: user.Status,
     status: user.Status,
     RestaurantId: user.RestaurantId || null,
+    restaurantId: user.RestaurantId || null,
+    idRestaurante: user.RestaurantId || null,
     isEmailVerified: user.UserEmail ? user.UserEmail.EmailVerified : false,
     CreatedAt: user.CreatedAt,
     createdAt: user.CreatedAt,

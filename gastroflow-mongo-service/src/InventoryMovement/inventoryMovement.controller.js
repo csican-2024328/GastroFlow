@@ -34,6 +34,7 @@ export const getInventoryMovements = async (req, res) => {
     const data = await InventoryMovement.find(filter)
       .populate('inventoryId', 'nombre unidadMedida restaurantId')
       .populate('orderId', 'numeroOrden estado')
+      .populate('restaurantId', 'nombre name')
       .sort({ createdAt: -1 })
       .skip((currentPage - 1) * pageSize)
       .limit(pageSize);
@@ -72,7 +73,8 @@ export const getInventoryMovementById = async (req, res) => {
 
     const movement = await InventoryMovement.findById(id)
       .populate('inventoryId', 'nombre unidadMedida restaurantId')
-      .populate('orderId', 'numeroOrden estado');
+      .populate('orderId', 'numeroOrden estado')
+      .populate('restaurantId', 'nombre name');
 
     if (!movement) {
       return res.status(404).json({

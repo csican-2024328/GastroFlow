@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
+import { NoRestaurantAssigned } from '../../../shared/components/layout/NoRestaurantAssigned.jsx';
 import {
   getOrders,
   updateOrderStatus,
@@ -10,6 +12,7 @@ import StatusBadge from '../../../shared/components/ui/StatusBadge.jsx';
 import Modal from '../../../shared/components/ui/Modal.jsx';
 
 const OrderManagement = () => {
+  const { restaurantId, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
   const [orders, setOrders] = useState([]);
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -24,9 +27,17 @@ const OrderManagement = () => {
   useEffect(() => {
     fetchOrders();
     fetchRestaurants();
-  }, []);
+  }, [restaurantId]);
+
+  if (isRestaurantAdmin && !hasRestaurantAssigned) {
+    return <NoRestaurantAssigned />;
+  }
 
   const fetchRestaurants = async () => {
+    if (restaurantId) {
+      return;
+    }
+
     try {
       const res = await getRestaurants();
       const list = res?.data?.data || res?.data || [];
@@ -49,8 +60,8 @@ const OrderManagement = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await getOrders();
-      setOrders(res?.data || []);
+      const res = await getOrders({ restaurantID: restaurantId || undefined, restaurantId: restaurantId || undefined });
+      setOrders(res?.data?.data || res?.data || []);
     } catch (error) {
       toast.error('Error al cargar pedidos');
     } finally {
@@ -140,12 +151,14 @@ const OrderManagement = () => {
         {/* Header */}
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-[#FAF9F6]">
           <h1 className="text-2xl font-bold text-gray-800">Gestión de Pedidos</h1>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
-            </svg>
-            Filtrar
-          </button>
+          {!(isRestaurantAdmin && hasRestaurantAssigned) ? (
+            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+              </svg>
+              Filtrar
+            </button>
+          ) : null}
         </div>
 
         {/* Table */}

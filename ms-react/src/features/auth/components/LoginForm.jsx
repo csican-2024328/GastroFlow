@@ -20,8 +20,12 @@ export const LoginForm = ({ onForgot, onRegister }) => {
   const getLandingRouteForRole = (role) => {
     const normalizedRole = (role || '').toString().trim().toUpperCase();
 
-    if (normalizedRole === 'PLATFORM_ADMIN' || normalizedRole === 'RESTAURANT_ADMIN') {
+    if (normalizedRole === 'PLATFORM_ADMIN') {
       return '/dashboard';
+    }
+
+    if (normalizedRole === 'RESTAURANT_ADMIN') {
+      return '/restaurant-dashboard';
     }
 
     return '/cliente';

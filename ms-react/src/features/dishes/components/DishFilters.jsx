@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Input } from '@material-tailwind/react';
 import { Typography } from '@material-tailwind/react';
 import { useDishStore } from '../store/useDishStore.js';
+import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
 
 export const DishFilters = ({ searchTerm, onSearchChange }) => {
   const componentMountedRef = useRef(false);
@@ -9,6 +10,7 @@ export const DishFilters = ({ searchTerm, onSearchChange }) => {
   const fetchRestaurantOptions = useDishStore((state) => state.fetchRestaurantOptions);
   const selectedRestaurantId = useDishStore((state) => state.selectedRestaurantId);
   const setSelectedRestaurantId = useDishStore((state) => state.setSelectedRestaurantId);
+  const { restaurantId, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
 
   // Refresca cada vez que el componente se monta
   useEffect(() => {
@@ -38,23 +40,29 @@ export const DishFilters = ({ searchTerm, onSearchChange }) => {
           />
         </div>
 
-        <div>
-          <Typography variant="small" className="mb-2 font-semibold text-stone-50">
-            Filtrar por:
-          </Typography>
-          <select
-            value={selectedRestaurantId}
-            onChange={(e) => setSelectedRestaurantId(e.target.value)}
-            className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-3 text-stone-900 outline-none transition focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            <option value="">Todos los restaurantes</option>
-            {restaurantOptions.map((restaurant) => (
-              <option key={restaurant._id} value={restaurant._id}>
-                {restaurant.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!(isRestaurantAdmin && hasRestaurantAssigned) ? (
+          <div>
+            <Typography variant="small" className="mb-2 font-semibold text-stone-50">
+              Filtrar por:
+            </Typography>
+            <select
+              value={selectedRestaurantId}
+              onChange={(e) => setSelectedRestaurantId(e.target.value)}
+              className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-3 text-stone-900 outline-none transition focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              <option value="">Todos los restaurantes</option>
+              {restaurantOptions.map((restaurant) => (
+                <option key={restaurant._id} value={restaurant._id}>
+                  {restaurant.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div>
+            <p className="text-sm text-stone-200">Mostrando datos del restaurante asignado</p>
+          </div>
+        )}
       </div>
     </div>
   );

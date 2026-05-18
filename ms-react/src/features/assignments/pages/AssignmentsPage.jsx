@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useAssignmentStore } from '../store/useAssignmentStore.js';
 
 export const AssignmentsPage = () => {
-  const { platformAdmins, restaurants, loading, fetchAllData } = useAssignmentStore();
+  const { platformAdmins, restaurants, loading, fetchAllData, assignRestaurant } = useAssignmentStore();
   const [filter, setFilter] = useState('');
 
   useEffect(() => {
@@ -16,9 +17,48 @@ export const AssignmentsPage = () => {
   const getRestaurantName = (restaurant) => restaurant?.name || restaurant?.nombre || '';
   const getRestaurantCity = (restaurant) => restaurant?.city || restaurant?.ciudad || '';
 
+  const [selectedRestaurantIds, setSelectedRestaurantIds] = useState({});
+  const [assigning, setAssigning] = useState({});
+
+  useEffect(() => {
+    const newSelection = {};
+    platformAdmins.forEach((admin) => {
+      const adminId = getAdminId(admin);
+      if (admin.RestaurantId) {
+        newSelection[adminId] = admin.RestaurantId;
+      }
+    });
+    setSelectedRestaurantIds(newSelection);
+  }, [platformAdmins]);
+
+  const handleRestaurantSelection = (adminId, restaurantId) => {
+    setSelectedRestaurantIds((prev) => ({
+      ...prev,
+      [adminId]: restaurantId,
+    }));
+  };
+
+  const handleAssign = async (adminId) => {
+    const restaurantId = selectedRestaurantIds[adminId];
+    if (!restaurantId) {
+      return toast.error('Selecciona un restaurante para asignar.');
+    }
+
+    setAssigning((prev) => ({ ...prev, [adminId]: true }));
+    try {
+      const assignmentResult = await assignRestaurant(adminId, restaurantId);
+      toast.success('Restaurante asignado correctamente.');
+      console.log('Usuario actualizado:', assignmentResult.updatedAdmin || assignmentResult.result || assignmentResult);
+    } catch (error) {
+      console.error('Error asignando restaurante:', error);
+      toast.error(error.response?.data?.message || error.message || 'Error al asignar restaurante');
+    } finally {
+      setAssigning((prev) => ({ ...prev, [adminId]: false }));
+    }
+  };
+
   const assignments = platformAdmins.map(admin => {
-    const adminId = getAdminId(admin);
-    const assignedRestaurant = restaurants.find(r => r.adminId === adminId || r.adminId === admin?.Id || r.adminId === admin?.id);
+    const assignedRestaurant = restaurants.find(r => r._id === admin.RestaurantId || r._id === admin?.RestaurantId);
     return {
       admin,
       restaurant: assignedRestaurant || null
@@ -104,14 +144,38 @@ export const AssignmentsPage = () => {
                     {getAdminEmail(item.admin)}
                   </td>
                   <td className="px-6 py-4">
-                    {item.restaurant ? (
-                      <div>
-                        <div className="font-medium text-[#2D4F4F]">{getRestaurantName(item.restaurant)}</div>
-                        <div className="text-sm text-[#5A5146]">{getRestaurantCity(item.restaurant)}</div>
+                    <div className="space-y-2">
+                      {item.restaurant ? (
+                        <div>
+                          <div className="font-medium text-[#2D4F4F]">{getRestaurantName(item.restaurant)}</div>
+                          <div className="text-sm text-[#5A5146]">{getRestaurantCity(item.restaurant)}</div>
+                        </div>
+                      ) : (
+                        <span className="text-[#D1574F] font-medium">Sin asignar</span>
+                      )}
+                      <div className="flex items-center gap-2 mt-2">
+                        <select
+                          value={selectedRestaurantIds[getAdminId(item.admin)] || ''}
+                          onChange={(e) => handleRestaurantSelection(getAdminId(item.admin), e.target.value)}
+                          className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-2 text-sm text-[#2D4F4F] outline-none"
+                        >
+                          <option value="">Seleccionar restaurante...</option>
+                          {restaurants.map((restaurant) => (
+                            <option key={restaurant._id} value={restaurant._id}>
+                              {restaurant.name} - {restaurant.city}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => handleAssign(getAdminId(item.admin))}
+                          disabled={assigning[getAdminId(item.admin)]}
+                          className="px-3 py-2 rounded-md bg-[#2D4F4F] text-white text-xs font-medium hover:bg-[#3A6B6B] disabled:opacity-50"
+                        >
+                          {assigning[getAdminId(item.admin)] ? 'Asignando...' : 'Asignar'}
+                        </button>
                       </div>
-                    ) : (
-                      <span className="text-[#D1574F] font-medium">Sin asignar</span>
-                    )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${

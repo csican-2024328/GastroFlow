@@ -4,6 +4,7 @@ import { DishFilters } from '../components/DishFilters.jsx';
 import { DishFormModal } from '../components/DishFormModal.jsx';
 import { useDishStore } from '../store/useDishStore.js';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
+import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
 
 const getCategoryLabel = (category) => {
   const labels = {
@@ -36,14 +37,26 @@ export const DishesPage = () => {
   const deleteDishAction = useDishStore((state) => state.deleteDishAction);
   const clearSelectedDish = useDishStore((state) => state.clearSelectedDish);
 
+  const { restaurantId } = useRestaurantScope();
+
   const filteredDishes = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
-    if (!normalizedSearch) return dishes;
+    if (!normalizedSearch) return dishes.filter((dish) => {
+      if (restaurantId) {
+        const rid = dish.restaurantId?._id || dish.restaurantId;
+        return rid && String(rid) === String(restaurantId);
+      }
+      return true;
+    });
 
-    return dishes.filter((dish) =>
-      dish.nombre?.toLowerCase().includes(normalizedSearch),
-    );
-  }, [dishes, searchTerm]);
+    return dishes.filter((dish) => {
+      if (restaurantId) {
+        const rid = dish.restaurantId?._id || dish.restaurantId;
+        if (!rid || String(rid) !== String(restaurantId)) return false;
+      }
+      return dish.nombre?.toLowerCase().includes(normalizedSearch);
+    });
+  }, [dishes, searchTerm, restaurantId]);
 
   useEffect(() => {
     if (restaurantOptions.length === 0) {
@@ -52,8 +65,8 @@ export const DishesPage = () => {
   }, [fetchRestaurantOptions, restaurantOptions.length]);
 
   useEffect(() => {
-    fetchDishes(selectedRestaurantId);
-  }, [fetchDishes, selectedRestaurantId]);
+    fetchDishes(restaurantId || selectedRestaurantId);
+  }, [fetchDishes, selectedRestaurantId, restaurantId]);
 
   const handleCreateDish = () => {
     clearSelectedDish();

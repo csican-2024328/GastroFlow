@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../auth/store/authStore.js';
 import { useRestaurantStore } from '../../restaurants/store/useRestaurantStore.js';
+import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
+import { NoRestaurantAssigned } from '../../../shared/components/layout/NoRestaurantAssigned.jsx';
 import {
   getRestaurantVigentesCoupons,
   getCoupons,
@@ -151,6 +153,7 @@ const CouponCard = ({ coupon, isAdmin, onEdit, onToggleActive }) => {
 export const CouponsPage = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const { restaurantId, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
   const restaurants = useRestaurantStore((s) => s.restaurants);
   const fetchRestaurants = useRestaurantStore((s) => s.fetchRestaurants);
 
@@ -170,6 +173,16 @@ export const CouponsPage = () => {
   useEffect(() => {
     fetchRestaurants(1, 50);
   }, [fetchRestaurants]);
+
+  useEffect(() => {
+    if (restaurantId) {
+      setSelectedRestaurantId(restaurantId);
+    }
+  }, [restaurantId]);
+
+  if (isRestaurantAdmin && !hasRestaurantAssigned) {
+    return <NoRestaurantAssigned />;
+  }
 
   useEffect(() => {
     if (!selectedRestaurantId) return;

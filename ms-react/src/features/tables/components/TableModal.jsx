@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { Button, Input, Typography } from '@material-tailwind/react';
 import { useTableStore } from '../store/useTableStore.js';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
+import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
 
 export const TableModal = ({ open, onClose, mesa = null }) => {
   const restaurantOptions = useTableStore((state) => state.restaurantOptions);
@@ -28,6 +29,8 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
     },
   });
 
+  const { restaurantId, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
+
   useEffect(() => {
     if (open) {
       if (restaurantOptions.length === 0) {
@@ -47,6 +50,7 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
         restaurantID:
           mesa?.restaurantID?._id ||
           mesa?.restaurantID ||
+          restaurantId ||
           selectedRestaurantId ||
           '',
       });
@@ -180,7 +184,7 @@ export const TableModal = ({ open, onClose, mesa = null }) => {
                   <select
                     {...field}
                     value={field.value || ''}
-                    disabled={restaurantOptionsLoading}
+                    disabled={restaurantOptionsLoading || (isRestaurantAdmin && hasRestaurantAssigned)}
                     className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-3 text-gray-900 shadow-sm outline-none transition focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <option value="">Selecciona un restaurante</option>

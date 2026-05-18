@@ -11,6 +11,8 @@ export const getUserReservations = async (params = {}) => {
   if (params.page) queryParams.append('page', params.page);
   if (params.limit) queryParams.append('limit', params.limit);
   if (params.status) queryParams.append('status', params.status);
+  if (params.restaurantID) queryParams.append('restaurantID', params.restaurantID);
+  if (params.restaurantId) queryParams.append('restaurantId', params.restaurantId);
 
   return axiosClient.get(`/reservation${queryParams.toString() ? '?' + queryParams.toString() : ''}`);
 };

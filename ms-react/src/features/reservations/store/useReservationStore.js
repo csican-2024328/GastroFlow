@@ -45,10 +45,10 @@ export const useReservationStore = create((set) => ({
   },
 
   // Fetch user reservations
-  fetchUserReservations: async (page = 1, limit = 10, status = null) => {
+  fetchUserReservations: async (page = 1, limit = 10, status = null, restaurantID = null) => {
     try {
       set({ loading: true, error: null });
-      const response = await getUserReservations({ page, limit, status });
+      const response = await getUserReservations({ page, limit, status, restaurantID: restaurantID || undefined });
 
       const data = response.data.data || [];
       const pagination = response.data.pagination || {};
