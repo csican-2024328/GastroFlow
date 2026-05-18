@@ -8,6 +8,7 @@ import { Router } from 'express';
 import {
     createOrder,
     checkOrderStock,
+    checkOrderEvents,
     getOrders,
     getMyOrders,
     getMyOrderById,
@@ -41,6 +42,15 @@ router.post(
     validateCreateOrder,
     validarCampos,
     checkOrderStock
+);
+
+router.post(
+    '/check-events',
+    autenticar,
+    autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateCreateOrder,
+    validarCampos,
+    checkOrderEvents
 );
 
 router.post(

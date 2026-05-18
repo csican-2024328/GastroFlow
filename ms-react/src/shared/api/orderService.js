@@ -19,6 +19,11 @@ export const createOrder = async (orderData) => {
   return axiosClient.post('/orders/create', orderData);
 };
 
+// CHECK EVENTS - Check active promotions/events for given items (preview discounts)
+export const checkOrderEvents = async (orderData) => {
+  return axiosClient.post('/orders/check-events', orderData);
+};
+
 // GET Order by ID
 export const getOrderById = async (id) => {
   return axiosClient.get(`/orders/${id}`);

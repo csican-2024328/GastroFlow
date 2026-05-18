@@ -77,29 +77,6 @@ const buildOrderItemsFromPayload = async (items, restaurantId) => {
     return orderItems;
 };
 
-const requirementsToDelta = (currentRequirements, nextRequirements) => {
-    const increase = new Map();
-    const release = new Map();
-    const ingredientIds = new Set([
-        ...currentRequirements.keys(),
-        ...nextRequirements.keys()
-    ]);
-
-    for (const ingredientId of ingredientIds) {
-        const currentQty = currentRequirements.get(ingredientId) || 0;
-        const nextQty = nextRequirements.get(ingredientId) || 0;
-        const diff = nextQty - currentQty;
-
-        if (diff > 0) {
-            increase.set(ingredientId, diff);
-        } else if (diff < 0) {
-            release.set(ingredientId, Math.abs(diff));
-        }
-    }
-
-    return { increase, release };
-};
-
 const reserveInventoryForOrder = async ({ requirementsMap, restaurantId, orderId, userId }) => {
     if (!requirementsMap || requirementsMap.size === 0) {
         return;
@@ -192,54 +169,117 @@ const generateOrderNumber = () => {
 };
 
 /**
- * Busca y aplica eventos/promociones vigentes a los menús de la orden
- * @param {string} restaurantID - ID del restaurante
- * @param {Array} orderItems - Items de la orden con sus menús
- * @returns {Object} { evento, descuentoPorEvento }
+ * Helper: redondeo a 2 decimales
+ */
+const discountRound = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
+
+
+/**
+ * Busca y aplica eventos/promociones vigentes considerando menús y platos.
+ * Soporta múltiples eventos y devuelve el que produce mayor beneficio económico.
+ * @param {string} restaurantID
+ * @param {Array} orderItems
+ * @returns {Object} { evento, descuentoPorEvento, detallePorItem }
  */
 const buscarYAplicarEvento = async (restaurantID, orderItems) => {
     try {
         const ahora = new Date();
-        
-        // Obtener IDs de menús en la orden
-        const menuIdsEnOrden = orderItems
-            .filter(item => item.tipo === 'MENU' && item.menu)
-            .map(item => item.menu.toString());
-        
-        if (menuIdsEnOrden.length === 0) {
-            return { evento: null, descuentoPorEvento: 0 };
-        }
 
-        // Buscar eventos vigentes que apliquen a estos menús
-        const evento = await Event.findOne({
+        // Obtener todos los eventos vigentes para el restaurante
+        const eventos = await Event.find({
             restaurantID,
             isActive: true,
             estado: 'ACTIVA',
             fechaInicio: { $lte: ahora },
-            fechaFin: { $gte: ahora },
-            menusAplicables: { $in: menuIdsEnOrden }
+            fechaFin: { $gte: ahora }
         });
 
-        if (!evento || !evento.esVigente() || !evento.puedeUsarse()) {
-            return { evento: null, descuentoPorEvento: 0 };
+        if (!eventos || eventos.length === 0) {
+            return { evento: null, descuentoPorEvento: 0, detallePorItem: {} };
         }
 
-        // Calcular el descuento
-        const subtotalMenusEnPromo = orderItems
-            .filter(item => item.tipo === 'MENU' && menuIdsEnOrden.includes(item.menu.toString()))
-            .reduce((acc, item) => acc + item.subtotal, 0);
+        const candidatos = [];
 
-        let descuentoPorEvento = 0;
-        if (evento.descuentoTipo === 'PORCENTAJE') {
-            descuentoPorEvento = subtotalMenusEnPromo * (evento.descuentoValor / 100);
-        } else if (evento.descuentoTipo === 'CANTIDAD_FIJA') {
-            descuentoPorEvento = evento.descuentoValor;
+        for (const evento of eventos) {
+            if (typeof evento.esVigente === 'function' && typeof evento.puedeUsarse === 'function') {
+                if (!evento.esVigente() || !evento.puedeUsarse()) continue;
+            }
+
+            let descuentoTotal = 0;
+            const detalle = {};
+
+            // Primero, marcar qué items son aplicables
+            const itemsAplicables = orderItems.filter(it => {
+                if (it.tipo === 'MENU' && evento.menusAplicables && evento.menusAplicables.length > 0) {
+                    return evento.menusAplicables.map(String).includes(String(it.menu || it.menu?._id || it.menuId));
+                }
+                if (it.tipo === 'PLATO' && evento.platosAplicables && evento.platosAplicables.length > 0) {
+                    return evento.platosAplicables.map(String).includes(String(it.plato || it.plato?._id || it.platoId));
+                }
+                return false;
+            });
+
+            if (itemsAplicables.length === 0) {
+                candidatos.push({ evento, descuentoTotal: 0, detalle });
+                continue;
+            }
+
+            const subtotalAplicables = itemsAplicables.reduce((s, it) => s + (it.subtotal || 0), 0);
+
+            if (evento.descuentoTipo === 'PORCENTAJE') {
+                // aplicar porcentaje sobre subtotal de items aplicables
+                descuentoTotal = subtotalAplicables * (evento.descuentoValor / 100);
+                for (const it of itemsAplicables) {
+                    const d = discountRound((it.subtotal || 0) * (evento.descuentoValor / 100));
+                    detalle[it.nombre || it.plato || it.menu || it.nombrePlato || it.nombre_menu] = { subtotal: it.subtotal || 0, descuento: d };
+                }
+            } else if (evento.descuentoTipo === 'CANTIDAD_FIJA') {
+                // distribuir monto fijo proporcionalmente
+                for (const it of itemsAplicables) {
+                    const propor = subtotalAplicables > 0 ? ((it.subtotal || 0) / subtotalAplicables) : 0;
+                    const d = discountRound(evento.descuentoValor * propor);
+                    detalle[it.nombre || it.plato || it.menu || it.nombrePlato || it.nombre_menu] = { subtotal: it.subtotal || 0, descuento: d };
+                    descuentoTotal += d;
+                }
+            }
+
+            candidatos.push({ evento, descuentoTotal: discountRound(descuentoTotal), detalle });
         }
 
-        return { evento, descuentoPorEvento };
+        // Elegir evento con mayor descuento
+        candidatos.sort((a, b) => (b.descuentoTotal || 0) - (a.descuentoTotal || 0));
+        const elegido = candidatos[0];
+        if (!elegido || !elegido.evento) return { evento: null, descuentoPorEvento: 0, detallePorItem: {} };
+
+        return { evento: elegido.evento, descuentoPorEvento: elegido.descuentoTotal || 0, detallePorItem: elegido.detalle || {} };
     } catch (error) {
         console.error('Error buscando eventos:', error);
-        return { evento: null, descuentoPorEvento: 0 };
+        return { evento: null, descuentoPorEvento: 0, detallePorItem: {} };
+    }
+};
+
+
+/**
+ * Endpoint público para previsualizar eventos y descuentos sin crear el pedido
+ */
+export const checkOrderEvents = async (req, res) => {
+    try {
+        const { restaurantID, restaurantId, items } = req.body;
+        const resolvedRestaurantId = restaurantId || restaurantID;
+
+        if (!resolvedRestaurantId) return res.status(400).json({ success: false, message: 'restaurantId es requerido' });
+        if (!items || !Array.isArray(items) || items.length === 0) return res.status(400).json({ success: false, message: 'Items son requeridos' });
+
+        const orderItems = await buildOrderItemsFromPayload(items, resolvedRestaurantId);
+        const { evento, descuentoPorEvento, detallePorItem } = await buscarYAplicarEvento(resolvedRestaurantId, orderItems);
+
+        if (!evento) {
+            return res.status(200).json({ success: true, message: 'No hay eventos aplicables', data: { evento: null, descuento: 0, detalle: {} } });
+        }
+
+        return res.status(200).json({ success: true, message: 'Evento aplicable encontrado', data: { evento: { id: evento._id, nombre: evento.nombre, descripcion: evento.descripcion, descuentoTipo: evento.descuentoTipo, descuentoValor: evento.descuentoValor }, descuento: descuentoPorEvento, detalle: detallePorItem } });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error al comprobar eventos', error: error.message });
     }
 };
 
@@ -375,9 +415,11 @@ export const createOrder = async (req, res) => {
         // Buscar y aplicar eventos/promociones automáticamente
         let evento = null;
         let descuentoPorEvento = 0;
-        const { evento: eventoEncontrado, descuentoPorEvento: descuento_evento } = await buscarYAplicarEvento(resolvedRestaurantId, orderItems);
+        let detalleDescuentoPorItem = {};
+        const { evento: eventoEncontrado, descuentoPorEvento: descuento_evento, detallePorItem } = await buscarYAplicarEvento(resolvedRestaurantId, orderItems);
         evento = eventoEncontrado;
         descuentoPorEvento = descuento_evento;
+        detalleDescuentoPorItem = detallePorItem || {};
 
         // Crear el pedido
         const newOrder = new Order({
@@ -399,6 +441,10 @@ export const createOrder = async (req, res) => {
             descuentoPorCoupon,
             eventID: evento ? evento._id : null,
             descuentoPorEvento,
+            eventNombre: evento ? evento.nombre : null,
+            eventDescuentoTipo: evento ? evento.descuentoTipo : null,
+            eventDescuentoValor: evento ? evento.descuentoValor : null,
+            descuentoDetalle: detalleDescuentoPorItem,
             notas,
             estado: 'EN_PREPARACION'
         });

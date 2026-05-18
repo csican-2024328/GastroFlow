@@ -94,16 +94,34 @@ export const StepConfirmOrder = ({ onClose }) => {
       ...(couponInput && { cupon: couponInput }),
     };
 
+    // Check for events/promotions before creating order
     setIsCreatingOrder(true);
-    const response = await orderStore.createOrderAction(orderData);
-    setIsCreatingOrder(false);
+    try {
+      const checkRes = await orderStore.checkEvents({ restaurantId: cart.restaurantId, items: orderData.items });
+      if (checkRes.success && checkRes.data && checkRes.data.data && checkRes.data.data.evento) {
+        const evt = checkRes.data.data.evento;
+        const descuentoPreview = Number(checkRes.data.data.descuento || 0);
+        const mensaje = `Este restaurante tiene una promoción activa: ${evt.nombre} — ${evt.descripcion}.\nDescuento estimado: $${descuentoPreview.toFixed(2)}.\n\nSubtotal: $${subtotal.toFixed(2)}\nDescuento: -$${descuentoPreview.toFixed(2)}\nImpuesto: $${tax.toFixed(2)}\nTotal estimado: $${(subtotal - descuentoPreview + tax).toFixed(2)}\n\n¿Deseas aplicar la promoción y continuar?`;
+        const aceptar = window.confirm(mensaje);
+        if (!aceptar) {
+          setIsCreatingOrder(false);
+          return;
+        }
+      }
 
-    if (response.success) {
-      notyfSuccess('✓ Su pedido fue hecho exitosamente');
-      cart.resetCart();
-      setTimeout(() => onClose(), 1500);
-    } else {
-      notyfError(response.error || 'Error al crear pedido');
+      const response = await orderStore.createOrderAction(orderData);
+      setIsCreatingOrder(false);
+
+      if (response.success) {
+        notyfSuccess('✓ Su pedido fue hecho exitosamente');
+        cart.resetCart();
+        setTimeout(() => onClose(), 1500);
+      } else {
+        notyfError(response.error || 'Error al crear pedido');
+      }
+    } catch (err) {
+      setIsCreatingOrder(false);
+      notyfError(err?.message || 'Error al comprobar promociones');
     }
   };
 

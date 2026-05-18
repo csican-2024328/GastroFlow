@@ -43,6 +43,20 @@ export const useOrderStore = create((set) => ({
     }
   },
 
+  // Check events / promotions applicable to an order (preview)
+  checkEvents: async (orderData) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await (await import('../../../shared/api/orderService.js')).checkOrderEvents(orderData);
+      set({ loading: false });
+      return { success: true, data: response.data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Error checking events';
+      set({ error: message, loading: false });
+      return { success: false, error: message };
+    }
+  },
+
   // Create order
   createOrderAction: async (orderData) => {
     try {
