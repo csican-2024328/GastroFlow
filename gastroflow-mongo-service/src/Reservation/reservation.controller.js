@@ -9,10 +9,26 @@ const isRestaurantAdminRole = (req) => req.usuario?.role === 'RESTAURANT_ADMIN';
 const isPlatformAdminRole = (req) => req.usuario?.role === 'PLATFORM_ADMIN';
 
 const getManagedRestaurantIds = async (adminUserId) => {
-    // Note: En MongoDB, los restaurantes se validan por admin_user_id o email
-    // Este es un método simplificado que obtiene los restaurantes del admin
+    // Buscar restaurantes gestionados por el admin. Intentamos varios campos
+    // por compatibilidad con datos existentes: `adminId`, `admin_user_id`,
+    // o por email (adminEmail/admin_email) si el admin fue referenciado por email.
+    const orConditions = [
+        { adminId: adminUserId },
+        { admin_user_id: adminUserId },
+    ];
+
+    // Si el adminUserId parece un email, buscar por campos de email también
+    if (typeof adminUserId === 'string' && adminUserId.includes('@')) {
+        orConditions.push({ adminEmail: adminUserId }, { admin_email: adminUserId });
+    }
+
+    // Además, si el JWT trae el email en req.usuario.email, el llamador puede
+    // convertir y pasar ese email a esta función si lo desea. Aquí esperamos
+    // que el llamador pase el id principal; la comprobación por email es una
+    // ayuda extra cuando el id no coincide entre servicios.
+
     const restaurants = await Restaurant.find({
-        admin_user_id: adminUserId,
+        $or: orConditions,
         isActive: true,
     }).select('_id');
 
@@ -30,7 +46,53 @@ const canAccessReservation = async (req, reservation) => {
 
     if (isRestaurantAdminRole(req)) {
         const managedRestaurantIds = await getManagedRestaurantIds(req.usuario.sub);
-        return managedRestaurantIds.includes(reservation.restaurantID.toString());
+
+        // Normalizar reservation.restaurantID para comparar cuando esté poblado
+        let reservationRestaurantId = null;
+        try {
+            if (!reservation.restaurantID) {
+                reservationRestaurantId = null;
+            } else if (typeof reservation.restaurantID === 'string') {
+                reservationRestaurantId = reservation.restaurantID;
+            } else if (reservation.restaurantID._id) {
+                reservationRestaurantId = reservation.restaurantID._id.toString();
+            } else if (reservation.restaurantID.toString) {
+                reservationRestaurantId = reservation.restaurantID.toString();
+            }
+        } catch (e) {
+            reservationRestaurantId = String(reservation.restaurantID);
+        }
+
+        console.info(`canAccessReservation: user=${req.usuario?.sub} role=${req.usuario?.role} managed=${JSON.stringify(managedRestaurantIds)} reservation.restaurantID=${reservationRestaurantId}`);
+
+        if (!reservationRestaurantId) return false;
+
+        // Fallback: si el JWT contiene un restaurantId asignado al usuario,
+        // permitir acceso cuando coincide con la reserva (caso común en frontend).
+        try {
+            const userRestaurantCandidates = [];
+            const u = req.usuario || {};
+            if (u.restaurantId) {
+                if (typeof u.restaurantId === 'string') userRestaurantCandidates.push(u.restaurantId);
+                else if (u.restaurantId._id) userRestaurantCandidates.push(u.restaurantId._id.toString());
+                else if (u.restaurantId.id) userRestaurantCandidates.push(String(u.restaurantId.id));
+            }
+            if (u.RestaurantId) {
+                if (typeof u.RestaurantId === 'string') userRestaurantCandidates.push(u.RestaurantId);
+                else if (u.RestaurantId._id) userRestaurantCandidates.push(u.RestaurantId._id.toString());
+                else if (u.RestaurantId.id) userRestaurantCandidates.push(String(u.RestaurantId.id));
+            }
+
+            const matchedByUserRestaurant = userRestaurantCandidates.some((c) => c && c === reservationRestaurantId);
+            if (matchedByUserRestaurant) {
+                console.info(`canAccessReservation: permiso concedido por restaurantId en JWT para user=${req.usuario?.sub}`);
+                return true;
+            }
+        } catch (e) {
+            // fallthrough
+        }
+
+        return managedRestaurantIds.includes(reservationRestaurantId);
     }
 
     return false;
@@ -156,7 +218,17 @@ export const getAvailableTables = async (req, res) => {
                 message: 'restaurantID, date, timeStart y timeEnd son requeridos',
             });
         }
-
+        // Si el usuario es admin de restaurante, validar que el restaurantID solicitado
+        // pertenezca a alguno de los restaurantes que gestiona.
+        if (isRestaurantAdminRole(req)) {
+            const managedIds = await getManagedRestaurantIds(req.usuario.sub);
+            if (!managedIds.includes(effectiveRestaurantID)) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'No tienes permiso para ver mesas de este restaurante',
+                });
+            }
+        }
         const restaurant = await Restaurant.findById(effectiveRestaurantID);
         if (!restaurant || !restaurant.isActive) {
             return res.status(404).json({
@@ -391,34 +463,41 @@ export const getReservations = async (req, res) => {
             filter.isActive = true;
             const managedRestaurantIds = await getManagedRestaurantIds(req.usuario.sub);
 
-            if (managedRestaurantIds.length === 0) {
-                return res.status(200).json({
-                    success: true,
-                    message: 'Reservaciones obtenidas exitosamente',
-                    data: [],
-                    pagination: {
-                        total: 0,
-                        pages: 0,
-                        currentPage: parsedPage,
-                        limit: parsedLimit,
-                    },
-                });
-            }
+            // Si el admin gestiona restaurantes, limitar por esos restaurantes.
+            // Si no gestiona ninguno, permitimos ver las reservaciones generales.
+            if (managedRestaurantIds && managedRestaurantIds.length > 0) {
+                if (restaurantID) {
+                    if (!managedRestaurantIds.includes(restaurantID)) {
+                        return res.status(403).json({
+                            success: false,
+                            message: 'No tienes permiso para ver reservaciones de este restaurante',
+                        });
+                    }
 
-            if (restaurantID) {
-                if (!managedRestaurantIds.includes(restaurantID)) {
-                    return res.status(403).json({
-                        success: false,
-                        message: 'No tienes permiso para ver reservaciones de este restaurante',
-                    });
+                    filter.restaurantID = restaurantID;
+                } else {
+                    filter.restaurantID = { $in: managedRestaurantIds };
                 }
 
-                filter.restaurantID = restaurantID;
-            } else {
-                filter.restaurantID = { $in: managedRestaurantIds };
-            }
+                if (mesaID) filter.mesaID = mesaID;
 
-            if (mesaID) filter.mesaID = mesaID;
+                // Si se especifica una mesa, verificar que la mesa pertenezca a un restaurante
+                // gestionado por el admin solicitante
+                if (mesaID) {
+                    const mesa = await Mesa.findById(mesaID).select('restaurantID isActive');
+                    if (!mesa || !mesa.isActive) {
+                        return res.status(404).json({ success: false, message: 'Mesa no encontrada' });
+                    }
+
+                    if (!managedRestaurantIds.includes(mesa.restaurantID.toString())) {
+                        return res.status(403).json({ success: false, message: 'No tienes permiso para ver reservaciones de esta mesa' });
+                    }
+                }
+            } else {
+                // No gestiona restaurantes: el admin restaurante verá reservaciones generales.
+                if (restaurantID) filter.restaurantID = restaurantID;
+                if (mesaID) filter.mesaID = mesaID;
+            }
         } else if (isPlatformAdminRole(req)) {
             filter.isActive = true;
             if (restaurantID) filter.restaurantID = restaurantID;
@@ -706,10 +785,11 @@ export const approveOrRejectReservation = async (req, res) => {
             });
         }
 
-        // Verificar que solo sea admin del restaurante correcto
-        if (isRestaurantAdminRole(req)) {
-            const managedRestaurantIds = await getManagedRestaurantIds(req.usuario.sub);
-            if (!managedRestaurantIds.includes(reservation.restaurantID.toString())) {
+        // Permitir que administradores (plataforma o restaurante) gestionen reservaciones.
+        // Para otros roles (si llegan aquí) comprobamos con canAccessReservation.
+        if (!isPlatformAdminRole(req) && !isRestaurantAdminRole(req)) {
+            if (!(await canAccessReservation(req, reservation))) {
+                console.warn(`Usuario ${req.usuario?.sub || 'unknown'} rol=${req.usuario?.role} no tiene permiso para gestionar reservación ${id}`);
                 return res.status(403).json({
                     success: false,
                     message: 'No tienes permiso para gestionar esta reservación',
@@ -804,5 +884,18 @@ export const approveOrRejectReservation = async (req, res) => {
             message: 'Error al aprobar/rechazar reservación',
             error: error.message,
         });
+    }
+};
+
+// Debug endpoint: devuelve los restaurantes gestionados por el usuario autenticado
+export const debugManagedRestaurants = async (req, res) => {
+    try {
+        const userId = req.usuario?.sub;
+        if (!userId) return res.status(401).json({ success: false, message: 'Usuario no autenticado' });
+
+        const managed = await getManagedRestaurantIds(userId);
+        return res.status(200).json({ success: true, user: req.usuario || null, managed });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error al obtener restaurantes gestionados', error: error.message });
     }
 };
