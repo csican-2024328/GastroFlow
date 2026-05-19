@@ -10,6 +10,7 @@ router.post(
   '/create',
   autenticar,
   body('restaurantID').notEmpty().isMongoId().withMessage('ID de restaurante requerido'),
+  body('platoID').optional().isMongoId().withMessage('ID de plato inválido'),
   body('rating').notEmpty().isInt({ min: 1, max: 5 }).withMessage('Rating debe ser 1-5'),
   body('comment').optional().isString().isLength({ max: 500 }).withMessage('Máximo 500 caracteres'),
   validarCampos,

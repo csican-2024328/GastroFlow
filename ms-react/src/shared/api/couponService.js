@@ -27,3 +27,11 @@ export const activateCoupon = async (id) => {
 export const getCouponById = async (id) => {
   return axiosClient.get(`/coupons/${id}`);
 };
+
+export const validateCoupon = async ({ codigo, montoTotal, restaurantID }) => {
+  return axiosClient.post('/coupons/validate', {
+    codigo,
+    montoTotal,
+    restaurantID,
+  });
+};
