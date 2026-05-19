@@ -115,10 +115,21 @@ export const ReservationForm = ({
   };
 
   const getMinTime = () => {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
+    if (!formData.date) return '00:00';
+    
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+    
+    if (formData.date === todayStr) {
+      const hours = String(today.getHours()).padStart(2, '0');
+      const minutes = String(today.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+    
+    return '00:00';
   };
 
   const formatTime = (time) => {
@@ -250,6 +261,8 @@ export const ReservationForm = ({
 
   // STEP 2: Seleccionar mesa
   if (step === 2) {
+    const filteredTables = (availableTables || []).filter(table => (table.capacidad || table.capacity) >= Number(formData.partySize));
+
     return (
       <div className="space-y-6 rounded-2xl border border-[#E8D4B8] bg-[#FDFBF7] p-6">
         <div>
@@ -257,16 +270,16 @@ export const ReservationForm = ({
             Seleccionar Mesa
           </h3>
           <p className="text-sm text-[#5A5146]">
-            Paso 2 de 3 - {formData.date} {formatTime(formData.timeStart)} a {formatTime(formData.timeEnd)}
+            Paso 2 de 3 - {formData.date} {formatTime(formData.timeStart)} a {formatTime(formData.timeEnd)} (Capacidad min: {formData.partySize})
           </p>
         </div>
 
-        {availableTables.length === 0 ? (
+        {filteredTables.length === 0 ? (
           <div className="rounded-lg border border-[#E8D4B8] bg-[#FDFBF7] p-8 text-center">
             <div className="text-4xl mb-3">😔</div>
-            <p className="font-semibold text-gray-800">No hay mesas disponibles</p>
+            <p className="font-semibold text-gray-800">No hay mesas disponibles para {formData.partySize} personas</p>
             <p className="text-sm text-gray-600 mt-2">
-              Para esta fecha y horario no hay mesas disponibles. Por favor, elige otro horario.
+              Para esta fecha, horario y cantidad de personas no hay mesas disponibles. Por favor, elige otro horario o cambia el número de asistentes.
             </p>
             <button
               onClick={() => {
@@ -275,13 +288,13 @@ export const ReservationForm = ({
               }}
               className="mt-4 rounded-lg border border-[#2D4F4F] bg-white px-6 py-2 font-semibold text-[#2D4F4F] hover:bg-gray-200"
             >
-              ← Cambiar fecha/hora
+              ← Cambiar fecha/hora/personas
             </button>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-              {availableTables.map((table) => (
+              {filteredTables.map((table) => (
                 <button
                   key={table._id}
                   onClick={() => handleTableSelect(table)}
@@ -292,10 +305,10 @@ export const ReservationForm = ({
                   }`}
                 >
                   <div className="text-2xl mb-2">
-                    {table.capacity <= 2 ? '🪑' : table.capacity <= 4 ? '🪑🪑' : '🪑🪑🪑'}
+                    {(table.capacidad || table.capacity) <= 2 ? '🪑' : (table.capacidad || table.capacity) <= 4 ? '🪑🪑' : '🪑🪑🪑'}
                   </div>
                   <div className="font-semibold text-gray-800">Mesa {table.numero}</div>
-                  <div className="text-sm text-gray-600">{table.capacity} personas</div>
+                  <div className="text-sm text-gray-600">{table.capacidad || table.capacity} personas</div>
                   {table.ubicacion && (
                     <div className="text-xs text-gray-500 mt-1">{table.ubicacion}</div>
                   )}
@@ -367,7 +380,7 @@ export const ReservationForm = ({
           <div className="flex items-center justify-between">
             <span className="text-[#5A5146]">🪑 Mesa:</span>
             <span className="font-semibold text-[#1A1A1A]">
-              Mesa {selectedTable.numero} ({selectedTable.capacity} lugares)
+              Mesa {selectedTable.numero} ({(selectedTable.capacidad || selectedTable.capacity)} lugares)
             </span>
           </div>
 
@@ -382,7 +395,7 @@ export const ReservationForm = ({
         {/* Disclaimer */}
         <div className="rounded-lg border border-[#C49A2B] bg-[#FFF8E7] p-4 text-sm">
           <p className="text-[#3D2C1E]">
-            ⚠️ <strong>Importante:</strong> La reserva se mantendrá por {selectedTable.capacity > 4 ? '2 horas' : '1.5 horas'} después de la hora de inicio. 
+            ⚠️ <strong>Importante:</strong> La reserva se mantendrá por {(selectedTable.capacidad || selectedTable.capacity) > 4 ? '2 horas' : '1.5 horas'} después de la hora de inicio. 
             Por favor, arriba con 15 minutos de anticipación.
           </p>
         </div>

@@ -127,20 +127,31 @@ const validateRestaurantAndMesa = async (restaurantID, mesaID) => {
 };
 
 const parseDateTime = (fechaReserva, hora) => {
-    const reservationDate = new Date(fechaReserva);
-    const [hours, minutes] = String(hora).split(':').map(Number);
+    // Asegurar compatibilidad sin mezclar UTC con setHours locales
+    const dateStr = fechaReserva instanceof Date 
+        ? fechaReserva.toISOString().split('T')[0] 
+        : String(fechaReserva).split('T')[0];
 
-    const dateTime = new Date(reservationDate);
-    dateTime.setHours(hours, minutes, 0, 0);
-    return dateTime;
+    const [hours, minutes] = String(hora).split(':').map(Number);
+    const combinedStr = `${dateStr}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+    
+    // Al usar "YYYY-MM-DDTHH:mm:00", JavaScript lo instanciará asumiendo el Local Time del Backend.
+    return new Date(combinedStr);
 };
 
 const hasReservationConflict = async ({ mesaID, fechaReserva, horaInicio, horaFin, excludeId }) => {
-    const reservationDate = new Date(fechaReserva);
-    const dateStart = new Date(reservationDate);
-    dateStart.setHours(0, 0, 0, 0);
-    const dateEnd = new Date(reservationDate);
-    dateEnd.setHours(23, 59, 59, 999);
+    let dateStart;
+    let dateEnd;
+
+    // Handle string YYYY-MM-DD correctly in UTC to avoid local timezone offset issues
+    if (typeof fechaReserva === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaReserva)) {
+        dateStart = new Date(`${fechaReserva}T00:00:00.000Z`);
+        dateEnd = new Date(`${fechaReserva}T23:59:59.999Z`);
+    } else {
+        const d = new Date(fechaReserva);
+        dateStart = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+        dateEnd = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
+    }
 
     const filter = {
         mesaID,
@@ -154,12 +165,16 @@ const hasReservationConflict = async ({ mesaID, fechaReserva, horaInicio, horaFi
     }
 
     const conflictingReservations = await Reservation.find(filter);
+    console.log("Found reservations matching date/mesa: ", conflictingReservations.length);
+
     const requestedStart = parseDateTime(fechaReserva, horaInicio);
     const requestedEnd = parseDateTime(fechaReserva, horaFin);
 
     for (const reservation of conflictingReservations) {
         const existingStart = parseDateTime(reservation.fechaReserva, reservation.horaInicio);
         const existingEnd = parseDateTime(reservation.fechaReserva, reservation.horaFin);
+        
+        console.log("Checking overlap: req", requestedStart, requestedEnd, "existing", existingStart, existingEnd);
 
         const hasTimeOverlap = requestedStart < existingEnd && requestedEnd > existingStart;
 
@@ -178,11 +193,17 @@ const checkRestaurantCapacity = async (restaurantID, cantidadPersonas, fechaRese
     const restaurant = await Restaurant.findById(restaurantID);
     if (!restaurant) return false;
 
-    const reservationDate = new Date(fechaReserva);
-    const dateStart = new Date(reservationDate);
-    dateStart.setHours(0, 0, 0, 0);
-    const dateEnd = new Date(reservationDate);
-    dateEnd.setHours(23, 59, 59, 999);
+    let dateStart;
+    let dateEnd;
+
+    if (typeof fechaReserva === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaReserva)) {
+        dateStart = new Date(`${fechaReserva}T00:00:00.000Z`);
+        dateEnd = new Date(`${fechaReserva}T23:59:59.999Z`);
+    } else {
+        const d = new Date(fechaReserva);
+        dateStart = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+        dateEnd = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
+    }
 
     const filter = {
         restaurantID,
