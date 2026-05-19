@@ -46,7 +46,7 @@ export const AvatarUser = () => {
         <img
             src={avatarSrc}
             alt={user?.username || 'avatar'}
-            className="w-10 h-10 md:w-12 md:h-12 object-cover rounded-full border-2 border-[var(--gf-green)] cursor-pointer"
+            className="w-10 h-10 md:w-11 md:h-11 object-cover rounded-full border-2 border-[#c88c28]/40 cursor-pointer shadow-lg hover:border-[#c88c28] transition-colors"
             onClick={toggleMenu}
             tabIndex={0}
             role="button"
@@ -62,15 +62,36 @@ export const AvatarUser = () => {
         />
 
         {open && (
-            <div role="menu" className="absolute right-0 mt-2 min-w-[14rem] bg-[var(--gf-cream)] border border-[var(--gf-beige)] rounded-lg shadow-lg animated-fadeIn z-50">
-                <div className="px-4 py-3 border-b border-[var(--gf-beige)]">
-                    <p className="font-semibold text-[var(--gf-graphite)]">{user?.username}</p>
-                    <p className="text-xs text-[var(--gf-green)]">{user?.role || 'CLIENT'}</p>
-                    <p className="text-sm text-[#4b4b4b] truncate">{user?.email}</p>
+            <div role="menu" className="absolute right-0 mt-3 min-w-[15rem] bg-[#111009] border border-[#c88c28]/20 rounded-2xl shadow-2xl animated-fadeIn z-50 overflow-hidden">
+                <div className="px-5 py-4 border-b border-[#c88c28]/10 bg-gradient-to-b from-[#c88c28]/5 to-transparent">
+                    <p className="font-bold text-[#f5ede0] tracking-tight">{user?.username}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#c88c28]" />
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#c88c28]/80">{user?.role || 'CLIENT'}</p>
+                    </div>
+                    <p className="text-xs text-[#f5ede0]/40 mt-1 truncate">{user?.email}</p>
                 </div>
-                <ul className="p-2 text-sm text-[var(--gf-graphite)] font-medium space-y-1">
-                    <button onClick={() => handleProfile(false)} role="menuitem" tabIndex={0} className="w-full text-left block px-4 py-2 rounded hover:bg-[var(--gf-beige)]">Detalles de perfil</button>
-                    <button onClick={handleLogout} role="menuitem" tabIndex={0} className="w-full text-left block px-4 py-2 rounded hover:bg-[var(--gf-beige)]">Cerrar Sesion</button>
+                <ul className="p-2 text-sm text-[#f5ede0]/70 font-medium">
+                    <li>
+                        <button 
+                            onClick={() => handleProfile(false)} 
+                            role="menuitem" 
+                            className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all hover:bg-[#c88c28]/10 hover:text-[#f5ede0]"
+                        >
+                            <i className="ti ti-user-circle text-lg" />
+                            Detalles de perfil
+                        </button>
+                    </li>
+                    <li>
+                        <button 
+                            onClick={handleLogout} 
+                            role="menuitem" 
+                            className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all hover:bg-red-500/10 hover:text-red-400"
+                        >
+                            <i className="ti ti-logout text-lg" />
+                            Cerrar Sesión
+                        </button>
+                    </li>
                 </ul>
             </div>
         )}

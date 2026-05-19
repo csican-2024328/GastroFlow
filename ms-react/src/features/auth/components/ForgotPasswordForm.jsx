@@ -2,7 +2,51 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { forgotPassword } from '../../../shared/api/auth.js';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
-import { AuthInput, AuthPrimaryButton, AuthSwitchLink } from '../../../shared/components/auth/index.js';
+
+/* ─────────────────────────────────────────
+   Sub-componentes UI con estilo GastroFlow
+───────────────────────────────────────── */
+const ICON_MAP = {
+  email:    'ti-mail',
+  text:     'ti-user',
+  password: 'ti-lock',
+};
+
+const AuthInput = ({ id, label, type = 'text', placeholder, register, rules, error, autoComplete }) => (
+  <div className="gf-field">
+    {label && <label htmlFor={id} className="gf-label">{label}</label>}
+    <div className="gf-input-wrap">
+      <i className={`ti ${ICON_MAP[type] ?? 'ti-user'} gf-input-icon`} aria-hidden="true" />
+      <input
+        id={id}
+        type={type}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        className={`gf-input${error ? ' gf-input--error' : ''}`}
+        {...register(id, rules)}
+      />
+    </div>
+    {error && <span className="gf-error-msg">{error.message}</span>}
+  </div>
+);
+
+const AuthPrimaryButton = ({ type = 'button', loading, loadingText, children }) => (
+  <button type={type} disabled={loading} className="gf-btn-primary">
+    <span className="gf-btn-primary__shimmer" />
+    {loading
+      ? <><span className="gf-spinner" />{loadingText ?? 'Cargando...'}</>
+      : children}
+  </button>
+);
+
+const AuthSwitchLink = ({ prefixText, actionText, onClick }) => (
+  <p className="gf-switch-link">
+    {prefixText && <span>{prefixText} </span>}
+    <button type="button" onClick={onClick} className="gf-switch-link__action">
+      {actionText}
+    </button>
+  </p>
+);
 
 export const ForgotPasswordForm = ({ onSwitch, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -28,7 +72,7 @@ export const ForgotPasswordForm = ({ onSwitch, onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)}>
       <AuthInput
         id="email"
         label="Email"
@@ -37,6 +81,7 @@ export const ForgotPasswordForm = ({ onSwitch, onSuccess }) => {
         register={register}
         rules={{
           required: 'El email es obligatorio',
+          pattern: { value: /^\S+@\S+\.\S+$/, message: 'Ingresa un email válido' },
         }}
         error={errors.email}
         autoComplete="email"

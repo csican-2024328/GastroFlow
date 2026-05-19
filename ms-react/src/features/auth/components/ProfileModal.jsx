@@ -1,37 +1,37 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '../store/authStore.js'
 import { ProfilePanel } from './ProfilePanel.jsx'
-
+import '../../../styles/detalles-perfil.css'
+ 
 export const ProfileModal = () => {
-  const show = useAuthStore((s) => s.showProfileModal)
-  const close = useAuthStore((s) => s.closeProfileModal)
-  const initialEdit = useAuthStore((s) => s.profileModalEdit)
-  const user = useAuthStore((s) => s.user)
-  const modalRef = useRef(null)
-
+  const show         = useAuthStore((s) => s.showProfileModal)
+  const close        = useAuthStore((s) => s.closeProfileModal)
+  const initialEdit  = useAuthStore((s) => s.profileModalEdit)
+  const user         = useAuthStore((s) => s.user)
+  const modalRef     = useRef(null)
+ 
+  /* ── Lógica intacta ── */
   useEffect(() => {
     if (!show) return
-    const onKey = (e) => {
-      if (e.key === 'Escape') close()
-    }
+    const onKey = (e) => { if (e.key === 'Escape') close() }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [show, close])
-
+ 
   useEffect(() => {
     if (show) {
-      const original = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = original; };
+      const original = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = original }
     }
   }, [show])
-
+ 
   useEffect(() => {
     if (show) console.debug('[ProfileModal] opened')
   }, [show])
-
+ 
   if (!show) return null
-
+ 
   return (
     <ProfileModalContent
       close={close}
@@ -41,55 +41,79 @@ export const ProfileModal = () => {
     />
   )
 }
-
+ 
 const ProfileModalContent = ({ close, initialEdit, modalRef, user }) => {
   const [activeTab, setActiveTab] = useState('profile')
-
+ 
   const normalizedRole = (user?.role || '').toString().trim().toUpperCase()
   const isAdmin = normalizedRole === 'PLATFORM_ADMIN' || normalizedRole === 'RESTAURANT_ADMIN'
-
+ 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="pm-overlay"
       onMouseDown={(e) => { if (e.target === e.currentTarget) close() }}
       role="dialog"
       aria-modal="true"
+      aria-label="Detalles de perfil"
     >
-      <div ref={modalRef} className="bg-[#E2D4B7] rounded-md w-[80%] max-w-xl p-5 shadow-2xl border border-[#d8c8a6]">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xl font-semibold">Detalles de perfil</h3>
-          <button onClick={close} aria-label="Cerrar" className="text-[#2C4035] hover:text-gray-900">✕</button>
+      <div ref={modalRef} className="pm-modal">
+ 
+        {/* Header */}
+        <div className="pm-modal-header">
+          <h3 className="pm-modal-title">Mi Perfil GastroFlow</h3>
+          <button onClick={close} aria-label="Cerrar" className="pm-close-btn">
+            <i className="ti ti-x" aria-hidden="true" />
+          </button>
         </div>
-
-        <div className="border-b border-[#d8c8a6] mb-4">
-          <nav className="flex gap-4">
-            <button onClick={() => setActiveTab('profile')} className={`px-3 py-2 ${activeTab === 'profile' ? 'border-b-2 border-[#2C4035] font-semibold text-[#2C4035]' : 'text-[#2C4035]'}`}>Perfil</button>
-            {isAdmin && (
-              <button onClick={() => setActiveTab('admin')} className={`px-3 py-2 ${activeTab === 'admin' ? 'border-b-2 border-[#2C4035] font-semibold text-[#2C4035]' : 'text-[#2C4035]'}`}>Admin</button>
-            )}
-          </nav>
+ 
+        {/* Tabs */}
+        <div className="pm-tabs">
+          <button
+            className={`pm-tab${activeTab === 'profile' ? ' active' : ''}`}
+            onClick={() => setActiveTab('profile')}
+          >
+            Perfil
+          </button>
+          {isAdmin && (
+            <button
+              className={`pm-tab${activeTab === 'admin' ? ' active' : ''}`}
+              onClick={() => setActiveTab('admin')}
+            >
+              Admin
+            </button>
+          )}
         </div>
-
-        <div className="">
+ 
+        {/* Body */}
+        <div className="pm-modal-body">
           {activeTab === 'profile' && (
-            <div>
-              <ProfilePanel onClose={close} initialEdit={initialEdit} />
-            </div>
+            <ProfilePanel onClose={close} initialEdit={initialEdit} />
           )}
-
+ 
           {activeTab === 'admin' && isAdmin && (
-            <div className="p-2">
-              <h4 className="font-semibold mb-2">Panel de administrador</h4>
-              <p className="text-sm text-gray-600">Acciones rápidas:</p>
-              <ul className="list-disc ml-5 mt-2 text-sm">
-                <li>Ver usuarios</li>
-                <li>Gestionar roles</li>
-                <li>Ver logs (placeholder)</li>
-              </ul>
+            <div className="pm-admin-tab">
+              <h4 className="pm-admin-tab-title">Panel de administrador</h4>
+              <p className="pm-admin-tab-sub">Acciones rápidas disponibles para tu rol</p>
+              <div className="pm-admin-action-list">
+                <div className="pm-admin-action-item">
+                  <i className="ti ti-users" aria-hidden="true" />
+                  Ver usuarios
+                </div>
+                <div className="pm-admin-action-item">
+                  <i className="ti ti-shield-check" aria-hidden="true" />
+                  Gestionar roles
+                </div>
+                <div className="pm-admin-action-item">
+                  <i className="ti ti-file-analytics" aria-hidden="true" />
+                  Ver logs (placeholder)
+                </div>
+              </div>
             </div>
           )}
         </div>
+ 
       </div>
     </div>
   )
 }
+ 
