@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../auth/store/authStore.js';
 import { useOrderStore } from '../store/useOrderStore.js';
+import { downloadOrderInvoicePdf } from '../../../shared/api/orderService.js';
 
 const PAYMENT_METHODS = [
   { value: 'EFECTIVO', label: 'Efectivo' },
@@ -126,6 +127,7 @@ export const ClientOrderTrackingPage = () => {
 
   const [socketConnected, setSocketConnected] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
 
   useEffect(() => {
     if (orderId) {
@@ -186,6 +188,29 @@ export const ClientOrderTrackingPage = () => {
       setIsPaymentOpen(false);
     } else {
       toast.error(result.error || 'No fue posible registrar el pago');
+    }
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!orderId) return;
+
+    try {
+      setIsDownloadingInvoice(true);
+      const response = await downloadOrderInvoicePdf(orderId);
+      const file = new Blob([response.data], { type: 'application/pdf' });
+      const fileUrl = window.URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = `factura-${order?.numeroOrden || orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(fileUrl);
+      toast.success('Factura descargada');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'No se pudo descargar la factura');
+    } finally {
+      setIsDownloadingInvoice(false);
     }
   };
 
@@ -297,8 +322,17 @@ export const ClientOrderTrackingPage = () => {
                   Pagar
                 </button>
               ) : order.metodoPago !== 'PENDIENTE' ? (
-                <div className="rounded-xl bg-[#E4EFE8] px-4 py-3 text-sm font-semibold text-[#2C4035]">
-                  Ya fue pagado con {order.metodoPago}
+                <div className="space-y-3">
+                  <div className="rounded-xl bg-[#E4EFE8] px-4 py-3 text-sm font-semibold text-[#2C4035]">
+                    Ya fue pagado con {order.metodoPago}
+                  </div>
+                  <button
+                    onClick={handleDownloadInvoice}
+                    disabled={isDownloadingInvoice}
+                    className="w-full rounded-xl border border-[#2C4035] bg-white px-4 py-3 text-sm font-semibold text-[#2C4035] transition hover:bg-[#E2D4B7] disabled:opacity-50"
+                  >
+                    {isDownloadingInvoice ? 'Generando factura...' : 'Descargar factura PDF'}
+                  </button>
                 </div>
               ) : (
                 <div className="rounded-xl bg-[#F8F1DF] px-4 py-3 text-sm text-[#7B5D27]">

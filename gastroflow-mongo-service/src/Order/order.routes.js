@@ -16,6 +16,7 @@ import {
     updateOrder,
     updateOrderStatus,
     payOrder,
+    downloadOrderInvoicePdf,
     cancelOrder,
     deleteOrderPermanent
 } from './order.controller.js';
@@ -98,6 +99,19 @@ router.get(
     validateOrderNumber,
     validarCampos,
     getOrderByNumber
+);
+
+/**
+ * @route GET /orders/:id
+ * @desc Obtener un pedido específico por ID
+ * @access Requiere autenticación
+ */
+router.get(
+    '/:id/invoice/pdf',
+    autenticar,
+    validateOrderId,
+    validarCampos,
+    downloadOrderInvoicePdf
 );
 
 /**
