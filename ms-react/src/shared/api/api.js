@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { useAuthStore } from '../../features/auth/store/authStore.js';
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3007/api/v1';
+// Por defecto en desarrollo el servicio de API (mongo) corre en 3006.
+// Se recomienda definir VITE_API_URL en .env local si difiere.
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3006/api/v1';
 
 export const axiosClient = axios.create({
   baseURL,

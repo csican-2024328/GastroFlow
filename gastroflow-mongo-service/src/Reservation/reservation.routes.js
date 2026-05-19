@@ -7,6 +7,7 @@ import {
     updateReservation,
     deleteReservation,
     approveOrRejectReservation,
+    debugManagedRestaurants,
 } from './reservation.controller.js';
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 import { validarCampos } from '../../middlewares/validator.middleware.js';
@@ -76,6 +77,13 @@ router.post(
     validateReservationId,
     validarCampos,
     approveOrRejectReservation
+);
+
+router.get(
+    '/debug/managed',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    debugManagedRestaurants
 );
 
 export default router;
