@@ -1018,24 +1018,46 @@ export const updateOrderStatus = async (req, res) => {
             }
         } else if (estado === 'CANCELADO') {
             order.horaCancelacion = new Date();
-            
+
             // Restaurar inventario si fue decrementado anteriormente
             if (order.inventarioDecrementado) {
                 const userId = req.usuario?.sub || req.usuario?.id || null;
                 const restaurantId = order.restaurantID?.toString() || order.restaurantId?.toString() || null;
                 const buildResult = await buildOrderIngredientRequirements(order.items, restaurantId);
+
                 if (!buildResult.success) {
-                    throw new Error(buildResult.message);
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Error al calcular requisitos de inventario para restauración',
+                        details: buildResult.message,
+                        faltantes: buildResult.faltantes || []
+                    });
                 }
 
-                await releaseInventoryForExistingOrder({
-                    requirementsMap: buildResult.requirements,
-                    restaurantId,
-                    orderId: order._id,
-                    userId,
-                    motivo: 'ORDER_CANCELADA'
-                });
-                order.inventarioDecrementado = false;
+                try {
+                    await releaseInventoryForExistingOrder({
+                        requirementsMap: buildResult.requirements,
+                        restaurantId,
+                        orderId: order._id,
+                        userId,
+                        motivo: 'ORDER_CANCELADA'
+                    });
+                    order.inventarioDecrementado = false;
+                } catch (releaseErr) {
+                    const msg = releaseErr && releaseErr.message ? releaseErr.message : 'Error liberando inventario';
+                    if (msg === 'RESTAURANT_MISMATCH') {
+                        return res.status(400).json({
+                            success: false,
+                            message: 'Error de consistencia: algunos ingredientes pertenecen a otro restaurante'
+                        });
+                    }
+
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Error al restaurar inventario',
+                        error: msg
+                    });
+                }
             }
         }
 
