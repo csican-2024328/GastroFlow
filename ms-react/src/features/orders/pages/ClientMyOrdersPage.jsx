@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../auth/store/authStore.js';
 import { useOrderStore } from '../store/useOrderStore.js';
+import { ReviewForm } from '../../reviews/index.js';
 
 export const ClientMyOrdersPage = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
+  const [showReviewForOrder, setShowReviewForOrder] = useState({});
 
   const orders = useOrderStore((s) => s.orders);
   const ordersLoading = useOrderStore((s) => s.loading);
@@ -27,6 +29,15 @@ export const ClientMyOrdersPage = () => {
     };
     return statusMap[status] || { icon: '•', label: status, color: 'bg-[#EFE8DC] text-[#5A5146]' };
   };
+
+  // Debugging: ver estructura del order
+  useEffect(() => {
+    if (orders.length > 0) {
+      console.log('📦 Primer order:', orders[0]);
+      console.log('🔍 restaurantID del primer order:', orders[0].restaurantID);
+      console.log('📊 Tipo de restaurantID:', typeof orders[0].restaurantID);
+    }
+  }, [orders]);
 
   return (
     <div className="min-h-screen bg-[#F8F5F0] text-[#1A1A1A] fade-in">
@@ -70,6 +81,12 @@ export const ClientMyOrdersPage = () => {
           <div className="space-y-4">
             {orders.map((order) => {
               const statusInfo = getOrderStatus(order.estado);
+              const restaurantIdToUse = order.restaurantID?._id
+                ? String(order.restaurantID._id)
+                : order.restaurantID
+                  ? String(order.restaurantID)
+                  : '';
+
               return (
                 <article
                   key={order._id}
@@ -94,13 +111,13 @@ export const ClientMyOrdersPage = () => {
                         {statusInfo.icon} {statusInfo.label}
                       </span>
                     </div>
-                      <div className="md:text-right">
-                        <button
-                          onClick={() => navigate(`/cliente/pedidos/${order._id}`)}
-                          className="rounded-xl bg-[#E2D4B7] px-4 py-2 text-sm font-semibold text-[#3D2C1E] hover:bg-[#D7C7A5]"
-                        >
-                          Ver seguimiento
-                        </button>
+                    <div className="md:text-right">
+                      <button
+                        onClick={() => navigate(`/cliente/pedidos/${order._id}`)}
+                        className="rounded-xl bg-[#E2D4B7] px-4 py-2 text-sm font-semibold text-[#3D2C1E] hover:bg-[#D7C7A5]"
+                      >
+                        Ver seguimiento
+                      </button>
                     </div>
                   </div>
 
@@ -117,6 +134,42 @@ export const ClientMyOrdersPage = () => {
                           </span>
                         ))}
                       </div>
+
+                      {/* Mostrar formulario de reseña solo si el pedido está entregado */}
+                      {order.estado === 'ENTREGADO' && (
+                        <div className="mt-4 border-t border-[#E2D4B7] pt-4">
+                          <button
+                            onClick={() =>
+                              setShowReviewForOrder((prev) => ({
+                                ...prev,
+                                [order._id]: !prev[order._id],
+                              }))
+                            }
+                            className="mb-3 rounded-lg bg-[#2D4F4F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1A3A3A] transition-colors"
+                          >
+                            {showReviewForOrder[order._id] ? '✖ Cancelar Reseña' : '⭐ Dejar una Reseña'}
+                          </button>
+
+                          {showReviewForOrder[order._id] && (
+                            <div className="mt-3 rounded-lg bg-[#FDFBF7] p-4">
+                              {!restaurantIdToUse && (
+                                <p className="mb-3 text-sm text-red-600 font-semibold">
+                                  ⚠️ Error: Restaurante no disponible. Por favor recarga la página.
+                                </p>
+                              )}
+                              <ReviewForm
+                                restaurantID={restaurantIdToUse}
+                                onReviewCreated={() => {
+                                  setShowReviewForOrder((prev) => ({
+                                    ...prev,
+                                    [order._id]: false,
+                                  }));
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </article>

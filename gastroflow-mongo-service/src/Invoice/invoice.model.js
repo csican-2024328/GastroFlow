@@ -87,13 +87,16 @@ invoiceSchema.index({ restaurantID: 1, estado: 1 });
 invoiceSchema.index({ userID: 1 });
 invoiceSchema.index({ fechaEmision: -1 });
 
-invoiceSchema.pre('save', function() {
-    this.total =
+// Calcular total antes de la validación y asegurar que no sea negativo
+invoiceSchema.pre('validate', function() {
+    const computed =
         Number(this.subtotal || 0) +
         Number(this.impuesto || 0) -
         Number(this.descuento || 0) +
         Number(this.propina || 0) +
         Number(this.cargosExtra || 0);
+
+    this.total = Math.max(0, Number(computed));
 });
 
 export default mongoose.model('Invoice', invoiceSchema);

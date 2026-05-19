@@ -9,7 +9,7 @@ const canAccessReview = (req, review) => {
 
 export const createReview = async (req, res) => {
   try {
-    const { restaurantID, rating, comment } = req.body;
+    const { restaurantID, platoID, rating, comment } = req.body;
     const userID = req.usuario?.sub;
     if (!userID) {
       return res.status(401).json({ success: false, message: 'Usuario no autenticado' });
@@ -21,7 +21,10 @@ export const createReview = async (req, res) => {
     if (!exists) {
       return res.status(404).json({ success: false, message: 'Restaurante no encontrado' });
     }
-    const review = await Review.create({ restaurantID, userID, rating, comment });
+    const reviewPayload = { restaurantID, userID, rating, comment };
+    if (platoID) reviewPayload.platoID = platoID;
+
+    const review = await Review.create(reviewPayload);
     res.status(201).json({ success: true, message: 'Reseña creada', data: review });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creando reseña', error: error.message });
@@ -30,10 +33,14 @@ export const createReview = async (req, res) => {
 
 export const getReviews = async (req, res) => {
   try {
-    const { restaurantID } = req.query;
+    const { restaurantID, platoID, userID } = req.query;
     const filter = { isActive: true };
     if (restaurantID) filter.restaurantID = restaurantID;
-    const reviews = await Review.find(filter).populate('restaurantID', 'name');
+    if (platoID) filter.platoID = platoID;
+    if (userID) filter.userID = userID;
+    const reviews = await Review.find(filter)
+      .populate('restaurantID', 'name')
+      .populate('platoID', 'nombre');
     res.status(200).json({ success: true, data: reviews });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error obteniendo reseñas', error: error.message });

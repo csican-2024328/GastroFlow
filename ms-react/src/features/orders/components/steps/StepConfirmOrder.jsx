@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOrderCartStore } from '../../store/useOrderCartStore.js';
 import { useOrderStore } from '../../store/useOrderStore.js';
+import { validateCoupon } from '../../../../shared/api/couponService.js';
 import { notyfError, notyfSuccess } from '../../../../shared/utils/notyf.js';
 
 export const StepConfirmOrder = ({ onClose }) => {
@@ -10,6 +11,9 @@ export const StepConfirmOrder = ({ onClose }) => {
   const [isValidatingStock, setIsValidatingStock] = useState(false);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [couponInput, setCouponInput] = useState('');
+  const [couponMessage, setCouponMessage] = useState('');
+  const [couponMessageType, setCouponMessageType] = useState('');
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [addressInput, setAddressInput] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [showAdditionalFields, setShowAdditionalFields] = useState(false);
@@ -47,6 +51,64 @@ export const StepConfirmOrder = ({ onClose }) => {
     }
 
     notyfSuccess('✓ Stock disponible. Procede a confirmar tu pedido');
+  };
+
+  const handleValidateCoupon = async () => {
+    const couponCode = couponInput.trim().toUpperCase();
+
+    if (!couponCode) {
+      setCouponMessage('Ingresa un código de cupón');
+      setCouponMessageType('error');
+      notyfError('Ingresa un código de cupón');
+      return;
+    }
+
+    if (!cart.restaurantId) {
+      setCouponMessage('No se pudo identificar el restaurante');
+      setCouponMessageType('error');
+      notyfError('No se pudo identificar el restaurante');
+      return;
+    }
+
+    setIsValidatingCoupon(true);
+    setCouponMessage('');
+    setCouponMessageType('');
+
+    try {
+      const response = await validateCoupon({
+        codigo: couponCode,
+        montoTotal: subtotal,
+        restaurantID: cart.restaurantId,
+      });
+
+      const descuento = Number(response.data?.data?.descuento || 0);
+
+      useOrderCartStore.setState({
+        couponCode,
+        discount: descuento,
+        discountType: 'FIXED_AMOUNT',
+      });
+
+      setCouponMessage(
+        `Cupón aplicado correctamente. Descuento: $${descuento.toFixed(2)}`
+      );
+      setCouponMessageType('success');
+      notyfSuccess('Cupón aplicado correctamente');
+    } catch (error) {
+      const message = error.response?.data?.message || 'No se pudo validar el cupón';
+
+      useOrderCartStore.setState({
+        couponCode: '',
+        discount: 0,
+        discountType: '',
+      });
+
+      setCouponMessage(message);
+      setCouponMessageType('error');
+      notyfError(message);
+    } finally {
+      setIsValidatingCoupon(false);
+    }
   };
 
   const handleCreateOrder = async () => {
@@ -91,7 +153,7 @@ export const StepConfirmOrder = ({ onClose }) => {
       descuento: discount > 0 ? discount : undefined,
       impuesto: tax,
       total,
-      ...(couponInput && { cupon: couponInput }),
+      ...(cart.couponCode ? { couponCode: cart.couponCode } : {}),
     };
 
     // Check for events/promotions before creating order
@@ -126,7 +188,7 @@ export const StepConfirmOrder = ({ onClose }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       {/* Order Summary */}
       <div className="bg-gradient-to-br from-[#FFF8F0] to-[#F8F5F0] border border-[#E2D4B7] rounded-lg p-6">
         <h3 className="text-xl font-bold text-[#1A1A1A] mb-4">Resumen de tu Pedido</h3>
@@ -273,14 +335,39 @@ export const StepConfirmOrder = ({ onClose }) => {
           <input
             type="text"
             value={couponInput}
-            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+            onChange={(e) => {
+              const nextValue = e.target.value.toUpperCase();
+              setCouponInput(nextValue);
+              setCouponMessage('');
+              setCouponMessageType('');
+              useOrderCartStore.setState({
+                couponCode: '',
+                discount: 0,
+                discountType: '',
+              });
+            }}
             placeholder="Ingresa tu cupón"
             className="flex-1 px-4 py-2 border border-[#E2D4B7] rounded-lg focus:outline-none focus:border-[#D4984E] bg-white"
           />
-          <button className="px-4 py-2 bg-[#E2D4B7] text-[#1A1A1A] rounded-lg hover:bg-[#d8c8a6] transition-colors font-semibold">
-            Validar
+          <button
+            type="button"
+            onClick={handleValidateCoupon}
+            disabled={isValidatingCoupon}
+            className="px-4 py-2 bg-[#E2D4B7] text-[#1A1A1A] rounded-lg hover:bg-[#d8c8a6] transition-colors font-semibold disabled:opacity-50"
+          >
+            {isValidatingCoupon ? 'Validando...' : 'Aplicar'}
           </button>
         </div>
+        {couponMessage && (
+          <p className={`text-sm font-medium ${couponMessageType === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+            {couponMessage}
+          </p>
+        )}
+        {cart.couponCode && discount > 0 && (
+          <p className="text-xs text-green-600 font-semibold">
+            Cupón aplicado: {cart.couponCode}
+          </p>
+        )}
       </div>
 
       {/* Notes */}
@@ -335,6 +422,17 @@ export const StepConfirmOrder = ({ onClose }) => {
       <p className="text-xs text-[#4b4b4b] text-center">
         Los campos marcados con * son obligatorios
       </p>
+
+      {isCreatingOrder && (
+        <div className="absolute inset-0 bg-transparent z-50 flex items-center justify-center pointer-events-none rounded-lg">
+          <div className="bg-white bg-opacity-95 px-6 py-4 rounded-md flex items-center gap-4 shadow pointer-events-auto">
+            <svg className="w-8 h-8 text-[#D4984E] animate-spin" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
+              <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeDasharray="31.4 31.4"></circle>
+            </svg>
+            <div className="text-lg font-semibold">Creando pedido...</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

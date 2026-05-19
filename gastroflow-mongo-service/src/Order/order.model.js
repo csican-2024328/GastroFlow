@@ -220,6 +220,21 @@ const orderSchema = mongoose.Schema(
         horaEntregaDomicilio: {
             type: Date
         },
+        // PIN para confirmar entrega a domicilio
+        deliveryPIN: {
+            type: String,
+            default: null,
+            trim: true,
+            select: false
+        },
+        pinValidated: {
+            type: Boolean,
+            default: false
+        },
+        pinExpiresAt: {
+            type: Date,
+            default: null
+        },
         horaCancelacion: {
             type: Date
         },
@@ -248,8 +263,8 @@ orderSchema.index({ numeroOrden: 1 });
 orderSchema.index({ tipoPedido: 1 });
 orderSchema.index({ estado: 1, tipoPedido: 1 });
 
-// Método para calcular el total antes de guardar
-orderSchema.pre('save', function() {
+// Método para calcular el total antes de validar/guardar
+orderSchema.pre('validate', function() {
     // Calcular subtotal si hay items
     if (this.items && this.items.length > 0) {
         this.subtotal = this.items.reduce((acc, item) => {
@@ -259,7 +274,9 @@ orderSchema.pre('save', function() {
     }
     
     // Calcular total: subtotal + impuesto - descuento + propina + cargosExtra
-    this.total = this.subtotal + this.impuesto - this.descuento + (this.propina || 0) + (this.cargosExtra || 0);
+    const computedTotal = (this.subtotal || 0) + (this.impuesto || 0) - (this.descuento || 0) + (this.propina || 0) + (this.cargosExtra || 0);
+    // Asegurar que total no sea negativo (evita fallos de validación y totales inválidos)
+    this.total = Math.max(0, Number(computedTotal));
 });
 
 export default mongoose.model('Order', orderSchema);

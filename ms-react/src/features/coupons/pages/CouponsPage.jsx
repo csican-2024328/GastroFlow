@@ -276,11 +276,11 @@ export const CouponsPage = () => {
     try {
       setLoading(true);
       const payload = {
-        codigo: form.codigo,
+        codigo: form.codigo.toUpperCase(),
         descripcion: form.descripcion,
         tipo: form.tipo,
-        porcentajeDescuento: form.tipo === 'PORCENTAJE' ? Number(form.porcentajeDescuento) : undefined,
-        montoFijo: form.tipo === 'MONTO_FIJO' ? Number(form.montoFijo) : undefined,
+        porcentajeDescuento: form.tipo === 'PORCENTAJE' ? Number(form.porcentajeDescuento) : 0,
+        montoFijo: form.tipo === 'MONTO_FIJO' ? Number(form.montoFijo) : 0,
         fechaExpiracion: form.fechaExpiracion,
         fechaInicio: form.fechaInicio || undefined,
         usosMaximos: Number(form.usosMaximos) || undefined,

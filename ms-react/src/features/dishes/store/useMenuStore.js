@@ -3,6 +3,7 @@ import { getRestaurants } from '../../../shared/api/restaurantService.js';
 import {
   createMenu,
   deleteMenu,
+  getActiveMenusByRestaurant,
   getMenus,
   getMenuById,
   updateMenu,
@@ -59,6 +60,25 @@ export const useMenuStore = create((set, get) => ({
       return { success: true, data };
     } catch (error) {
       const message = error.response?.data?.message || 'Error al obtener menús';
+      set({ error: message, loading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  fetchActiveMenus: async (restaurantId = get().selectedRestaurantId) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await getActiveMenusByRestaurant(restaurantId);
+      const data = response.data.data || [];
+
+      set({
+        menus: data,
+        loading: false,
+      });
+
+      return { success: true, data };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Error al obtener menús activos';
       set({ error: message, loading: false });
       return { success: false, error: message };
     }

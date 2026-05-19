@@ -17,9 +17,11 @@ import {
     updateOrder,
     updateOrderStatus,
     payOrder,
+    downloadOrderInvoicePdf,
     cancelOrder,
     deleteOrderPermanent
 } from './order.controller.js';
+import { generateDeliveryPIN, confirmDeliveryWithPIN } from './order.controller.js';
 import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
 import { validarCampos } from '../../middlewares/validator.middleware.js';
 import { validateStockAvailability, validateUpdateOrderStock } from '../../middlewares/stock.middleware.js';
@@ -115,6 +117,19 @@ router.get(
  * @access Requiere autenticación
  */
 router.get(
+    '/:id/invoice/pdf',
+    autenticar,
+    validateOrderId,
+    validarCampos,
+    downloadOrderInvoicePdf
+);
+
+/**
+ * @route GET /orders/:id
+ * @desc Obtener un pedido específico por ID
+ * @access Requiere autenticación
+ */
+router.get(
     '/:id',
     autenticar,
     validateOrderId,
@@ -191,6 +206,26 @@ router.delete(
     validateOrderId,
     validarCampos,
     deleteOrderPermanent
+);
+
+// Generar PIN de entrega (envía PIN al cliente)
+router.post(
+    '/:id/generate-pin',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateOrderId,
+    validarCampos,
+    generateDeliveryPIN
+);
+
+// Confirmar entrega con PIN (admin/repartidor valida PIN y marca ENTREGADO)
+router.post(
+    '/:id/confirm-delivery',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateOrderId,
+    validarCampos,
+    confirmDeliveryWithPIN
 );
 
 export default router;

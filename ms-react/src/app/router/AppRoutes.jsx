@@ -13,6 +13,7 @@ import { IngredientsPage } from '../../features/ingredients/pages/IngredientsPag
 import { RestaurantIngredientsPage } from '../../features/ingredients/pages/RestaurantIngredientsPage.jsx';
 import { InventoryAuditPage } from '../../features/inventory-audit/pages/InventoryAuditPage.jsx';
 import { DishesPage } from '../../features/dishes/pages/DishesPage.jsx';
+import { MenusPage } from '../../features/dishes/pages/MenusPage.jsx';
 import OrderManagement  from '../../features/orders/views/OrderManagement.jsx';
 import RestaurantReportsPage from '../../features/reports/pages/RestaurantReportsPage.jsx';
 import { Users } from '../../features/users/components/Users.jsx';
@@ -29,6 +30,8 @@ import { CouponsPage } from '../../features/coupons/pages/CouponsPage.jsx';
 import { ClientOrderTrackingPage } from '../../features/orders/pages/ClientOrderTrackingPage.jsx';
 import InvoicesPage from '../../features/invoices/pages/InvoicesPage.jsx';
 import { AssignmentsPage } from '../../features/assignments/pages/AssignmentsPage.jsx';
+import { ClientRestaurantReviewsPage, ClientDishReviewsPage, AdminReviewsPage } from '../../features/reviews/pages/index.js';
+import { ClientReviewsHistoryPage } from '../../features/reviews/pages/index.js';
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -37,15 +40,36 @@ export const AppRoutes = () => {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/verificar-email" element={<VerifyEmailPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/cliente" element={<ClientPage />} />
-            <Route path="/cliente/pedidos" element={<Navigate to="/cliente/pedidos/hacer" replace />} />
-            <Route path="/cliente/pedidos/hacer" element={<ClientMakeOrderPage />} />
-            <Route path="/cliente/pedidos/mis" element={<ClientMyOrdersPage />} />
-            <Route path="/cliente/pedidos/:orderId" element={<ClientOrderTrackingPage />} />
-            <Route path="/cliente/pedidos/legacy" element={<ClientOrdersPage />} />
-            <Route path="/cliente/eventos" element={<EventsPage />} />
-            <Route path="/cliente/reservaciones" element={<ReservationsPage />} />
-            <Route path="/cliente/cupones" element={<CouponsPage />} />
+            <Route
+                path="/cliente"
+                element={
+                    <ProtectedRoute>
+                        <RoleGuard allowedRoles={['CLIENT']}>
+                            <ClientPage />
+                        </RoleGuard>
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/cliente/pedidos"
+                element={
+                    <ProtectedRoute>
+                        <RoleGuard allowedRoles={['CLIENT']}>
+                            <Navigate to="/cliente/pedidos/hacer" replace />
+                        </RoleGuard>
+                    </ProtectedRoute>
+                }
+            />
+            <Route path="/cliente/pedidos/hacer" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientMakeOrderPage /></RoleGuard></ProtectedRoute>} />
+            <Route path="/cliente/pedidos/mis" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientMyOrdersPage /></RoleGuard></ProtectedRoute>} />
+            <Route path="/cliente/pedidos/:orderId" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientOrderTrackingPage /></RoleGuard></ProtectedRoute>} />
+            <Route path="/cliente/pedidos/legacy" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientOrdersPage /></RoleGuard></ProtectedRoute>} />
+            <Route path="/cliente/eventos" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><EventsPage /></RoleGuard></ProtectedRoute>} />
+            <Route path="/cliente/reservaciones" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ReservationsPage /></RoleGuard></ProtectedRoute>} />
+            <Route path="/cliente/cupones" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><CouponsPage /></RoleGuard></ProtectedRoute>} />
+            <Route path="/cliente/resenas" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientReviewsHistoryPage /></RoleGuard></ProtectedRoute>} />
+            <Route path="/cliente/restaurante/:restaurantId/resenas" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientRestaurantReviewsPage /></RoleGuard></ProtectedRoute>} />
+            <Route path="/cliente/restaurante/:restaurantId/plato/:dishId/resenas" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientDishReviewsPage /></RoleGuard></ProtectedRoute>} />
             <Route
                 path="/restaurant-dashboard"
                 element={
@@ -62,10 +86,12 @@ export const AppRoutes = () => {
                 <Route path="ingredientes" element={<RestaurantIngredientsPage />} />
                 <Route path="inventario" element={<InventoryAuditPage />} />
                 <Route path="platos" element={<DishesPage />} />
+                <Route path="menus" element={<MenusPage />} />
                 <Route path="reportes" element={<RestaurantReportsPage />} />
                 <Route path="facturas" element={<InvoicesPage />} />
                 <Route path="cupones" element={<CouponsPage />} />
                 <Route path="eventos" element={<EventsAdminPage />} />
+                <Route path="resenas" element={<AdminReviewsPage />} />
             </Route>
             <Route
                 path="/dashboard"
@@ -82,12 +108,14 @@ export const AppRoutes = () => {
                 <Route path="ingredientes" element={<IngredientsPage />} />
                 <Route path="auditoria-inventario" element={<InventoryAuditPage />} />
                 <Route path="platos" element={<DishesPage />} />
+                <Route path="menus" element={<MenusPage />} />
                 <Route path="pedidos" element={<OrderManagement />} />
                 <Route path="reservas" element={<ReservationManagement />} />
                 <Route path="facturas" element={<InvoicesPage />} />
                 <Route path="cupones" element={<CouponsPage />} />
                 <Route path="eventos" element={<EventsAdminPage />} />
                 <Route path="asignacion" element={<AssignmentsPage />} />
+                <Route path="resenas" element={<AdminReviewsPage />} />
                 <Route
                     path="users"
                     element={

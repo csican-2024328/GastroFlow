@@ -51,6 +51,13 @@ export const payOrder = async (orderId, payload) => {
   return axiosClient.put(`/orders/${orderId}/pagar`, payload);
 };
 
+// DOWNLOAD Invoice PDF for a paid order
+export const downloadOrderInvoicePdf = async (orderId) => {
+  return axiosClient.get(`/orders/${orderId}/invoice/pdf`, {
+    responseType: 'blob',
+  });
+};
+
 // GET Order by Order Number
 export const getOrderByNumber = async (numeroOrden) => {
   return axiosClient.get(`/orders/numero/${numeroOrden}`);

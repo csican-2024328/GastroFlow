@@ -5,13 +5,171 @@ import Mesa from '../Mesas/mesa.model.js';
 import Coupon from '../Coupon/coupon.model.js';
 import Event from '../Event/event.model.js';
 import Invoice from '../Invoice/invoice.model.js';
+import PDFDocument from 'pdfkit';
 import { notifyNewOrder, notifyOrderStatusChange } from '../../configs/socket.js';
+import Restaurant from '../Restaurant/Restaurant.model.js';
+import Notification from '../Notifications/notification.model.js';
+import { enviarEmailPedidoCreado, enviarEmailCambioEstadoPedido, enviarEmailPINEntrega } from '../../helper/email-service.js';
 import {
     buildOrderIngredientRequirements,
     getStockShortages,
     reserveInventoryAtomically,
     releaseInventoryForOrder
 } from '../../helper/stock-engine.js';
+
+const formatMoney = (value) => `Q ${Number(value || 0).toFixed(2)}`;
+
+const resolveDocumentId = (value) => {
+    if (!value) return null;
+    if (typeof value === 'object' && value !== null) {
+        return String(value._id || value.id || value.toString());
+    }
+    return String(value);
+};
+
+const getOrderInvoiceName = (order) => {
+    if (!order) return 'factura-pedido.pdf';
+
+    const orderNumber = order.numeroOrden || order._id?.toString()?.slice(-8).toUpperCase() || 'PEDIDO';
+    return `factura-${orderNumber}.pdf`.replace(/\s+/g, '-');
+};
+
+const ensureInvoiceForOrder = async (order, metodoPagoOverride = null) => {
+    const invoiceData = {
+        orderID: order._id,
+        restaurantID: resolveDocumentId(order.restaurantID),
+        userID: order.clienteId ? String(order.clienteId) : String(order.clienteNombre || order.clienteTelefono || 'CLIENTE'),
+        subtotal: Number(order.subtotal || 0),
+        impuesto: Number(order.impuesto || 0),
+        descuento: Number(order.descuento || 0),
+        propina: Number(order.propina || 0),
+        cargosExtra: Number(order.cargosExtra || 0),
+        metodoPago: metodoPagoOverride || order.metodoPago || 'PENDIENTE',
+        estado: (metodoPagoOverride || order.metodoPago) && (metodoPagoOverride || order.metodoPago) !== 'PENDIENTE' ? 'PAGADA' : 'PENDIENTE'
+    };
+
+    const existingInvoice = await Invoice.findOne({ orderID: order._id });
+
+    if (existingInvoice) {
+        existingInvoice.restaurantID = invoiceData.restaurantID;
+        existingInvoice.userID = invoiceData.userID;
+        existingInvoice.subtotal = invoiceData.subtotal;
+        existingInvoice.impuesto = invoiceData.impuesto;
+        existingInvoice.descuento = invoiceData.descuento;
+        existingInvoice.propina = invoiceData.propina;
+        existingInvoice.cargosExtra = invoiceData.cargosExtra;
+        existingInvoice.metodoPago = invoiceData.metodoPago;
+        existingInvoice.estado = invoiceData.estado;
+        await existingInvoice.save();
+        return existingInvoice;
+    }
+
+    const invoice = new Invoice(invoiceData);
+    await invoice.save();
+    return invoice;
+};
+
+const writeInvoiceLine = (doc, label, value, y, { bold = false } = {}) => {
+    doc.font(bold ? 'Helvetica-Bold' : 'Helvetica');
+    doc.text(label, 340, y, { width: 140, align: 'right' });
+    doc.text(value, 490, y, { width: 70, align: 'right' });
+};
+
+const buildOrderInvoicePdf = (doc, order, invoice) => {
+    const restaurantName = order.restaurantID?.nombre || order.restaurantID?.name || 'Restaurante GastroFlow';
+    const customerName = order.clienteNombre || 'Cliente';
+    const orderNumber = order.numeroOrden || order._id?.toString()?.slice(-8).toUpperCase() || 'PEDIDO';
+    const paymentMethod = invoice?.metodoPago || order.metodoPago || 'PENDIENTE';
+    const issueDate = invoice?.fechaEmision || new Date();
+
+    doc.font('Helvetica-Bold').fontSize(20).fillColor('#1A1A1A').text('Factura de pedido', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.font('Helvetica').fontSize(11).fillColor('#4B4B4B');
+    doc.text(`Restaurante: ${restaurantName}`);
+    doc.text(`Pedido: ${orderNumber}`);
+    doc.text(`Fecha de emisión: ${new Date(issueDate).toLocaleString('es-ES')}`);
+    doc.text(`Cliente: ${customerName}`);
+    doc.text(`Método de pago: ${paymentMethod}`);
+
+    doc.moveDown(1);
+
+    const startX = 40;
+    const tableWidth = 515;
+    let currentY = doc.y;
+    const headerHeight = 22;
+    const rowHeight = 22;
+
+    const drawHeader = () => {
+        doc.fillColor('#2C4035').rect(startX, currentY, tableWidth, headerHeight).fill();
+        doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(10);
+        doc.text('Producto', startX + 8, currentY + 6, { width: 260 });
+        doc.text('Cant.', startX + 274, currentY + 6, { width: 50, align: 'right' });
+        doc.text('Unit.', startX + 332, currentY + 6, { width: 80, align: 'right' });
+        doc.text('Subtotal', startX + 420, currentY + 6, { width: 72, align: 'right' });
+        currentY += headerHeight;
+    };
+
+    const ensureSpace = () => {
+        if (currentY > 720) {
+            doc.addPage();
+            currentY = 50;
+            drawHeader();
+        }
+    };
+
+    drawHeader();
+
+    const items = Array.isArray(order.items) ? order.items : [];
+    if (items.length === 0) {
+        ensureSpace();
+        doc.fillColor('#1A1A1A').font('Helvetica').fontSize(10);
+        doc.text('Sin items disponibles', startX + 8, currentY + 6, { width: 474 });
+        currentY += rowHeight;
+    } else {
+        items.forEach((item, index) => {
+            ensureSpace();
+            const itemName = item.nombre || item.plato?.nombre || item.menu?.nombre || `Item ${index + 1}`;
+            const quantity = Number(item.cantidad || 0);
+            const unitPrice = Number(item.precioUnitario || 0);
+            const subtotal = Number(item.subtotal ?? quantity * unitPrice);
+
+            doc.fillColor(index % 2 === 0 ? '#FAF7F2' : '#F3EEE4').rect(startX, currentY, tableWidth, rowHeight).fill();
+            doc.fillColor('#1A1A1A').font('Helvetica').fontSize(10);
+            doc.text(itemName, startX + 8, currentY + 6, { width: 260 });
+            doc.text(String(quantity), startX + 274, currentY + 6, { width: 50, align: 'right' });
+            doc.text(formatMoney(unitPrice), startX + 332, currentY + 6, { width: 80, align: 'right' });
+            doc.text(formatMoney(subtotal), startX + 420, currentY + 6, { width: 72, align: 'right' });
+            currentY += rowHeight;
+        });
+    }
+
+    currentY += 18;
+    doc.moveTo(startX, currentY).lineTo(startX + tableWidth, currentY).strokeColor('#D9C7AC').stroke();
+    currentY += 18;
+
+    const subtotal = Number(invoice?.subtotal ?? order.subtotal ?? 0);
+    const impuesto = Number(invoice?.impuesto ?? order.impuesto ?? 0);
+    const descuento = Number(invoice?.descuento ?? order.descuento ?? 0);
+    const propina = Number(invoice?.propina ?? order.propina ?? 0);
+    const cargosExtra = Number(invoice?.cargosExtra ?? order.cargosExtra ?? 0);
+    const total = subtotal + impuesto - descuento + propina + cargosExtra;
+
+    writeInvoiceLine(doc, 'Subtotal', formatMoney(subtotal), currentY);
+    currentY += 18;
+    writeInvoiceLine(doc, 'Impuesto', formatMoney(impuesto), currentY);
+    currentY += 18;
+    writeInvoiceLine(doc, 'Descuento', `-${formatMoney(descuento)}`, currentY);
+    currentY += 18;
+    writeInvoiceLine(doc, 'Propina', formatMoney(propina), currentY);
+    currentY += 18;
+    writeInvoiceLine(doc, 'Cargos extra', formatMoney(cargosExtra), currentY);
+    currentY += 18;
+    writeInvoiceLine(doc, 'Total pagado', formatMoney(total), currentY, { bold: true });
+
+    doc.moveDown(2);
+    doc.font('Helvetica').fontSize(9).fillColor('#6D6459');
+    doc.text('Gracias por tu compra. Conserva esta factura para cualquier reclamo o seguimiento.', { align: 'center' });
+};
 
 
 const buildOrderItemsFromPayload = async (items, restaurantId) => {
@@ -75,6 +233,61 @@ const buildOrderItemsFromPayload = async (items, restaurantId) => {
     }
 
     return orderItems;
+};
+
+/**
+ * Parse horaProgramada value which can be:
+ * - a Date object
+ * - an ISO datetime string
+ * - a time-only string like "14:30" (interpreted as today at that time)
+ * Returns a Date instance or null if cannot parse
+ */
+const parseHoraProgramadaValue = (value) => {
+    if (!value) return null;
+    if (value instanceof Date) {
+        return isNaN(value.getTime()) ? null : value;
+    }
+    if (typeof value === 'string') {
+        // Try ISO parse first
+        const iso = new Date(value);
+        if (!isNaN(iso.getTime())) return iso;
+
+        // Try HH:MM or H:MM
+        const m = value.match(/^(\d{1,2}):(\d{2})$/);
+        if (m) {
+            const hh = Number(m[1]);
+            const mm = Number(m[2]);
+            if (hh >= 0 && hh < 24 && mm >= 0 && mm < 60) {
+                const d = new Date();
+                d.setHours(hh, mm, 0, 0);
+                return d;
+            }
+        }
+    }
+    return null;
+};
+
+const requirementsToDelta = (currentRequirements, nextRequirements) => {
+    const increase = new Map();
+    const release = new Map();
+    const ingredientIds = new Set([
+        ...currentRequirements.keys(),
+        ...nextRequirements.keys()
+    ]);
+
+    for (const ingredientId of ingredientIds) {
+        const currentQty = currentRequirements.get(ingredientId) || 0;
+        const nextQty = nextRequirements.get(ingredientId) || 0;
+        const diff = nextQty - currentQty;
+
+        if (diff > 0) {
+            increase.set(ingredientId, diff);
+        } else if (diff < 0) {
+            release.set(ingredientId, Math.abs(diff));
+        }
+    }
+
+    return { increase, release };
 };
 
 const reserveInventoryForOrder = async ({ requirementsMap, restaurantId, orderId, userId }) => {
@@ -355,6 +568,18 @@ export const createOrder = async (req, res) => {
                     message: 'horaProgramada es requerida para pedidos PARA_LLEVAR'
                 });
             }
+
+            // parse horaProgramada safely (accept "HH:MM" or ISO)
+            const parsedHora = parseHoraProgramadaValue(horaProgramada);
+            if (!parsedHora) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Formato de horaProgramada inválido. Use HH:MM o ISO datetime'
+                });
+            }
+
+            // replace value with parsed Date for later saving
+            req.body.horaProgramada = parsedHora;
         }
 
         const orderItems = await buildOrderItemsFromPayload(items, resolvedRestaurantId);
@@ -432,7 +657,7 @@ export const createOrder = async (req, res) => {
             clienteTelefono,
             clienteDireccion: tipoPedido === 'A_DOMICILIO' ? clienteDireccion : null,
             clienteReferencia: tipoPedido === 'A_DOMICILIO' ? clienteReferencia : null,
-            horaProgramada: tipoPedido === 'PARA_LLEVAR' ? horaProgramada : null,
+            horaProgramada: tipoPedido === 'PARA_LLEVAR' ? req.body.horaProgramada : null,
             items: orderItems,
             impuesto: impuesto || 0,
             descuento: (descuento || 0) + descuentoPorCoupon + descuentoPorEvento,
@@ -499,6 +724,39 @@ export const createOrder = async (req, res) => {
             estado: newOrder.estado,
             mesa: newOrder.mesaID
         });
+
+        // Crear notificación persistente para el admin del restaurante (si existe)
+        try {
+            const restaurant = await Restaurant.findById(resolvedRestaurantId).select('adminId nombre');
+            if (restaurant && restaurant.adminId) {
+                await Notification.create({
+                    userId: String(restaurant.adminId),
+                    type: 'NUEVO_PEDIDO',
+                    message: `Nuevo pedido ${newOrder.numeroOrden}`,
+                    data: { orderId: newOrder._id, restaurantId: resolvedRestaurantId }
+                });
+            }
+        } catch (notifErr) {
+            console.error('❌ Error creando notificación persistente para admin:', notifErr.message);
+        }
+
+        // Enviar email de confirmación al cliente si disponemos de su email
+        try {
+            const clientEmail = req.body.clienteEmail || req.usuario?.email || null;
+            if (clientEmail) {
+                await enviarEmailPedidoCreado({
+                    email: clientEmail,
+                    nombre: newOrder.clienteNombre,
+                    numeroOrden: newOrder.numeroOrden,
+                    restaurante: newOrder.restaurantID?.nombre || '',
+                    total: newOrder.total
+                });
+            } else {
+                console.warn('⚠️ No se encontró email del cliente para enviar confirmación de pedido');
+            }
+        } catch (emailErr) {
+            console.error('❌ Error enviando email de pedido creado:', emailErr.message);
+        }
 
         res.status(201).json({
             success: true,
@@ -829,24 +1087,46 @@ export const updateOrderStatus = async (req, res) => {
             }
         } else if (estado === 'CANCELADO') {
             order.horaCancelacion = new Date();
-            
+
             // Restaurar inventario si fue decrementado anteriormente
             if (order.inventarioDecrementado) {
                 const userId = req.usuario?.sub || req.usuario?.id || null;
                 const restaurantId = order.restaurantID?.toString() || order.restaurantId?.toString() || null;
                 const buildResult = await buildOrderIngredientRequirements(order.items, restaurantId);
+
                 if (!buildResult.success) {
-                    throw new Error(buildResult.message);
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Error al calcular requisitos de inventario para restauración',
+                        details: buildResult.message,
+                        faltantes: buildResult.faltantes || []
+                    });
                 }
 
-                await releaseInventoryForExistingOrder({
-                    requirementsMap: buildResult.requirements,
-                    restaurantId,
-                    orderId: order._id,
-                    userId,
-                    motivo: 'ORDER_CANCELADA'
-                });
-                order.inventarioDecrementado = false;
+                try {
+                    await releaseInventoryForExistingOrder({
+                        requirementsMap: buildResult.requirements,
+                        restaurantId,
+                        orderId: order._id,
+                        userId,
+                        motivo: 'ORDER_CANCELADA'
+                    });
+                    order.inventarioDecrementado = false;
+                } catch (releaseErr) {
+                    const msg = releaseErr && releaseErr.message ? releaseErr.message : 'Error liberando inventario';
+                    if (msg === 'RESTAURANT_MISMATCH') {
+                        return res.status(400).json({
+                            success: false,
+                            message: 'Error de consistencia: algunos ingredientes pertenecen a otro restaurante'
+                        });
+                    }
+
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Error al restaurar inventario',
+                        error: msg
+                    });
+                }
             }
         }
 
@@ -866,6 +1146,38 @@ export const updateOrderStatus = async (req, res) => {
                 tipoPedido: order.tipoPedido,
                 total: order.total
             });
+        }
+
+        // Crear notificación persistente para admin del restaurante (si existe)
+        try {
+            const restaurant = await Restaurant.findById(order.restaurantID?.toString()).select('adminId nombre');
+            if (restaurant && restaurant.adminId) {
+                await Notification.create({
+                    userId: String(restaurant.adminId),
+                    type: 'CAMBIO_ESTADO_PEDIDO',
+                    message: `Pedido ${order.numeroOrden} cambió a ${order.estado}`,
+                    data: { orderId: order._id, estado: order.estado }
+                });
+            }
+        } catch (notifErr) {
+            console.error('❌ Error creando notificación persistente para admin tras cambio de estado:', notifErr.message);
+        }
+
+        // Enviar email de cambio de estado al cliente (si se proporciona email en body)
+        try {
+            const clientEmail = req.body.clienteEmail || null;
+            if (clientEmail) {
+                await enviarEmailCambioEstadoPedido({
+                    email: clientEmail,
+                    nombre: order.clienteNombre,
+                    numeroOrden: order.numeroOrden,
+                    nuevoEstado: order.estado
+                });
+            } else {
+                console.warn('⚠️ No se proporcionó clienteEmail en request; no se envió email de estado');
+            }
+        } catch (emailErr) {
+            console.error('❌ Error enviando email de cambio de estado:', emailErr.message);
         }
 
         res.status(200).json({
@@ -1020,6 +1332,128 @@ export const updateOrder = async (req, res) => {
     }
 };
 
+// Generar PIN de entrega para pedido (envía email al cliente)
+export const generateDeliveryPIN = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const order = await Order.findById(id);
+        if (!order || !order.isActive) {
+            return res.status(404).json({ success: false, message: 'Pedido no encontrado' });
+        }
+
+        // Generar PIN numérico de 6 dígitos
+        const pin = Math.floor(100000 + Math.random() * 900000).toString();
+        order.deliveryPIN = pin;
+        order.pinValidated = false;
+        order.pinExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+        await order.save();
+
+        // Envío de email con el PIN
+        const clientEmail = req.body.clienteEmail || req.usuario?.email || null;
+        if (clientEmail) {
+            try {
+                await enviarEmailPINEntrega({
+                    email: clientEmail,
+                    nombre: order.clienteNombre,
+                    numeroOrden: order.numeroOrden,
+                    pin
+                });
+            } catch (emailErr) {
+                console.error('❌ Error enviando email PIN:', emailErr.message);
+            }
+        }
+
+        // Notificar al admin del restaurante en la sala socket
+        try {
+            notifyNewOrder(order.restaurantID?.toString(), {
+                _id: order._id,
+                numeroOrden: order.numeroOrden,
+                mensaje: 'PIN de entrega generado'
+            });
+        } catch (err) {
+            console.error('❌ Error notificando generación de PIN via socket:', err.message);
+        }
+
+        return res.status(200).json({ success: true, message: 'PIN generado y enviado (si hay email disponible)' });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error generando PIN', error: error.message });
+    }
+};
+
+// Confirmar entrega mediante PIN (admin/repartidor valida el PIN y se marca ENTREGADO)
+export const confirmDeliveryWithPIN = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { pin } = req.body;
+
+        if (!pin) {
+            return res.status(400).json({ success: false, message: 'PIN es requerido' });
+        }
+
+        const order = await Order.findById(id);
+        if (!order || !order.isActive) {
+            return res.status(404).json({ success: false, message: 'Pedido no encontrado' });
+        }
+
+        if (!order.deliveryPIN || !order.pinExpiresAt) {
+            return res.status(400).json({ success: false, message: 'No se ha generado un PIN para este pedido' });
+        }
+
+        if (new Date() > new Date(order.pinExpiresAt)) {
+            return res.status(400).json({ success: false, message: 'El PIN ha expirado' });
+        }
+
+        if (String(pin).trim() !== String(order.deliveryPIN).trim()) {
+            return res.status(400).json({ success: false, message: 'PIN inválido' });
+        }
+
+        // Validado: marcar pedido como ENTREGADO
+        order.pinValidated = true;
+        order.deliveryPIN = null;
+        order.pinExpiresAt = null;
+        order.estado = 'ENTREGADO';
+        if (order.tipoPedido === 'A_DOMICILIO') {
+            order.horaEntregaDomicilio = new Date();
+        } else {
+            order.horaEntrega = new Date();
+        }
+
+        await order.save();
+
+        // Notificar al cliente y al admin
+        try {
+            if (order.clienteId) {
+                notifyOrderStatusChange(String(order.clienteId), {
+                    _id: order._id,
+                    numeroOrden: order.numeroOrden,
+                    estado: order.estado
+                });
+            }
+        } catch (err) {
+            console.error('❌ Error notificando estado ENTREGADO vía socket:', err.message);
+        }
+
+        // Intentar enviar email de confirmación al cliente si se dispone
+        try {
+            const clientEmail = req.body.clienteEmail || req.usuario?.email || null;
+            if (clientEmail) {
+                await enviarEmailCambioEstadoPedido({
+                    email: clientEmail,
+                    nombre: order.clienteNombre,
+                    numeroOrden: order.numeroOrden,
+                    nuevoEstado: order.estado
+                });
+            }
+        } catch (emailErr) {
+            console.error('❌ Error enviando email de confirmación de entrega:', emailErr.message);
+        }
+
+        return res.status(200).json({ success: true, message: 'Entrega confirmada correctamente', data: order });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Error confirmando entrega', error: error.message });
+    }
+};
+
 
 export const payOrder = async (req, res) => {
     try {
@@ -1081,13 +1515,8 @@ export const payOrder = async (req, res) => {
 
         await order.save();
 
-        // Actualizar la factura asociada con el método de pago correcto y estado PAGADA
-        const invoice = await Invoice.findOne({ orderID: order._id });
-        if (invoice) {
-            invoice.metodoPago = metodoPago;
-            invoice.estado = 'PAGADA';
-            await invoice.save();
-        }
+        // Asegurar que la factura exista y quede asociada al pago.
+        const invoice = await ensureInvoiceForOrder(order, metodoPago);
 
         if (order.clienteId) {
             notifyOrderStatusChange(order.clienteId.toString(), {
@@ -1110,13 +1539,76 @@ export const payOrder = async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'Pago registrado exitosamente',
-            data: order
+            data: order,
+            invoiceId: invoice?._id || null,
+            invoicePdfUrl: `/api/v1/orders/${order._id}/invoice/pdf`
         });
 
     } catch (error) {
         res.status(500).json({
             success: false,
             message: 'Error al registrar el pago',
+            error: error.message
+        });
+    }
+};
+
+export const downloadOrderInvoicePdf = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const requesterId = req.usuario?.sub ? String(req.usuario.sub) : null;
+
+        const order = await Order.findById(id)
+            .populate('restaurantID', 'nombre name direccion telefono')
+            .populate('mesaID', 'numero ubicacion');
+
+        if (!order || !order.isActive) {
+            return res.status(404).json({
+                success: false,
+                message: 'Pedido no encontrado'
+            });
+        }
+
+        if (req.usuario?.role === 'CLIENT' && order.clienteId?.toString() !== requesterId) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tienes permiso para descargar esta factura'
+            });
+        }
+
+        if (order.metodoPago === 'PENDIENTE') {
+            return res.status(400).json({
+                success: false,
+                message: 'La factura solo está disponible después de registrar el pago'
+            });
+        }
+
+        const invoice = await ensureInvoiceForOrder(order, order.metodoPago);
+
+        const fileName = getOrderInvoiceName(order);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+        const doc = new PDFDocument({ size: 'A4', margin: 40 });
+        doc.on('error', (error) => {
+            console.error('Error generating invoice PDF:', error);
+            if (!res.headersSent) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Error al generar la factura PDF'
+                });
+            } else {
+                res.destroy(error);
+            }
+        });
+
+        doc.pipe(res);
+        buildOrderInvoicePdf(doc, order, invoice);
+        doc.end();
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error al descargar la factura PDF',
             error: error.message
         });
     }

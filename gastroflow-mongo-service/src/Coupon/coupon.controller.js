@@ -41,14 +41,14 @@ export const createCoupon = asyncHandler(async (req, res) => {
     }
 
     // Validar tipo de descuento
-    if (tipo === 'PORCENTAJE' && !porcentajeDescuento) {
+    if (tipo === 'PORCENTAJE' && porcentajeDescuento === undefined) {
       return res.status(400).json({
         success: false,
         message: 'El porcentajeDescuento es requerido para tipo PORCENTAJE',
       });
     }
 
-    if (tipo === 'MONTO_FIJO' && !montoFijo) {
+    if (tipo === 'MONTO_FIJO' && montoFijo === undefined) {
       return res.status(400).json({
         success: false,
         message: 'El montoFijo es requerido para tipo MONTO_FIJO',

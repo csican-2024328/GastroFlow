@@ -8,10 +8,12 @@ const items = [
   { label: 'Ingredientes', to: '/restaurant-dashboard/ingredientes' },
   { label: 'Inventario', to: '/restaurant-dashboard/inventario' },
   { label: 'Platos', to: '/restaurant-dashboard/platos' },
+  { label: 'Menús', to: '/restaurant-dashboard/menus' },
   { label: 'Reportes', to: '/restaurant-dashboard/reportes' },
   { label: 'Cupones', to: '/restaurant-dashboard/cupones' },
   { label: 'Eventos', to: '/restaurant-dashboard/eventos' },
   { label: 'Facturas', to: '/restaurant-dashboard/facturas' },
+  { label: 'Reseñas', to: '/restaurant-dashboard/resenas' }
 ];
 
 export const RestaurantSidebar = () => {
