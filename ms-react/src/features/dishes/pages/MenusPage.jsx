@@ -5,6 +5,7 @@ import { MenuFilters } from '../components/MenuFilters.jsx';
 import { MenuFormModal } from '../components/MenuFormModal.jsx';
 import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
+import '../../../styles/menu.css';
 
 const getRestaurantName = (restaurantId, restaurantOptions) => {
   const normalizedId = restaurantId?._id || restaurantId;
@@ -103,24 +104,31 @@ export const MenusPage = () => {
 
   if (loading && menus.length === 0) {
     return (
-      <div className="p-6">
-        <p className="text-[#2D4F4F]">Cargando menús...</p>
+      <div className="menu-page">
+        <div className="menu-page__hero">
+          <div>
+            <p className="menu-page__eyebrow">Menús</p>
+            <h1 className="menu-page__title">Administración de menús</h1>
+            <p className="menu-page__subtitle">Cargando menús...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-8">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div className="menu-page">
+      <div className="menu-page__hero">
         <div>
-          <Typography variant="h3" className="text-gray-800">Menús</Typography>
-          <Typography variant="small" className="text-[#2D4F4F]">
+          <p className="menu-page__eyebrow">Gestión de cocina</p>
+          <Typography variant="h3" className="menu-page__title">Menús</Typography>
+          <Typography variant="small" className="menu-page__subtitle">
             Administra los menús y su relación con platos e ingredientes.
           </Typography>
         </div>
         <Button
           onClick={handleCreateMenu}
-          className="rounded-lg bg-[#2D4F4F] text-white shadow-[0_10px_22px_rgba(45,79,79,0.3)] transition-all duration-200 hover:shadow-[0_14px_30px_rgba(45,79,79,0.35)]"
+          className="ds-btn-new"
         >
           + Nuevo menú
         </Button>
@@ -129,58 +137,58 @@ export const MenusPage = () => {
       <MenuFilters searchTerm={searchTerm} onSearchChange={setSearchTerm} />
 
       {filteredMenus.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="menu-page__grid">
           {filteredMenus.map((menu) => (
             <Card
               key={menu._id}
-              className="flex h-full flex-col overflow-hidden rounded-xl border border-[#E8D4B8] bg-[#FDFBF7] shadow-md transition-all duration-200 hover:shadow-lg"
+              className="menu-card"
             >
-              <CardHeader floated={false} shadow={false} className="m-0 h-48 overflow-hidden rounded-none bg-stone-100">
+              <CardHeader floated={false} shadow={false} className="menu-card__media m-0 rounded-none border-0 p-0">
                 {menu.foto ? (
                   <img
                     src={menu.foto}
                     alt={menu.nombre}
-                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                    className="transition-transform duration-300 hover:scale-105"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-stone-200">
-                    <Typography variant="small" className="text-stone-500">Sin foto</Typography>
+                  <div className="menu-card__media-placeholder">
+                    <Typography variant="small" className="text-inherit">Sin foto</Typography>
                   </div>
                 )}
               </CardHeader>
 
-              <CardBody className="flex-grow px-4 py-3">
-                <Typography variant="h6" className="mb-1 line-clamp-2 text-gray-800">{menu.nombre}</Typography>
+              <CardBody className="menu-card__body">
+                <Typography variant="h6" className="menu-card__title line-clamp-2">{menu.nombre}</Typography>
 
                 {menu.descripcion && (
-                  <Typography variant="small" className="mb-2 line-clamp-2 text-stone-600">{menu.descripcion}</Typography>
+                  <Typography variant="small" className="menu-card__description line-clamp-2">{menu.descripcion}</Typography>
                 )}
 
-                <div className="mb-3 flex items-center justify-between">
-                  <Typography variant="h5" className="font-bold text-[#2D4F4F]">{formatCurrency(menu.precio)}</Typography>
-                  <span className="inline-block rounded-full bg-gray-200 px-2 py-1 text-xs font-semibold text-[#2D4F4F]">
+                <div className="menu-card__meta-row">
+                  <Typography variant="h5" className="menu-card__price">{formatCurrency(menu.precio)}</Typography>
+                  <span className="menu-card__tag">
                     {menu.tipo || 'SIN TIPO'}
                   </span>
                 </div>
 
-                <Typography variant="small" className="mb-1 text-[#2D4F4F]">
+                <Typography variant="small" className="menu-card__detail">
                   Restaurante: {getRestaurantName(menu.restaurantId, restaurantOptions)}
                 </Typography>
 
-                <Typography variant="small" className="mb-1 text-xs text-stone-600">
+                <Typography variant="small" className="menu-card__detail text-xs">
                   {Array.isArray(menu.platos) ? `${menu.platos.length} plato${menu.platos.length !== 1 ? 's' : ''}` : 'Sin platos'}
                 </Typography>
 
-                <Typography variant="small" className="text-xs text-stone-600">
+                <Typography variant="small" className="menu-card__detail text-xs">
                   {Array.isArray(menu.ingredientes) ? `${menu.ingredientes.length} ingrediente${menu.ingredientes.length !== 1 ? 's' : ''}` : 'Sin ingredientes'}
                 </Typography>
               </CardBody>
 
-              <div className="flex gap-2 border-t border-[#E8D4B8] bg-[#FDFBF7] px-4 py-3">
+              <div className="menu-card__actions">
                 <IconButton
                   size="sm"
                   onClick={() => handleEditMenu(menu)}
-                  className="flex-1 bg-[#2D4F4F] shadow-md transition-all duration-200 hover:-translate-y-[1px] hover:shadow-lg"
+                  className="menu-icon-btn menu-icon-btn--edit flex-1 transition-all duration-200 hover:-translate-y-[1px]"
                   title="Editar menú"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
@@ -191,7 +199,7 @@ export const MenusPage = () => {
                 <IconButton
                   size="sm"
                   onClick={() => handleRequestDeleteMenu(menu)}
-                  className="flex-1 bg-[#D97065] shadow-md transition-all duration-200 hover:-translate-y-[1px] hover:shadow-lg"
+                  className="menu-icon-btn menu-icon-btn--delete flex-1 transition-all duration-200 hover:-translate-y-[1px]"
                   title="Eliminar menú"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
@@ -207,9 +215,9 @@ export const MenusPage = () => {
           ))}
         </div>
       ) : (
-        <Card className="rounded-xl border border-[#E8D4B8] bg-[#FDFBF7] shadow-[0_16px_34px_rgba(26,26,26,0.08)]">
-          <CardBody className="flex items-center justify-center py-12">
-            <Typography className="text-center text-[#2D4F4F]">
+        <Card className="menu-empty shadow-[0_16px_34px_rgba(26,26,26,0.08)]">
+          <CardBody className="menu-empty__body">
+            <Typography className="text-center text-inherit">
               {searchTerm.trim() ? 'No hay menús que coincidan con la búsqueda.' : 'No hay menús registrados para este filtro.'}
             </Typography>
           </CardBody>
@@ -223,24 +231,24 @@ export const MenusPage = () => {
       />
 
       {menuToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl border border-[#E8D4B8] bg-[#FDFBF7] p-6 shadow-2xl">
-            <Typography variant="h5" className="text-[#1A1A1A]">Confirmar eliminación</Typography>
-            <Typography variant="small" className="mt-2 text-[#2D4F4F]">
+        <div className="menu-modal-overlay">
+          <div className="menu-confirm p-6 shadow-2xl">
+            <Typography variant="h5" className="text-inherit">Confirmar eliminación</Typography>
+            <Typography variant="small" className="mt-2 text-inherit">
               ¿Estás seguro de que deseas eliminar este menú?
             </Typography>
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="menu-confirm__actions">
               <Button
                 variant="text"
                 onClick={handleCloseDeleteDialog}
-                className="rounded-md text-[#2D4F4F] transition-colors duration-200 hover:bg-[#F5EFEA]"
+                className="menu-confirm__button menu-confirm__button--secondary transition-colors duration-200"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={handleConfirmDeleteMenu}
                 disabled={loading}
-                className="bg-[#D97065] text-white"
+                className="menu-confirm__button menu-confirm__button--danger"
               >
                 Eliminar
               </Button>

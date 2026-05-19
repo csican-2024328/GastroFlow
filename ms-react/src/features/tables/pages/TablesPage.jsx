@@ -1,35 +1,36 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Card, CardBody, CardHeader, Chip, IconButton, Typography } from '@material-tailwind/react';
 import { useTableStore } from '../store/useTableStore.js';
 import { TableFilters } from '../components/TableFilters.jsx';
 import { TableModal } from '../components/TableModal.jsx';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
 import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
-
+import '../../../styles/tables-page.css';
+ 
 export const TablesPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen]   = useState(false);
   const [selectedMesa, setSelectedMesa] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const hasMountedRef = useRef(false);
-  const skipNextPageFetchRef = useRef(false);
-  const currentPageRef = useRef(currentPage);
-
-  const restaurantOptions = useTableStore((state) => state.restaurantOptions);
-  const fetchRestaurantOptions = useTableStore((state) => state.fetchRestaurantOptions);
-  const selectedRestaurantId = useTableStore((state) => state.selectedRestaurantId);
-  const mesas = useTableStore((state) => state.mesas);
-  const loading = useTableStore((state) => state.loading);
-  const pagination = useTableStore((state) => state.pagination);
-  const fetchMesas = useTableStore((state) => state.fetchMesas);
-  const deleteMesaAction = useTableStore((state) => state.deleteMesaAction);
-  const clearSelectedMesa = useTableStore((state) => state.clearSelectedMesa);
-
+  const [currentPage, setCurrentPage]   = useState(1);
+  const [searchTerm, setSearchTerm]     = useState('');
+ 
+  const hasMountedRef          = useRef(false);
+  const skipNextPageFetchRef   = useRef(false);
+  const currentPageRef         = useRef(currentPage);
+ 
+  const restaurantOptions      = useTableStore((s) => s.restaurantOptions);
+  const fetchRestaurantOptions = useTableStore((s) => s.fetchRestaurantOptions);
+  const selectedRestaurantId   = useTableStore((s) => s.selectedRestaurantId);
+  const mesas                  = useTableStore((s) => s.mesas);
+  const loading                = useTableStore((s) => s.loading);
+  const pagination             = useTableStore((s) => s.pagination);
+  const fetchMesas             = useTableStore((s) => s.fetchMesas);
+  const deleteMesaAction       = useTableStore((s) => s.deleteMesaAction);
+  const clearSelectedMesa      = useTableStore((s) => s.clearSelectedMesa);
+ 
   const { restaurantId } = useRestaurantScope();
-
+ 
+  /* ── Filtrado — INTACTO ── */
   const filteredMesas = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
-
     return mesas
       .filter((mesa) => {
         if (restaurantId) {
@@ -41,216 +42,209 @@ export const TablesPage = () => {
       })
       .filter((mesa) => {
         if (!normalizedSearch) return true;
-        const ubicacion = mesa.ubicacion?.toLowerCase() || '';
-        const numero = String(mesa.numero ?? '').toLowerCase();
+        const ubicacion     = mesa.ubicacion?.toLowerCase() || '';
+        const numero        = String(mesa.numero ?? '').toLowerCase();
         const restaurantName = mesa.restaurantID?.name?.toLowerCase() || '';
         return ubicacion.includes(normalizedSearch)
           || numero.includes(normalizedSearch)
           || restaurantName.includes(normalizedSearch);
       });
   }, [mesas, searchTerm, restaurantId]);
-
+ 
+  /* ── Effects — INTACTOS ── */
   useEffect(() => {
-    if (restaurantOptions.length === 0) {
-      fetchRestaurantOptions();
-    }
+    if (restaurantOptions.length === 0) fetchRestaurantOptions();
   }, [fetchRestaurantOptions, restaurantOptions.length]);
-
+ 
+  useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
+ 
   useEffect(() => {
-    currentPageRef.current = currentPage;
-  }, [currentPage]);
-
-  useEffect(() => {
-    if (!hasMountedRef.current) {
-      hasMountedRef.current = true;
-      return;
-    }
-
-    if (currentPageRef.current !== 1) {
-      skipNextPageFetchRef.current = true;
-      setCurrentPage(1);
-    }
-
+    if (!hasMountedRef.current) { hasMountedRef.current = true; return; }
+    if (currentPageRef.current !== 1) { skipNextPageFetchRef.current = true; setCurrentPage(1); }
     fetchMesas(1, 10, restaurantId || selectedRestaurantId);
   }, [fetchMesas, selectedRestaurantId]);
-
+ 
   useEffect(() => {
-    if (skipNextPageFetchRef.current) {
-      skipNextPageFetchRef.current = false;
-      return;
-    }
-
+    if (skipNextPageFetchRef.current) { skipNextPageFetchRef.current = false; return; }
     fetchMesas(currentPage, 10, restaurantId || selectedRestaurantId);
   }, [currentPage, fetchMesas, selectedRestaurantId]);
-
-  const handleCreateMesa = () => {
-    clearSelectedMesa();
-    setSelectedMesa(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditMesa = (mesa) => {
-    setSelectedMesa(mesa);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedMesa(null);
-    clearSelectedMesa();
-  };
-
+ 
+  /* ── Handlers — INTACTOS ── */
+  const handleCreateMesa = () => { clearSelectedMesa(); setSelectedMesa(null); setIsModalOpen(true); };
+  const handleEditMesa   = (mesa) => { setSelectedMesa(mesa); setIsModalOpen(true); };
+  const handleCloseModal = () => { setIsModalOpen(false); setSelectedMesa(null); clearSelectedMesa(); };
+ 
   const handleDeleteMesa = async (id) => {
     if (!window.confirm('¿Estás seguro de eliminar esta mesa?')) return;
-
     const result = await deleteMesaAction(id);
-    if (result.success) {
-      notyfSuccess('Mesa eliminada correctamente');
-    } else {
-      notyfError(result.error || 'Error al eliminar la mesa');
-    }
+    if (result.success) notyfSuccess('Mesa eliminada correctamente');
+    else notyfError(result.error || 'Error al eliminar la mesa');
   };
-
+ 
   const getRestaurantName = (restaurantID) => {
     const restaurant = restaurantOptions.find((item) => item._id === restaurantID || item._id === restaurantID?._id);
     return restaurant?.name || restaurantID?.name || 'Sin restaurante';
   };
-
+ 
+  /* ── Estado de carga ── */
   if (loading && mesas.length === 0) {
     return (
-      <div className="p-6 min-h-screen bg-[#FDFBF7]">
-        <p className="text-[#2D4F4F]">Cargando mesas...</p>
+      <div className="tp-loading">
+        <div className="tp-loading-spinner" />
+        Cargando mesas...
       </div>
     );
   }
-
+ 
+  /* ── RENDER ── */
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+    <div className="tp-root">
+ 
+      {/* HEADER */}
+      <div className="tp-header">
         <div>
-          <Typography variant="h3" className="text-[#2D4F4F]">Mesas</Typography>
-          <Typography variant="small" className="text-[#2D4F4F]">
-            Administra las mesas por sucursal.
-          </Typography>
+          <div className="tp-header-badge">
+            <i className="ti ti-armchair" aria-hidden="true" />
+            Gestión de mesas
+          </div>
+          <h1 className="tp-header-title">Mesas</h1>
+          <p className="tp-header-sub">Administra las mesas por sucursal.</p>
         </div>
-        <Button onClick={handleCreateMesa} className="bg-[#2D4F4F] text-white rounded-lg shadow-[0_10px_22px_rgba(45,79,79,0.3)] hover:shadow-[0_14px_30px_rgba(45,79,79,0.35)] transition-all duration-200">
+        <button onClick={handleCreateMesa} className="tp-btn-new">
+          <i className="ti ti-plus" aria-hidden="true" />
           + Nueva mesa
-        </Button>
+        </button>
       </div>
-
+ 
+      {/* STATS */}
+      <div className="tp-stats">
+        <div className="tp-stat tp-stat--gold">
+          <div className="tp-stat-top">
+            <div className="tp-stat-icon"><i className="ti ti-armchair" aria-hidden="true" /></div>
+          </div>
+          <div className="tp-stat-label">Total mesas</div>
+          <div className="tp-stat-value">{mesas.length}</div>
+        </div>
+        <div className="tp-stat tp-stat--green">
+          <div className="tp-stat-top">
+            <div className="tp-stat-icon tp-stat-icon--g"><i className="ti ti-check" aria-hidden="true" /></div>
+          </div>
+          <div className="tp-stat-label">Activas</div>
+          <div className="tp-stat-value tp-stat-value--green">
+            {mesas.filter((m) => m.isActive !== false).length}
+          </div>
+        </div>
+        <div className="tp-stat tp-stat--red">
+          <div className="tp-stat-top">
+            <div className="tp-stat-icon tp-stat-icon--r"><i className="ti ti-x" aria-hidden="true" /></div>
+          </div>
+          <div className="tp-stat-label">Inactivas</div>
+          <div className="tp-stat-value tp-stat-value--red">
+            {mesas.filter((m) => m.isActive === false).length}
+          </div>
+        </div>
+        <div className="tp-stat">
+          <div className="tp-stat-top">
+            <div className="tp-stat-icon"><i className="ti ti-building-store" aria-hidden="true" /></div>
+          </div>
+          <div className="tp-stat-label">Restaurantes</div>
+          <div className="tp-stat-value tp-stat-value--gold">{restaurantOptions.length}</div>
+        </div>
+      </div>
+ 
+      {/* FILTROS */}
       <TableFilters searchTerm={searchTerm} onSearchChange={setSearchTerm} />
-
-      <Card className="bg-[#FDFBF7] border border-[#E8D4B8] shadow-[0_16px_34px_rgba(26,26,26,0.08)] rounded-xl overflow-hidden">
-        <CardHeader floated={false} shadow={false} className="bg-[#F5EFEA] m-0 rounded-none border-b border-[#E8D4B8] px-5 py-4">
-          <Typography variant="h6" className="text-[#2D4F4F]">
-            Lista de mesas
-          </Typography>
-        </CardHeader>
-        <CardBody className="px-0 py-0 bg-[#FDFBF7]">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-[#1A1A1A]">
-              <thead>
-                <tr className="text-[#2D4F4F] uppercase tracking-wide text-xs bg-[#F5EFEA] border-b border-[#E8D4B8]">
-                  <th className="p-4 text-left font-semibold">Identificador</th>
-                  <th className="p-4 text-left font-semibold">Número</th>
-                  <th className="p-4 text-left font-semibold">Capacidad</th>
-                  <th className="p-4 text-left font-semibold">Restaurante</th>
-                  <th className="p-4 text-left font-semibold">Estado</th>
-                  <th className="p-4 text-left font-semibold">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredMesas.length > 0 ? (
-                  filteredMesas.map((mesa) => (
-                    <tr key={mesa._id} className="border-t border-[#E8D4B8] hover:bg-[#F5EFEA] transition-colors duration-200">
-                      <td className="p-4">
-                        <Typography variant="small" className="font-semibold text-gray-800">
-                          {mesa.ubicacion}
-                        </Typography>
-                      </td>
-                      <td className="p-4 text-gray-800">{mesa.numero}</td>
-                      <td className="p-4 text-gray-800">{mesa.capacidad}</td>
-                      <td className="p-4 text-gray-800">{getRestaurantName(mesa.restaurantID)}</td>
-                      <td className="p-4">
-                        <Chip
-                          value={mesa.isActive ? 'Activa' : 'Inactiva'}
-                          className={mesa.isActive ? 'bg-[#2D4F4F] text-white' : 'bg-gray-400 text-white'}
-                        />
-                      </td>
-                      <td className="p-4">
-                        <div className="flex gap-2">
-                          <IconButton
-                            size="sm"
-                            onClick={() => handleEditMesa(mesa)}
-                            className="bg-[#E8956B] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
-                            title="Editar mesa"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              className="h-4 w-4"
-                            >
-                              <path d="M12 20h9" />
-                              <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
-                            </svg>
-                          </IconButton>
-                          <IconButton
-                            size="sm"
-                            onClick={() => handleDeleteMesa(mesa._id)}
-                            className="bg-[#D97065] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
-                            title="Eliminar mesa"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              className="h-4 w-4"
-                            >
-                              <path d="M3 6h18" />
-                              <path d="M8 6V4h8v2" />
-                              <path d="M19 6l-1 14H6L5 6" />
-                              <path d="M10 11v6" />
-                              <path d="M14 11v6" />
-                            </svg>
-                          </IconButton>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="p-6 text-center text-gray-500">
-                      {searchTerm.trim() ? 'No hay mesas que coincidan con la búsqueda.' : 'No hay mesas registradas para este filtro.'}
+ 
+      {/* TABLA */}
+      <div className="tp-section">
+        <div className="tp-section-header">
+          <span className="tp-section-title">Lista de mesas</span>
+          <span className="tp-section-badge">{filteredMesas.length} registros</span>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="tp-table">
+            <thead>
+              <tr>
+                <th style={{ width: '22%' }}>Identificador</th>
+                <th style={{ width: '10%' }}>Número</th>
+                <th style={{ width: '12%' }}>Capacidad</th>
+                <th style={{ width: '26%' }}>Restaurante</th>
+                <th style={{ width: '14%' }}>Estado</th>
+                <th style={{ width: '16%' }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMesas.length > 0 ? (
+                filteredMesas.map((mesa, idx) => (
+                  <tr key={mesa._id} style={{ animationDelay: `${idx * 0.04}s` }}>
+                    <td className="tp-td-main">{mesa.ubicacion}</td>
+                    <td className="tp-td-gold">{mesa.numero}</td>
+                    <td>
+                      <i className="ti ti-users" style={{ fontSize: 12, verticalAlign: -2, marginRight: 4, color: 'rgba(200,140,40,.45)' }} aria-hidden="true" />
+                      {mesa.capacidad}
+                    </td>
+                    <td>{getRestaurantName(mesa.restaurantID)}</td>
+                    <td>
+                      <span className={`tp-badge ${mesa.isActive !== false ? 'tp-badge--active' : 'tp-badge--inactive'}`}>
+                        <i className={`ti ${mesa.isActive !== false ? 'ti-check' : 'ti-x'}`} style={{ fontSize: 9 }} aria-hidden="true" />
+                        {mesa.isActive !== false ? 'Activa' : 'Inactiva'}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="tp-action-btns">
+                        <button
+                          className="tp-action-btn tp-action-btn--edit"
+                          onClick={() => handleEditMesa(mesa)}
+                          title="Editar mesa"
+                          aria-label="Editar mesa"
+                        >
+                          <i className="ti ti-edit" aria-hidden="true" />
+                        </button>
+                        <button
+                          className="tp-action-btn tp-action-btn--del"
+                          onClick={() => handleDeleteMesa(mesa._id)}
+                          title="Eliminar mesa"
+                          aria-label="Eliminar mesa"
+                        >
+                          <i className="ti ti-trash" aria-hidden="true" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardBody>
-      </Card>
-
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="tp-empty">
+                    <i className="ti ti-armchair-off" aria-hidden="true" />
+                    {searchTerm.trim()
+                      ? 'No hay mesas que coincidan con la búsqueda.'
+                      : 'No hay mesas registradas para este filtro.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+ 
+      {/* PAGINACIÓN */}
       {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6 flex-wrap">
-          {Array.from({ length: pagination.totalPages }, (_, index) => index + 1).map((page) => (
-            <Button
+        <div className="tp-pagination">
+          {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+            <button
               key={page}
-              size="sm"
+              className={`tp-page-btn${page === currentPage ? ' tp-page-btn--active' : ''}`}
               onClick={() => setCurrentPage(page)}
-              className={page === currentPage ? 'bg-[#2D4F4F] text-white rounded-md shadow-md' : 'bg-[#FDFBF7] border border-[#E8D4B8] text-[#2D4F4F] rounded-md hover:bg-[#F5EFEA] transition-colors duration-200'}
             >
               {page}
-            </Button>
+            </button>
           ))}
         </div>
       )}
-
+ 
+      {/* MODAL */}
       <TableModal open={isModalOpen} onClose={handleCloseModal} mesa={selectedMesa} />
     </div>
   );
 };
+ 

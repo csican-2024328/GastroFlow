@@ -1,60 +1,57 @@
 import { useEffect } from 'react';
-import { Input, Typography } from '@material-tailwind/react';
 import { useMenuStore } from '../store/useMenuStore.js';
 import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
-
+ 
 export const MenuFilters = ({ searchTerm, onSearchChange }) => {
-  const restaurantOptions = useMenuStore((state) => state.restaurantOptions);
-  const fetchRestaurantOptions = useMenuStore((state) => state.fetchRestaurantOptions);
-  const selectedRestaurantId = useMenuStore((state) => state.selectedRestaurantId);
-  const setSelectedRestaurantId = useMenuStore((state) => state.setSelectedRestaurantId);
+  const restaurantOptions       = useMenuStore((s) => s.restaurantOptions);
+  const fetchRestaurantOptions  = useMenuStore((s) => s.fetchRestaurantOptions);
+  const selectedRestaurantId    = useMenuStore((s) => s.selectedRestaurantId);
+  const setSelectedRestaurantId = useMenuStore((s) => s.setSelectedRestaurantId);
   const { isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
-
-  useEffect(() => {
-    fetchRestaurantOptions();
-  }, [fetchRestaurantOptions]);
-
+ 
+  useEffect(() => { fetchRestaurantOptions(); }, [fetchRestaurantOptions]);
+ 
   return (
-    <div className="mb-6 rounded-lg border border-stone-200 bg-[#2D4F4F] p-4 shadow-md">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-end">
-        <div>
-          <Typography variant="small" className="mb-2 font-semibold text-stone-50">
-            Buscar por nombre
-          </Typography>
-          <Input
+    <div className="ds-filters menu-filters">
+      <div className="ds-filter-group ds-filter-group--wide">
+        <span className="ds-filter-label">Buscar por nombre</span>
+        <div className="ds-filter-wrap">
+          <i className="ti ti-search ds-filter-icon" aria-hidden="true" />
+          <input
+            type="text"
             value={searchTerm}
-            onChange={(event) => onSearchChange(event.target.value)}
-            label="Buscar por nombre"
-            className="bg-white"
-            labelProps={{ className: 'text-[#2D4F4F]' }}
-            containerProps={{ className: 'min-w-full' }}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Buscar por nombre..."
+            className="ds-filter-input"
           />
         </div>
-
-        {!(isRestaurantAdmin && hasRestaurantAssigned) ? (
-          <div>
-            <Typography variant="small" className="mb-2 font-semibold text-stone-50">
-              Filtrar por restaurante
-            </Typography>
+      </div>
+ 
+      {!(isRestaurantAdmin && hasRestaurantAssigned) ? (
+        <div className="ds-filter-group">
+          <span className="ds-filter-label">Filtrar por restaurante</span>
+          <div className="ds-filter-wrap">
+            <i className="ti ti-building-store ds-filter-icon" aria-hidden="true" />
             <select
               value={selectedRestaurantId}
-              onChange={(event) => setSelectedRestaurantId(event.target.value)}
-              className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-3 text-stone-900 outline-none transition focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20"
+              onChange={(e) => setSelectedRestaurantId(e.target.value)}
+              className="ds-filter-select"
             >
               <option value="">Todos los restaurantes</option>
-              {restaurantOptions.map((restaurant) => (
-                <option key={restaurant._id} value={restaurant._id}>
-                  {restaurant.name}
-                </option>
+              {restaurantOptions.map((r) => (
+                <option key={r._id} value={r._id}>{r.name}</option>
               ))}
             </select>
           </div>
-        ) : (
-          <div>
-            <p className="text-sm text-stone-200">Mostrando datos del restaurante asignado</p>
+        </div>
+      ) : (
+        <div className="ds-filter-group">
+          <div className="ds-filter-hint">
+            <i className="ti ti-lock" aria-hidden="true" />
+            Mostrando datos del restaurante asignado
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

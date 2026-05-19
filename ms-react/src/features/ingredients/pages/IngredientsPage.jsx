@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Card, CardBody, CardHeader, Chip, IconButton, Typography } from '@material-tailwind/react';
 import { IngredientFilters } from '../components/IngredientFilters.jsx';
 import { IngredientModal } from '../components/IngredientModal.jsx';
 import { useIngredientStore } from '../store/useIngredientStore.js';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
-
+import '../../../styles/ingredients.css';
+ 
+/* ── Helpers — INTACTOS ── */
 const getRestaurantName = (restaurantId, restaurantOptions) => {
   const normalizedId = restaurantId?._id || restaurantId;
   const restaurant = restaurantOptions.find((item) => item._id === normalizedId);
   return restaurant?.name || restaurantId?.name || 'Sin restaurante';
 };
-
+ 
 const normalizeIngredientRestaurantId = (ingredient) => (
   ingredient?.restaurantId?._id ||
   ingredient?.restaurantId ||
@@ -18,233 +19,219 @@ const normalizeIngredientRestaurantId = (ingredient) => (
   ingredient?.RestaurantId ||
   ''
 );
-
+ 
 export const IngredientsPage = ({ hideRestaurantFilter = false, lockedRestaurantId = '' }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedIngredient, setSelectedIngredient] = useState(null);
-  const [ingredientToDelete, setIngredientToDelete] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const ingredients = useIngredientStore((state) => state.ingredients);
-  const restaurantOptions = useIngredientStore((state) => state.restaurantOptions);
-  const loading = useIngredientStore((state) => state.loading);
-  const selectedRestaurantId = useIngredientStore((state) => state.selectedRestaurantId);
-  const fetchRestaurantOptions = useIngredientStore((state) => state.fetchRestaurantOptions);
-  const fetchIngredients = useIngredientStore((state) => state.fetchIngredients);
-  const deleteIngredientAction = useIngredientStore((state) => state.deleteIngredientAction);
-  const clearSelectedIngredient = useIngredientStore((state) => state.clearSelectedIngredient);
-
+  const [isModalOpen,         setIsModalOpen]         = useState(false);
+  const [selectedIngredient,  setSelectedIngredient]  = useState(null);
+  const [ingredientToDelete,  setIngredientToDelete]  = useState(null);
+  const [searchTerm,          setSearchTerm]          = useState('');
+ 
+  const ingredients            = useIngredientStore((s) => s.ingredients);
+  const restaurantOptions      = useIngredientStore((s) => s.restaurantOptions);
+  const loading                = useIngredientStore((s) => s.loading);
+  const selectedRestaurantId   = useIngredientStore((s) => s.selectedRestaurantId);
+  const fetchRestaurantOptions = useIngredientStore((s) => s.fetchRestaurantOptions);
+  const fetchIngredients       = useIngredientStore((s) => s.fetchIngredients);
+  const deleteIngredientAction = useIngredientStore((s) => s.deleteIngredientAction);
+  const clearSelectedIngredient= useIngredientStore((s) => s.clearSelectedIngredient);
+ 
+  /* ── Filtrado — INTACTO ── */
   const filteredIngredients = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     const scopedIngredients = lockedRestaurantId
-      ? ingredients.filter((ingredient) => normalizeIngredientRestaurantId(ingredient).toString() === lockedRestaurantId.toString())
+      ? ingredients.filter((i) => normalizeIngredientRestaurantId(i).toString() === lockedRestaurantId.toString())
       : ingredients;
-
     if (!normalizedSearch) return scopedIngredients;
-
-    return scopedIngredients.filter((ingredient) =>
-      ingredient.nombre?.toLowerCase().includes(normalizedSearch),
-    );
+    return scopedIngredients.filter((i) => i.nombre?.toLowerCase().includes(normalizedSearch));
   }, [ingredients, lockedRestaurantId, searchTerm]);
-
+ 
+  /* ── Effects — INTACTOS ── */
   useEffect(() => {
-    if (restaurantOptions.length === 0) {
-      fetchRestaurantOptions();
-    }
+    if (restaurantOptions.length === 0) fetchRestaurantOptions();
   }, [fetchRestaurantOptions, restaurantOptions.length]);
-
+ 
   useEffect(() => {
     fetchIngredients(lockedRestaurantId || selectedRestaurantId);
   }, [fetchIngredients, lockedRestaurantId, selectedRestaurantId]);
-
-  const handleCreateIngredient = () => {
-    clearSelectedIngredient();
-    setSelectedIngredient(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditIngredient = (ingredient) => {
-    setSelectedIngredient(ingredient);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedIngredient(null);
-    clearSelectedIngredient();
-  };
-
-  const handleRequestDeleteIngredient = (ingredient) => {
-    setIngredientToDelete(ingredient);
-  };
-
-  const handleCloseDeleteDialog = () => {
-    setIngredientToDelete(null);
-  };
-
-  const handleConfirmDeleteIngredient = async () => {
-    if (!ingredientToDelete?._id) {
-      return;
-    }
-
+ 
+  /* ── Handlers — INTACTOS ── */
+  const handleCreateIngredient  = () => { clearSelectedIngredient(); setSelectedIngredient(null); setIsModalOpen(true); };
+  const handleEditIngredient    = (i) => { setSelectedIngredient(i); setIsModalOpen(true); };
+  const handleCloseModal        = () => { setIsModalOpen(false); setSelectedIngredient(null); clearSelectedIngredient(); };
+  const handleRequestDelete     = (i) => setIngredientToDelete(i);
+  const handleCloseDeleteDialog = () => setIngredientToDelete(null);
+ 
+  const handleConfirmDelete = async () => {
+    if (!ingredientToDelete?._id) return;
     const result = await deleteIngredientAction(ingredientToDelete._id);
-    if (result.success) {
-      notyfSuccess('Ingrediente eliminado correctamente');
-      handleCloseDeleteDialog();
-    } else {
-      notyfError(result.error || 'Error al eliminar ingrediente');
-    }
+    if (result.success) { notyfSuccess('Ingrediente eliminado correctamente'); handleCloseDeleteDialog(); }
+    else notyfError(result.error || 'Error al eliminar ingrediente');
   };
-
+ 
   if (loading && ingredients.length === 0) {
     return (
-      <div className="p-6">
-        <p className="text-[#2D4F4F]">Cargando ingredientes...</p>
+      <div className="ig-loading">
+        <div className="ig-loading-spinner" />
+        Cargando ingredientes...
       </div>
     );
   }
-
+ 
+  /* Stats derivadas */
+  const totalIngredients  = filteredIngredients.length;
+  const lowStock          = filteredIngredients.filter((i) => (i.stock ?? 0) < 5).length;
+  const totalRestaurants  = new Set(filteredIngredients.map((i) => normalizeIngredientRestaurantId(i)).filter(Boolean)).size;
+ 
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+    <div className="ig-root">
+ 
+      {/* HEADER */}
+      <div className="ig-header">
         <div>
-          <Typography variant="h3" className="text-gray-800">Ingredientes</Typography>
-          <Typography variant="small" className="text-[#2D4F4F]">
-            Administra el inventario de ingredientes por sucursal.
-          </Typography>
+          <div className="ig-header-badge">
+            <i className="ti ti-carrot" aria-hidden="true" />
+            Gestión de inventario
+          </div>
+          <h1 className="ig-header-title">Ingredientes</h1>
+          <p className="ig-header-sub">Administra el inventario de ingredientes por sucursal.</p>
         </div>
-        <Button
-          onClick={handleCreateIngredient}
-          className="bg-[#2D4F4F] text-white rounded-lg shadow-[0_10px_22px_rgba(45,79,79,0.3)] hover:shadow-[0_14px_30px_rgba(45,79,79,0.35)] transition-all duration-200"
-        >
+        <button onClick={handleCreateIngredient} className="ig-btn-new">
+          <i className="ti ti-plus" aria-hidden="true" />
           + Nuevo ingrediente
-        </Button>
+        </button>
       </div>
-
+ 
+      {/* STATS */}
+      <div className="ig-stats">
+        <div className="ig-stat ig-stat--gold">
+          <div className="ig-stat-top"><div className="ig-stat-icon"><i className="ti ti-carrot" aria-hidden="true" /></div></div>
+          <div className="ig-stat-label">Total ingredientes</div>
+          <div className="ig-stat-value">{totalIngredients}</div>
+        </div>
+        <div className="ig-stat ig-stat--green">
+          <div className="ig-stat-top"><div className="ig-stat-icon ig-stat-icon--g"><i className="ti ti-check" aria-hidden="true" /></div></div>
+          <div className="ig-stat-label">Stock suficiente</div>
+          <div className="ig-stat-value ig-stat-value--green">{totalIngredients - lowStock}</div>
+        </div>
+        <div className="ig-stat">
+          <div className="ig-stat-top"><div className="ig-stat-icon" style={{ background:'rgba(200,80,80,.10)', borderColor:'rgba(200,80,80,.2)' }}><i className="ti ti-alert-triangle" style={{ color:'var(--ig-red)' }} aria-hidden="true" /></div></div>
+          <div className="ig-stat-label">Stock bajo (&lt;5)</div>
+          <div className="ig-stat-value" style={{ color: lowStock > 0 ? 'var(--ig-red)' : 'var(--ig-text-primary)' }}>{lowStock}</div>
+        </div>
+        <div className="ig-stat ig-stat--blue">
+          <div className="ig-stat-top"><div className="ig-stat-icon ig-stat-icon--b"><i className="ti ti-building-store" aria-hidden="true" /></div></div>
+          <div className="ig-stat-label">Restaurantes</div>
+          <div className="ig-stat-value ig-stat-value--blue">{totalRestaurants || restaurantOptions.length}</div>
+        </div>
+      </div>
+ 
+      {/* FILTROS */}
       {!hideRestaurantFilter ? (
         <IngredientFilters searchTerm={searchTerm} onSearchChange={setSearchTerm} />
       ) : (
-        <div className="mb-6 rounded-xl border border-[#E8D4B8] bg-[#F5EFEA] px-5 py-4 shadow-sm">
-          <Typography variant="small" className="font-medium tracking-wide text-[#2D4F4F]">
+        <div className="ig-filters">
+          <div className="ig-filter-group ig-filter-group--wide">
+            <span className="ig-filter-label">Buscar por nombre</span>
+            <div className="ig-filter-wrap">
+              <i className="ti ti-search ig-filter-icon" aria-hidden="true" />
+              <input
+                type="text" value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por nombre..."
+                className="ig-filter-input"
+              />
+            </div>
+          </div>
+          <div className="ig-filter-locked">
+            <i className="ti ti-lock" aria-hidden="true" />
             Ingredientes restringidos al restaurante asignado
-          </Typography>
+          </div>
         </div>
       )}
-
-      <Card className="bg-[#FDFBF7] border border-[#E8D4B8] shadow-[0_16px_34px_rgba(26,26,26,0.08)] rounded-xl overflow-hidden">
-        <CardHeader floated={false} shadow={false} className="bg-transparent m-0 rounded-none border-b border-[#E8D4B8] px-5 py-4">
-          <Typography variant="h6" className="text-gray-800">
-            Lista de ingredientes
-          </Typography>
-        </CardHeader>
-        <CardBody className="px-0 py-0">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-[#1A1A1A]">
-              <thead>
-                <tr className="text-[#2D4F4F] uppercase tracking-wide text-xs">
-                  <th className="p-4 text-left font-semibold">Nombre</th>
-                  <th className="p-4 text-left font-semibold">Stock</th>
-                  <th className="p-4 text-left font-semibold">Unidad de medida</th>
-                  <th className="p-4 text-left font-semibold">Restaurante</th>
-                  <th className="p-4 text-left font-semibold">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredIngredients.length > 0 ? (
-                  filteredIngredients.map((ingredient) => (
-                    <tr key={ingredient._id} className="border-t border-[#E8D4B8] hover:bg-[#F5EFEA]/70 transition-colors duration-200">
-                      <td className="p-4">
-                        <Typography variant="small" className="font-semibold text-[#1A1A1A]">
-                          {ingredient.nombre}
-                        </Typography>
-                      </td>
-                      <td className="p-4 text-[#1A1A1A]">
-                        <Chip
-                          value={ingredient.stock ?? 0}
-                          className="inline-flex bg-[#2D4F4F] text-white"
-                        />
-                      </td>
-                      <td className="p-4 text-[#1A1A1A]">{ingredient.unidadMedida}</td>
-                      <td className="p-4 text-[#1A1A1A]">{getRestaurantName(ingredient.restaurantId, restaurantOptions)}</td>
-                      <td className="p-4">
-                        <div className="flex gap-2">
-                          <IconButton
-                            size="sm"
-                            onClick={() => handleEditIngredient(ingredient)}
-                            className="bg-[#2D4F4F] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
-                            title="Editar ingrediente"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                              <path d="M12 20h9" />
-                              <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
-                            </svg>
-                          </IconButton>
-                          <IconButton
-                            size="sm"
-                            onClick={() => handleRequestDeleteIngredient(ingredient)}
-                            className="bg-[#D97065] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
-                            title="Eliminar ingrediente"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                              <path d="M3 6h18" />
-                              <path d="M8 6V4h8v2" />
-                              <path d="M19 6l-1 14H6L5 6" />
-                              <path d="M10 11v6" />
-                              <path d="M14 11v6" />
-                            </svg>
-                          </IconButton>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="p-6 text-center text-[#2D4F4F]">
-                      {searchTerm.trim() ? 'No hay ingredientes que coincidan con la búsqueda.' : 'No hay ingredientes registrados para este filtro.'}
+ 
+      {/* TABLA */}
+      <div className="ig-section">
+        <div className="ig-section-header">
+          <span className="ig-section-title">Lista de ingredientes</span>
+          <span className="ig-section-badge">{filteredIngredients.length} registros</span>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="ig-table">
+            <thead>
+              <tr>
+                <th style={{ width: '28%' }}>Nombre</th>
+                <th style={{ width: '14%' }}>Stock</th>
+                <th style={{ width: '16%' }}>Unidad de medida</th>
+                <th style={{ width: '26%' }}>Restaurante</th>
+                <th style={{ width: '16%' }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredIngredients.length > 0 ? (
+                filteredIngredients.map((ingredient, idx) => (
+                  <tr key={ingredient._id} style={{ animationDelay: `${idx * 0.04}s` }}>
+                    <td className="ig-td-main">{ingredient.nombre}</td>
+                    <td>
+                      <span className={`ig-stock-chip${(ingredient.stock ?? 0) < 5 ? ' ig-stock-chip--low' : (ingredient.stock ?? 0) >= 20 ? ' ig-stock-chip--ok' : ''}`}>
+                        {ingredient.stock ?? 0}
+                      </span>
+                    </td>
+                    <td><span className="ig-unit-badge">{ingredient.unidadMedida}</span></td>
+                    <td>{getRestaurantName(ingredient.restaurantId, restaurantOptions)}</td>
+                    <td>
+                      <div className="ig-action-btns">
+                        <button className="ig-action-btn ig-action-btn--edit" onClick={() => handleEditIngredient(ingredient)} title="Editar ingrediente" aria-label="Editar">
+                          <i className="ti ti-edit" aria-hidden="true" />
+                        </button>
+                        <button className="ig-action-btn ig-action-btn--del" onClick={() => handleRequestDelete(ingredient)} title="Eliminar ingrediente" aria-label="Eliminar">
+                          <i className="ti ti-trash" aria-hidden="true" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardBody>
-      </Card>
-
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="ig-empty">
+                    <i className="ti ti-basket-off" aria-hidden="true" />
+                    {searchTerm.trim() ? 'No hay ingredientes que coincidan con la búsqueda.' : 'No hay ingredientes registrados para este filtro.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+ 
+      {/* MODAL */}
       <IngredientModal
         open={isModalOpen}
         onClose={handleCloseModal}
         ingredient={selectedIngredient}
         lockedRestaurantId={lockedRestaurantId}
       />
-
+ 
+      {/* CONFIRM DELETE DIALOG */}
       {ingredientToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl border border-[#E8D4B8] bg-[#FDFBF7] p-6 shadow-2xl">
-            <Typography variant="h5" className="text-gray-800">
-              Confirmar eliminación
-            </Typography>
-            <Typography variant="small" className="mt-2 text-[#2D4F4F]">
-              ¿Estás seguro de que deseas eliminar este ingrediente?
-            </Typography>
-            <div className="mt-6 flex justify-end gap-2">
-              <Button
-                variant="text"
-                onClick={handleCloseDeleteDialog}
-                className="rounded-md text-[#2D4F4F] transition-colors duration-200 hover:bg-[#F5EFEA]"
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleConfirmDeleteIngredient}
-                disabled={loading}
-                className="rounded-md bg-[#D97065] text-white shadow-md transition-all duration-200 hover:shadow-lg"
-              >
+        <div className="ig-confirm-overlay">
+          <div className="ig-confirm-box">
+            <div className="ig-confirm-icon"><i className="ti ti-trash" aria-hidden="true" /></div>
+            <h4 className="ig-confirm-title">Confirmar eliminación</h4>
+            <p className="ig-confirm-msg">
+              ¿Estás seguro de que deseas eliminar <strong style={{ color: 'var(--ig-text-primary)' }}>{ingredientToDelete.nombre}</strong>? Esta acción no se puede deshacer.
+            </p>
+            <div className="ig-confirm-actions">
+              <button onClick={handleCloseDeleteDialog} className="ig-confirm-cancel">Cancelar</button>
+              <button onClick={handleConfirmDelete} disabled={loading} className="ig-confirm-delete">
+                <i className="ti ti-trash" aria-hidden="true" />
                 {loading ? 'Eliminando...' : 'Eliminar'}
-              </Button>
+              </button>
             </div>
           </div>
         </div>
       )}
+ 
     </div>
   );
 };
+ 

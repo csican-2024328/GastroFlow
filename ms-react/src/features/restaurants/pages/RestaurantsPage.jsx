@@ -2,180 +2,171 @@ import { useEffect, useState, useRef } from 'react';
 import { useRestaurantStore } from '../store/useRestaurantStore.js';
 import { RestaurantModal } from '../components/RestaurantModal.jsx';
 import { notyfSuccess, notyfError } from '../../../shared/utils/notyf.js';
-
+import '../../../styles/restaurant.css';
+ 
 export const RestaurantsPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen]           = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const componentMountedRef = useRef(false);
-
-  const restaurants = useRestaurantStore((s) => s.restaurants);
-  const loading = useRestaurantStore((s) => s.loading);
-  const pagination = useRestaurantStore((s) => s.pagination);
-  const fetchRestaurants = useRestaurantStore((s) => s.fetchRestaurants);
+  const [currentPage, setCurrentPage]           = useState(1);
+  const componentMountedRef                     = useRef(false);
+ 
+  const restaurants         = useRestaurantStore((s) => s.restaurants);
+  const loading             = useRestaurantStore((s) => s.loading);
+  const pagination          = useRestaurantStore((s) => s.pagination);
+  const fetchRestaurants    = useRestaurantStore((s) => s.fetchRestaurants);
   const deleteRestaurantAction = useRestaurantStore((s) => s.deleteRestaurantAction);
-
-  // Refresca cada vez que el componente se monta
+ 
+  /* ── Effects — INTACTOS ── */
   useEffect(() => {
     console.log('🔄 [RESTAURANTES PAGE] Componente montado, refrescando datos...');
     fetchRestaurants(1, 10);
     componentMountedRef.current = true;
-    
-    return () => {
-      console.log('👋 [RESTAURANTES PAGE] Componente desmontado');
-    };
+    return () => { console.log('👋 [RESTAURANTES PAGE] Componente desmontado'); };
   }, []);
-
-  // Load restaurants cuando cambia la página
+ 
   useEffect(() => {
     if (componentMountedRef.current) {
       console.log('📄 [RESTAURANTES PAGE] Página cambiada a:', currentPage);
       fetchRestaurants(currentPage, 10);
     }
   }, [currentPage, fetchRestaurants]);
-
-  const handleCreateRestaurant = () => {
-    setSelectedRestaurant(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditRestaurant = (restaurant) => {
-    setSelectedRestaurant(restaurant);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedRestaurant(null);
-  };
-
+ 
+  /* ── Handlers — INTACTOS ── */
+  const handleCreateRestaurant  = () => { setSelectedRestaurant(null); setIsModalOpen(true); };
+  const handleEditRestaurant    = (r) => { setSelectedRestaurant(r); setIsModalOpen(true); };
+  const handleCloseModal        = () => { setIsModalOpen(false); setSelectedRestaurant(null); };
+ 
   const handleDeleteRestaurant = async (id) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este restaurante?')) {
-      return;
-    }
-
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este restaurante?')) return;
     const result = await deleteRestaurantAction(id);
-    if (result.success) {
-      notyfSuccess('Restaurante eliminado correctamente');
-    } else {
-      notyfError(result.error || 'Error al eliminar restaurante');
-    }
+    if (result.success) notyfSuccess('Restaurante eliminado correctamente');
+    else notyfError(result.error || 'Error al eliminar restaurante');
   };
-
+ 
+  /* ── Loading ── */
   if (loading && restaurants.length === 0) {
     return (
-      <div className="p-6">
-        <p className="text-[#2D4F4F]">Cargando restaurantes...</p>
+      <div className="rp-loading">
+        <div className="rp-loading-spinner" />
+        Cargando restaurantes...
       </div>
     );
   }
-
+ 
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
-        <h1 className="text-3xl font-bold text-gray-800">Restaurantes</h1>
-        <button
-          onClick={handleCreateRestaurant}
-          className="px-4 py-2 rounded-lg bg-[#2D4F4F] text-white font-medium shadow-[0_10px_22px_rgba(45,79,79,0.3)] hover:shadow-[0_14px_30px_rgba(45,79,79,0.35)] transition-all duration-200"
-        >
+    <div className="rp-root">
+ 
+      {/* HEADER */}
+      <div className="rp-header">
+        <div>
+          <div className="rp-header-badge">
+            <i className="ti ti-building-store" aria-hidden="true" />
+            Gestión de restaurantes
+          </div>
+          <h1 className="rp-header-title">Restaurantes</h1>
+          <p className="rp-header-sub">Administra todos los locales de la plataforma.</p>
+        </div>
+        <button onClick={handleCreateRestaurant} className="rp-btn-new">
+          <i className="ti ti-plus" aria-hidden="true" />
           + Nuevo Restaurante
         </button>
       </div>
-
-      {/* Grid de restaurantes */}
+ 
+      {/* GRID DE CARDS */}
       {restaurants.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {restaurants.map((restaurant) => (
+        <div className="rp-grid">
+          {restaurants.map((restaurant, idx) => (
             <div
               key={restaurant._id}
-              className="bg-[#FDFBF7] border border-[#E8D4B8] rounded-xl overflow-hidden hover:border-[#2D4F4F] hover:-translate-y-[2px] transition-all duration-200 shadow-[0_12px_28px_rgba(26,26,26,0.08)]"
+              className="rp-card"
+              style={{ animationDelay: `${idx * 0.05}s` }}
             >
-              {/* Imagen del restaurante */}
-              <div className="relative h-40 bg-[#F5EFEA] overflow-hidden border-b border-[#E8D4B8]/60">
+              {/* Imagen */}
+              <div className="rp-card-img">
                 {restaurant.photos && restaurant.photos.length > 0 ? (
-                  <img
-                    src={restaurant.photos[0]}
-                    alt={restaurant.name}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={restaurant.photos[0]} alt={restaurant.name} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[#2D4F4F]">
+                  <div className="rp-card-no-img">
+                    <i className="ti ti-photo-off" aria-hidden="true" />
                     Sin imagen
                   </div>
                 )}
-                {/* Badge de estado */}
-                <div className="absolute top-2 right-2">
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-semibold ${
-                      restaurant.isActive
-                        ? 'bg-[#2D4F4F] text-white'
-                        : 'bg-[#D97065] text-white'
-                    }`}
-                  >
-                    {restaurant.isActive ? 'Activo' : 'Inactivo'}
-                  </span>
-                </div>
+                <span className={`rp-status-badge ${restaurant.isActive ? 'rp-status-badge--active' : 'rp-status-badge--inactive'}`}>
+                  <i className={`ti ${restaurant.isActive ? 'ti-check' : 'ti-x'}`} aria-hidden="true" />
+                  {restaurant.isActive ? 'Activo' : 'Inactivo'}
+                </span>
               </div>
-
-              {/* Contenido */}
-              <div className="p-4 bg-[#FDFBF7]">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                  {restaurant.name}
-                </h3>
-
-                <div className="space-y-1 text-sm text-[#2D4F4F] mb-4">
-                  <p>
-                    <span className="font-semibold">Dirección:</span> {restaurant.address}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Ciudad:</span> {restaurant.city}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Teléfono:</span> {restaurant.phone}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Email:</span> {restaurant.email}
-                  </p>
+ 
+              {/* Cuerpo */}
+              <div className="rp-card-body">
+                <h3 className="rp-card-name">{restaurant.name}</h3>
+ 
+                {/* Pills */}
+                <div className="rp-pills">
                   {restaurant.category && (
-                    <p>
-                      <span className="font-semibold">Categoría:</span> {restaurant.category}
-                    </p>
+                    <span className="rp-pill">
+                      <i className="ti ti-tools-kitchen-2" aria-hidden="true" />
+                      {restaurant.category}
+                    </span>
                   )}
                   {restaurant.openingHours && (
-                    <p>
-                      <span className="font-semibold">Horario:</span> {restaurant.openingHours}
-                    </p>
-                  )}
-                  {restaurant.aforoMaximo && (
-                    <p>
-                      <span className="font-semibold">Aforo máximo:</span> {restaurant.aforoMaximo}
-                    </p>
+                    <span className="rp-pill">
+                      <i className="ti ti-clock" aria-hidden="true" />
+                      {restaurant.openingHours}
+                    </span>
                   )}
                   {restaurant.averagePrice && (
-                    <p>
-                      <span className="font-semibold">Precio promedio:</span> Q{restaurant.averagePrice.toFixed(2)}
-                    </p>
+                    <span className="rp-pill">
+                      <i className="ti ti-currency-dollar" aria-hidden="true" />
+                      Q{restaurant.averagePrice.toFixed(2)}
+                    </span>
                   )}
                 </div>
-
+ 
+                {/* Info */}
+                <div className="rp-card-info">
+                  <div className="rp-info-row">
+                    <i className="ti ti-map-pin" aria-hidden="true" />
+                    <span className="rp-info-label">Dirección</span>
+                    <span>{restaurant.address}</span>
+                  </div>
+                  <div className="rp-info-row">
+                    <i className="ti ti-building" aria-hidden="true" />
+                    <span className="rp-info-label">Ciudad</span>
+                    <span>{restaurant.city}</span>
+                  </div>
+                  <div className="rp-info-row">
+                    <i className="ti ti-phone" aria-hidden="true" />
+                    <span className="rp-info-label">Teléfono</span>
+                    <span>{restaurant.phone}</span>
+                  </div>
+                  <div className="rp-info-row">
+                    <i className="ti ti-mail" aria-hidden="true" />
+                    <span className="rp-info-label">Email</span>
+                    <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{restaurant.email}</span>
+                  </div>
+                  {restaurant.aforoMaximo && (
+                    <div className="rp-info-row">
+                      <i className="ti ti-users" aria-hidden="true" />
+                      <span className="rp-info-label">Aforo máx.</span>
+                      <span>{restaurant.aforoMaximo}</span>
+                    </div>
+                  )}
+                </div>
+ 
+                {/* Descripción */}
                 {restaurant.description && (
-                  <p className="text-xs text-gray-600 mb-4 line-clamp-2">
-                    {restaurant.description}
-                  </p>
+                  <p className="rp-card-desc">{restaurant.description}</p>
                 )}
-
+ 
                 {/* Acciones */}
-                <div className="flex gap-2 flex-wrap">
-                  <button
-                    onClick={() => handleEditRestaurant(restaurant)}
-                    className="flex-1 px-3 py-2 rounded-md bg-[#2D4F4F] text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
-                  >
+                <div className="rp-card-actions">
+                  <button onClick={() => handleEditRestaurant(restaurant)} className="rp-card-btn rp-card-btn--edit">
+                    <i className="ti ti-edit" aria-hidden="true" />
                     Editar
                   </button>
-                  <button
-                    onClick={() => handleDeleteRestaurant(restaurant._id)}
-                    className="flex-1 px-3 py-2 rounded-md bg-[#D97065] text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
-                  >
+                  <button onClick={() => handleDeleteRestaurant(restaurant._id)} className="rp-card-btn rp-card-btn--delete">
+                    <i className="ti ti-trash" aria-hidden="true" />
                     Eliminar
                   </button>
                 </div>
@@ -184,42 +175,34 @@ export const RestaurantsPage = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">
-          <p className="text-[#2D4F4F] text-lg mb-4">No hay restaurantes registrados</p>
-          <button
-            onClick={handleCreateRestaurant}
-            className="px-4 py-2 rounded-md bg-[#2D4F4F] text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
-          >
+        <div className="rp-empty">
+          <i className="ti ti-building-store" aria-hidden="true" />
+          <p className="rp-empty-title">No hay restaurantes registrados</p>
+          <button onClick={handleCreateRestaurant} className="rp-btn-empty">
+            <i className="ti ti-plus" aria-hidden="true" />
             Crear primer restaurante
           </button>
         </div>
       )}
-
-      {/* Paginación */}
+ 
+      {/* PAGINACIÓN */}
       {pagination.totalPages > 1 && (
-        <div className="mt-6 flex justify-center gap-2">
+        <div className="rp-pagination">
           {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
-              className={`px-3 py-2 rounded ${
-                currentPage === page
-                  ? 'bg-[#2D4F4F] text-white shadow-md'
-                  : 'bg-[#FDFBF7] border border-[#E8D4B8] text-[#2D4F4F] hover:bg-[#F5EFEA] transition-colors duration-200'
-              }`}
+              className={`rp-page-btn${page === currentPage ? ' rp-page-btn--active' : ''}`}
             >
               {page}
             </button>
           ))}
         </div>
       )}
-
-      {/* Modal */}
-      <RestaurantModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        restaurant={selectedRestaurant}
-      />
+ 
+      {/* MODAL */}
+      <RestaurantModal isOpen={isModalOpen} onClose={handleCloseModal} restaurant={selectedRestaurant} />
     </div>
   );
 };
+ 

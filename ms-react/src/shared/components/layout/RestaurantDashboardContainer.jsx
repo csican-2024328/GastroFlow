@@ -5,7 +5,7 @@ import { useRestaurantScope } from '../../hooks/useRestaurantScope.js';
 import { NoRestaurantAssigned } from './NoRestaurantAssigned.jsx';
 import { RestaurantNavbar } from './RestaurantNavbar.jsx';
 import { RestaurantSidebar } from './RestaurantSidebar.jsx';
-import { LiveAdminDashboard } from './LiveAdminDashboard.jsx';
+import { RestaurantDashboardOverview } from './RestaurantDashboardOverview.jsx';
 import { useTableStore } from '../../../features/tables/store/useTableStore.js';
 import { useIngredientStore } from '../../../features/ingredients/store/useIngredientStore.js';
 import { useDishStore } from '../../../features/dishes/store/useDishStore.js';
@@ -47,6 +47,7 @@ export const RestaurantDashboardContainer = () => {
   }
 
   const showDashboardHome = location.pathname === '/restaurant-dashboard' || location.pathname === '/restaurant-dashboard/';
+  const isMenusRoute = location.pathname.startsWith('/restaurant-dashboard/menus');
 
   return (
     <div className="min-h-screen bg-[#0b0a08] flex flex-col text-[#f5ede0]">
@@ -54,9 +55,9 @@ export const RestaurantDashboardContainer = () => {
       <div className="flex flex-1 overflow-hidden">
         <RestaurantSidebar />
 
-        <main className={`flex-1 overflow-y-auto ${showDashboardHome ? 'p-0' : 'p-6 bg-[#F8F5F0] text-[#1A1A1A]'}`}>
+        <main className={`flex-1 overflow-y-auto ${showDashboardHome || isMenusRoute ? 'p-0 bg-[#0a0a08] text-[#f5ede0]' : 'p-6 bg-[#F8F5F0] text-[#1A1A1A]'}`}>
           {showDashboardHome ? (
-            <LiveAdminDashboard restaurantId={restaurantId} />
+            <RestaurantDashboardOverview />
           ) : (
             <Outlet />
           )}
