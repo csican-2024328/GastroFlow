@@ -1492,11 +1492,11 @@ export const payOrder = async (req, res) => {
             });
         }
 
-        // Solo se puede pagar pedidos en estado LISTO o ENTREGADO
-        if (!['LISTO', 'ENTREGADO'].includes(order.estado)) {
+        // Solo se puede pagar pedidos en estado LISTO, ENTREGADO o ENTREGADO_AL_REPARTIDOR
+        if (!['LISTO', 'ENTREGADO', 'ENTREGADO_AL_REPARTIDOR'].includes(order.estado)) {
             return res.status(400).json({
                 success: false,
-                message: `Pedido debe estar en estado LISTO o ENTREGADO para ser pagado. Estado actual: ${order.estado}`
+                message: `Pedido debe estar en estado LISTO, ENTREGADO o ENTREGADO_AL_REPARTIDOR para ser pagado. Estado actual: ${order.estado}`
             });
         }
 

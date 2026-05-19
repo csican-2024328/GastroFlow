@@ -179,7 +179,7 @@ export const ClientOrderTrackingPage = () => {
     return 2;
   }, [order]);
 
-  const canPay = order?.estado === 'LISTO' && order?.metodoPago === 'PENDIENTE';
+  const canPay = (['LISTO', 'ENTREGADO_AL_REPARTIDOR', 'ENTREGADO'].includes(order?.estado)) && order?.metodoPago === 'PENDIENTE';
 
   const handlePay = async (payload) => {
     const result = await payOrderAction(orderId, payload);
