@@ -7,6 +7,7 @@ export const validateCreateCoupon = [
     .notEmpty()
     .withMessage('El código del cupón es requerido')
     .trim()
+    .toUpperCase()
     .isLength({ min: 3, max: 20 })
     .withMessage('El código debe tener entre 3 y 20 caracteres')
     .matches(/^[A-Z0-9-]+$/)
