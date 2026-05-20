@@ -1,167 +1,110 @@
 import { useEffect } from 'react';
 import { useReviewStore } from '../store/useReviewStore.js';
 import { notyfSuccess, notyfError } from '../../../shared/utils/notyf.js';
-
-const StarRating = ({ rating }) => {
-  return (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <svg
-          key={star}
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill={star <= rating ? '#2D4F4F' : 'none'}
-          stroke="#2D4F4F"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polygon points="12 2 15.09 10.26 24 10.35 17.77 16.88 20.16 25.54 12 20.01 3.84 25.54 6.23 16.88 0 10.35 8.91 10.26 12 2"></polygon>
-        </svg>
-      ))}
-    </div>
-  );
-};
-
+import '../../../styles/reviews.css';
+ 
+const STAR_PATH = "M12 2 15.09 10.26 24 10.35 17.77 16.88 20.16 25.54 12 20.01 3.84 25.54 6.23 16.88 0 10.35 8.91 10.26 12 2";
+ 
+const StarRating = ({ rating, size=13 }) => (
+  <div className="rw-stars">
+    {[1,2,3,4,5].map(s => (
+      <span key={s} className="rw-star">
+        <svg width={size} height={size} viewBox="0 0 24 24"
+          fill={s<=rating?'var(--rw-star)':'var(--rw-star-empty)'}
+          stroke={s<=rating?'var(--rw-star)':'rgba(200,140,40,.3)'}
+          strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+        ><polygon points={STAR_PATH} /></svg>
+      </span>
+    ))}
+    <span className="rw-star-label">{rating}/5</span>
+  </div>
+);
+ 
 export const ReviewsAdminTable = ({ restaurantID = null, platoID = null, showRestaurant = false }) => {
-  const reviews = useReviewStore((s) => s.reviews);
-  const loading = useReviewStore((s) => s.loading);
+  const reviews       = useReviewStore((s) => s.reviews);
+  const loading       = useReviewStore((s) => s.loading);
   const averageRating = useReviewStore((s) => s.averageRating);
-  const fetchReviews = useReviewStore((s) => s.fetchReviews);
-  const deleteReview = useReviewStore((s) => s.deleteReview);
-
-  useEffect(() => {
-    fetchReviews(restaurantID, platoID);
-  }, [restaurantID, platoID, fetchReviews]);
-
+  const fetchReviews  = useReviewStore((s) => s.fetchReviews);
+  const deleteReview  = useReviewStore((s) => s.deleteReview);
+ 
+  useEffect(() => { fetchReviews(restaurantID, platoID); }, [restaurantID, platoID, fetchReviews]);
+ 
   const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar esta reseña? Esta acción no se puede deshacer.')) {
-      return;
-    }
-
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta reseña? Esta acción no se puede deshacer.')) return;
     const result = await deleteReview(reviewId);
-
-    if (result.success) {
-      notyfSuccess('Reseña eliminada correctamente');
-    } else {
-      notyfError(result.error);
-    }
+    if (result.success) notyfSuccess('Reseña eliminada correctamente');
+    else notyfError(result.error);
   };
-
+ 
   if (loading && reviews.length === 0) {
-    return (
-      <div className="p-6">
-        <p className="text-[#2D4F4F]">Cargando reseñas...</p>
-      </div>
-    );
+    return <div className="rw-loading"><div className="rw-spinner" />Cargando reseñas...</div>;
   }
-
+ 
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
-        <h1 className="text-3xl font-bold text-gray-800">Gestión de Reseñas</h1>
-        <div className="flex items-center gap-4">
-          <div className="bg-[#FDFBF7] border border-[#E8D4B8] rounded-lg px-4 py-3">
-            <p className="text-sm text-gray-600">Calificación Promedio</p>
-            <p className="text-2xl font-bold text-[#2D4F4F]">
-              {averageRating.toFixed(1)} <span className="text-lg">/ 5.0</span>
-            </p>
+    <div className="rw-root">
+ 
+      {/* Header */}
+      <div className="rw-header">
+        <div>
+          <div className="rw-header-badge"><i className="ti ti-star" aria-hidden="true" />Gestión de reseñas</div>
+          <h1 className="rw-header-title">Gestión de Reseñas</h1>
+        </div>
+        <div className="rw-header-stats">
+          <div className="rw-stat">
+            <div className="rw-stat-label">Calificación Promedio</div>
+            <div className="rw-stat-value">{averageRating.toFixed(1)} <span style={{fontSize:13,color:'var(--rw-text-tertiary)'}}>/ 5.0</span></div>
           </div>
-          <div className="bg-[#FDFBF7] border border-[#E8D4B8] rounded-lg px-4 py-3">
-            <p className="text-sm text-gray-600">Total de Reseñas</p>
-            <p className="text-2xl font-bold text-[#2D4F4F]">{reviews.length}</p>
+          <div className="rw-stat">
+            <div className="rw-stat-label">Total de Reseñas</div>
+            <div className="rw-stat-value">{reviews.length}</div>
           </div>
         </div>
       </div>
-
+ 
+      {/* Tabla */}
       {reviews.length > 0 ? (
-        <div className="overflow-x-auto shadow-md rounded-lg border border-[#E8D4B8]">
-          <table className="w-full bg-white">
-            <thead className="bg-[#2D4F4F] text-white">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Usuario</th>
-                {showRestaurant && <th className="px-4 py-3 text-left text-sm font-semibold">Restaurante</th>}
-                <th className="px-4 py-3 text-left text-sm font-semibold">Calificación</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Comentario</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Fecha</th>
-                <th className="px-4 py-3 text-center text-sm font-semibold">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reviews.map((review, index) => (
-                <tr
-                  key={review._id}
-                  className={`border-t border-[#E8D4B8] hover:bg-[#FDFBF7] transition-colors duration-200 ${
-                    index % 2 === 0 ? 'bg-white' : 'bg-[#FDFBF7]/50'
-                  }`}
-                >
-                  <td className="px-4 py-3 text-sm text-[#2D4F4F]">
-                    <div>
-                      <p className="font-medium">
-                        {review.userID?.full_name || review.userID || 'Usuario desconocido'}
-                      </p>
-                      {review.userID?.email && (
-                        <p className="text-xs text-gray-600">{review.userID.email}</p>
-                      )}
-                    </div>
-                  </td>
-                  {showRestaurant && (
-                    <td className="px-4 py-3 text-sm text-[#2D4F4F] font-medium">
-                      {review.restaurantID?.name || 'Desconocido'}
-                    </td>
-                  )}
-                  <td className="px-4 py-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      <StarRating rating={review.rating} />
-                      <span className="font-semibold text-[#2D4F4F]">{review.rating}/5</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-[#2D4F4F] max-w-xs truncate">
-                    {review.comment}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {new Date(review.createdAt).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'numeric',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => handleDeleteReview(review._id)}
-                      className="inline-flex items-center gap-2 px-3 py-1 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors duration-200 font-medium"
-                      title="Eliminar reseña"
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                      </svg>
-                      Eliminar
-                    </button>
-                  </td>
+        <div className="rw-section">
+          <div style={{overflowX:'auto'}}>
+            <table className="rw-table">
+              <thead>
+                <tr>
+                  <th style={{width:'18%'}}>Usuario</th>
+                  {showRestaurant && <th style={{width:'14%'}}>Restaurante</th>}
+                  <th style={{width:'16%'}}>Calificación</th>
+                  <th style={{width:'28%'}}>Comentario</th>
+                  <th style={{width:'14%'}}>Fecha</th>
+                  <th style={{width:'10%'}} className="center">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {reviews.map((review, idx) => (
+                  <tr key={review._id} style={{animationDelay:`${idx*.03}s`}}>
+                    <td>
+                      <div className="rw-td-main">{review.userID?.full_name||review.userID||'Usuario desconocido'}</div>
+                      {review.userID?.email && <div className="rw-td-sub">{review.userID.email}</div>}
+                    </td>
+                    {showRestaurant && <td className="rw-td-main">{review.restaurantID?.name||'Desconocido'}</td>}
+                    <td><StarRating rating={review.rating} /></td>
+                    <td className="rw-td-comment">{review.comment}</td>
+                    <td style={{fontSize:11,color:'rgba(245,237,224,.3)'}}>
+                      {new Date(review.createdAt).toLocaleString('es-ES',{year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+                    </td>
+                    <td className="rw-td-center">
+                      <button onClick={() => handleDeleteReview(review._id)} className="rw-del-btn" title="Eliminar reseña">
+                        <i className="ti ti-trash" aria-hidden="true" />Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
-        <div className="bg-[#FDFBF7] border border-[#E8D4B8] rounded-lg p-8 text-center">
-          <p className="text-gray-600 font-medium">No hay reseñas para mostrar</p>
-          <p className="text-sm text-gray-500 mt-2">Las reseñas aparecerán aquí cuando los clientes las creen</p>
+        <div className="rw-empty">
+          <i className="ti ti-message-off" aria-hidden="true" />
+          <div className="rw-empty-title">No hay reseñas para mostrar</div>
+          <div className="rw-empty-sub">Las reseñas aparecerán aquí cuando los clientes las creen</div>
         </div>
       )}
     </div>

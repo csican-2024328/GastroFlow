@@ -26,7 +26,7 @@ const getSocketUrl = () => {
 };
  
 const formatCurrency = (value) =>
-  new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 }).format(Number(value || 0));
+  new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ', maximumFractionDigits: 2 }).format(Number(value || 0));
  
 const formatDate = (value) => {
   if (!value) return '-';

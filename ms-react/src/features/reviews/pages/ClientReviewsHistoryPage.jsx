@@ -39,23 +39,23 @@ const ClientReviewsHistoryPage = () => {
   }, [userID, fetchReviews]);
 
   return (
-    <div className="min-h-screen bg-[#F8F5F0] text-[#1A1A1A] fade-in">
-      <header className="border-b border-[#E2D4B7] bg-[#F8F5F0]">
+    <div className="min-h-screen bg-[#0b0a08] text-[#f5ede0] fade-in">
+      <header className="border-b border-[#2f2218] bg-[#111009]">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
           <div>
-            <h1 className="font-['Playfair_Display'] text-3xl font-bold text-[#1A1A1A]">Mis Reseñas</h1>
-            <p className="text-sm text-[#5A5146]">{user?.name}, aquí ves tu historial de reseñas</p>
+            <h1 className="font-['Playfair_Display'] text-3xl font-bold text-[#f5ede0]">Mis Reseñas</h1>
+            <p className="text-sm text-[#b8a48a]">{user?.name}, aquí ves tu historial de reseñas</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/cliente')}
-              className="rounded-full border border-[#2C4035] bg-white px-4 py-2 text-sm font-semibold text-[#2C4035] hover:bg-[#E2D4B7]"
+              className="rounded-full border border-[#2f2218] bg-[#0e0d0a] px-4 py-2 text-sm font-semibold text-[#f5ede0] hover:bg-[#1a1a14]"
             >
               ← Menu Principal
             </button>
             <button
               onClick={() => navigate('/cliente/pedidos/mis')}
-              className="rounded-full border border-[#C49A2B] bg-white px-4 py-2 text-sm font-semibold text-[#3D2C1E] hover:bg-[#E2D4B7]"
+              className="rounded-full border border-[#c88c28] bg-gradient-to-r from-[#c88c28] to-[#9a6a18] px-4 py-2 text-sm font-semibold text-[#0a0a08] hover:opacity-90"
             >
               Ver mis pedidos
             </button>
@@ -65,55 +65,55 @@ const ClientReviewsHistoryPage = () => {
 
       <main className="mx-auto w-full max-w-6xl px-6 py-8">
         {!userID ? (
-          <div className="rounded-2xl border border-[#E2D4B7] bg-white p-10 text-center">
-            <p className="font-semibold text-[#3D2C1E]">No se pudo identificar tu usuario</p>
+          <div className="rounded-2xl border border-[#2f2218] bg-[#111009] p-10 text-center shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+            <p className="font-semibold text-[#f5ede0]">No se pudo identificar tu usuario</p>
           </div>
         ) : loading && reviews.length === 0 ? (
-          <div className="py-14 text-center text-[#5A5146]">Cargando reseñas...</div>
+          <div className="py-14 text-center text-[#b8a48a]">Cargando reseñas...</div>
         ) : reviews.length === 0 ? (
-          <div className="rounded-2xl border border-[#E2D4B7] bg-white p-10 text-center">
-            <p className="font-semibold text-[#3D2C1E]">Aún no has dejado reseñas</p>
+          <div className="rounded-2xl border border-[#2f2218] bg-[#111009] p-10 text-center shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+            <p className="font-semibold text-[#f5ede0]">Aún no has dejado reseñas</p>
             <button
               onClick={() => navigate('/cliente/pedidos/mis')}
-              className="mt-4 rounded-xl bg-gradient-to-r from-[#C49A2B] to-[#E8B84B] px-4 py-2 font-bold text-white"
+              className="mt-4 rounded-xl bg-gradient-to-r from-[#c88c28] to-[#9a6a18] px-4 py-2 font-bold text-[#0a0a08]"
             >
               Ir a mis pedidos
             </button>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-2xl border border-[#E2D4B7] bg-white p-5 shadow-[0_8px_20px_rgba(61,44,30,0.08)]">
-              <p className="text-sm text-[#5A5146]">Promedio de tus reseñas</p>
+            <div className="rounded-2xl border border-[#2f2218] bg-[#111009] p-5 shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+              <p className="text-sm text-[#b8a48a]">Promedio de tus reseñas</p>
               <div className="mt-2 flex items-center gap-3">
-                <span className="text-3xl font-bold text-[#2D4F4F]">{averageRating.toFixed(1)}</span>
+                <span className="text-3xl font-bold text-[#c88c28]">{averageRating.toFixed(1)}</span>
                 <StarRating rating={Math.round(averageRating)} />
-                <span className="text-sm text-[#5A5146]">{reviews.length} reseñas</span>
+                <span className="text-sm text-[#b8a48a]">{reviews.length} reseñas</span>
               </div>
             </div>
 
             {reviews.map((review) => (
               <article
                 key={review._id}
-                className="rounded-2xl border border-[#E2D4B7] bg-white p-6 shadow-[0_8px_20px_rgba(61,44,30,0.08)]"
+                className="rounded-2xl border border-[#2f2218] bg-[#111009] p-6 shadow-[0_10px_24px_rgba(0,0,0,0.28)]"
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <StarRating rating={review.rating} />
-                      <span className="font-semibold text-[#2D4F4F]">{review.rating}/5</span>
+                      <span className="font-semibold text-[#c88c28]">{review.rating}/5</span>
                     </div>
-                    <p className="text-sm text-[#5A5146]">
-                      Restaurante: <span className="font-semibold text-[#3D2C1E]">{review.restaurantID?.name || 'No disponible'}</span>
+                    <p className="text-sm text-[#b8a48a]">
+                      Restaurante: <span className="font-semibold text-[#f5ede0]">{review.restaurantID?.name || 'No disponible'}</span>
                     </p>
                     {review.platoID?.nombre && (
-                      <p className="text-sm text-[#5A5146]">
-                        Plato: <span className="font-semibold text-[#3D2C1E]">{review.platoID.nombre}</span>
+                      <p className="text-sm text-[#b8a48a]">
+                        Plato: <span className="font-semibold text-[#f5ede0]">{review.platoID.nombre}</span>
                       </p>
                     )}
-                    <p className="text-sm text-[#3D2C1E] leading-relaxed">{review.comment}</p>
+                    <p className="text-sm text-[#f5ede0] leading-relaxed">{review.comment}</p>
                   </div>
 
-                  <div className="text-sm text-[#5A5146] md:text-right">
+                  <div className="text-sm text-[#b8a48a] md:text-right">
                     {review.createdAt && (
                       <p>
                         {new Date(review.createdAt).toLocaleDateString('es-ES', {

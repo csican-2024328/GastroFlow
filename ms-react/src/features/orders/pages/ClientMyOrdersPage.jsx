@@ -40,23 +40,23 @@ export const ClientMyOrdersPage = () => {
   }, [orders]);
 
   return (
-    <div className="min-h-screen bg-[#F8F5F0] text-[#1A1A1A] fade-in">
-      <header className="border-b border-[#E2D4B7] bg-[#F8F5F0]">
+    <div className="min-h-screen bg-[#0b0a08] text-[#f5ede0] fade-in">
+      <header className="border-b border-[#2f2218] bg-[#111009]">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
           <div>
-            <h1 className="font-['Playfair_Display'] text-3xl font-bold text-[#1A1A1A]">Mis Pedidos</h1>
-            <p className="text-sm text-[#5A5146]">{user?.name}, sigue el estado de tus pedidos</p>
+            <h1 className="font-['Playfair_Display'] text-3xl font-bold text-[#f5ede0]">Mis Pedidos</h1>
+            <p className="text-sm text-[#b8a48a]">{user?.name}, sigue el estado de tus pedidos</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/cliente')}
-              className="rounded-full border border-[#2C4035] bg-white px-4 py-2 text-sm font-semibold text-[#2C4035] hover:bg-[#E2D4B7]"
+              className="rounded-full border border-[#2f2218] bg-[#0e0d0a] px-4 py-2 text-sm font-semibold text-[#f5ede0] hover:bg-[#1a1a14]"
             >
               ← Menu Principal
             </button>
             <button
               onClick={() => navigate('/cliente/pedidos/hacer')}
-              className="rounded-full border border-[#C49A2B] bg-white px-4 py-2 text-sm font-semibold text-[#3D2C1E] hover:bg-[#E2D4B7]"
+              className="rounded-full border border-[#c88c28] bg-gradient-to-r from-[#c88c28] to-[#9a6a18] px-4 py-2 text-sm font-semibold text-[#0a0a08] hover:opacity-90"
             >
               Hacer un Pedido
             </button>
@@ -66,13 +66,13 @@ export const ClientMyOrdersPage = () => {
 
       <main className="mx-auto w-full max-w-6xl px-6 py-8">
         {ordersLoading ? (
-          <div className="py-14 text-center text-[#5A5146]">Cargando pedidos...</div>
+          <div className="py-14 text-center text-[#b8a48a]">Cargando pedidos...</div>
         ) : orders.length === 0 ? (
-          <div className="rounded-2xl border border-[#E2D4B7] bg-white p-10 text-center">
-            <p className="font-semibold text-[#3D2C1E]">Aun no tienes pedidos</p>
+          <div className="rounded-2xl border border-[#2f2218] bg-[#111009] p-10 text-center shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+            <p className="font-semibold text-[#f5ede0]">Aun no tienes pedidos</p>
             <button
               onClick={() => navigate('/cliente/pedidos/hacer')}
-              className="mt-4 rounded-xl bg-gradient-to-r from-[#C49A2B] to-[#E8B84B] px-4 py-2 font-bold text-white"
+              className="mt-4 rounded-xl bg-gradient-to-r from-[#c88c28] to-[#9a6a18] px-4 py-2 font-bold text-[#0a0a08]"
             >
               Crear mi primer pedido
             </button>
@@ -90,23 +90,23 @@ export const ClientMyOrdersPage = () => {
               return (
                 <article
                   key={order._id}
-                  className="rounded-2xl border border-[#E2D4B7] bg-white p-6 shadow-[0_8px_20px_rgba(61,44,30,0.08)]"
+                  className="rounded-2xl border border-[#2f2218] bg-[#111009] p-6 shadow-[0_10px_24px_rgba(0,0,0,0.28)]"
                 >
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:items-center">
                     <div>
-                      <p className="text-xs text-[#5A5146]">Numero de Pedido</p>
-                      <p className="font-bold text-[#1A1A1A]">{order.numeroOrden}</p>
+                      <p className="text-xs text-[#b8a48a]">Numero de Pedido</p>
+                      <p className="font-bold text-[#f5ede0]">{order.numeroOrden}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#5A5146]">Articulos</p>
-                      <p className="font-bold text-[#1A1A1A]">{order.items?.length || 0} items</p>
+                      <p className="text-xs text-[#b8a48a]">Articulos</p>
+                      <p className="font-bold text-[#f5ede0]">{order.items?.length || 0} items</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#5A5146]">Total</p>
-                      <p className="font-bold text-[#C49A2B]">${order.total?.toFixed(2) || '0.00'}</p>
+                      <p className="text-xs text-[#b8a48a]">Total</p>
+                      <p className="font-bold text-[#c88c28]">${order.total?.toFixed(2) || '0.00'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#5A5146]">Estado</p>
+                      <p className="text-xs text-[#b8a48a]">Estado</p>
                       <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${statusInfo.color}`}>
                         {statusInfo.icon} {statusInfo.label}
                       </span>
@@ -114,7 +114,7 @@ export const ClientMyOrdersPage = () => {
                     <div className="md:text-right">
                       <button
                         onClick={() => navigate(`/cliente/pedidos/${order._id}`)}
-                        className="rounded-xl bg-[#E2D4B7] px-4 py-2 text-sm font-semibold text-[#3D2C1E] hover:bg-[#D7C7A5]"
+                        className="rounded-xl bg-[#0e0d0a] px-4 py-2 text-sm font-semibold text-[#f5ede0] border border-[#2f2218] hover:bg-[#1a1a14]"
                       >
                         Ver seguimiento
                       </button>
@@ -122,13 +122,13 @@ export const ClientMyOrdersPage = () => {
                   </div>
 
                   {order.items && order.items.length > 0 && (
-                    <div className="mt-4 border-t border-[#E2D4B7] pt-4">
-                      <p className="mb-2 text-xs text-[#5A5146]">Articulos:</p>
+                    <div className="mt-4 border-t border-[#2f2218] pt-4">
+                      <p className="mb-2 text-xs text-[#b8a48a]">Articulos:</p>
                       <div className="flex flex-wrap gap-2">
                         {order.items.slice(0, 4).map((item, idx) => (
                           <span
                             key={idx}
-                            className="rounded-md bg-[#F8F5F0] px-2 py-1 text-xs text-[#5A5146]"
+                            className="rounded-md bg-[#0e0d0a] px-2 py-1 text-xs text-[#b8a48a] border border-[#2f2218]"
                           >
                             {item.cantidad}x {item.nombre}
                           </span>
@@ -137,7 +137,7 @@ export const ClientMyOrdersPage = () => {
 
                       {/* Mostrar formulario de reseña solo si el pedido está entregado */}
                       {order.estado === 'ENTREGADO' && (
-                        <div className="mt-4 border-t border-[#E2D4B7] pt-4">
+                        <div className="mt-4 border-t border-[#2f2218] pt-4">
                           <button
                             onClick={() =>
                               setShowReviewForOrder((prev) => ({
@@ -145,15 +145,15 @@ export const ClientMyOrdersPage = () => {
                                 [order._id]: !prev[order._id],
                               }))
                             }
-                            className="mb-3 rounded-lg bg-[#2D4F4F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1A3A3A] transition-colors"
+                            className="mb-3 rounded-lg bg-gradient-to-r from-[#c88c28] to-[#9a6a18] px-4 py-2 text-sm font-semibold text-[#0a0a08] hover:opacity-90 transition-colors"
                           >
                             {showReviewForOrder[order._id] ? '✖ Cancelar Reseña' : '⭐ Dejar una Reseña'}
                           </button>
 
                           {showReviewForOrder[order._id] && (
-                            <div className="mt-3 rounded-lg bg-[#FDFBF7] p-4">
+                            <div className="mt-3 rounded-lg border border-[#2f2218] bg-[#111009] p-4">
                               {!restaurantIdToUse && (
-                                <p className="mb-3 text-sm text-red-600 font-semibold">
+                                <p className="mb-3 text-sm text-[#e06d6d] font-semibold">
                                   ⚠️ Error: Restaurante no disponible. Por favor recarga la página.
                                 </p>
                               )}

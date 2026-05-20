@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 
 const items = [
-  { label: 'Dashboard', to: '/restaurant-dashboard' },
   { label: 'Pedidos', to: '/restaurant-dashboard/pedidos' },
   { label: 'Reservaciones', to: '/restaurant-dashboard/reservaciones' },
   { label: 'Mesas', to: '/restaurant-dashboard/mesas' },

@@ -1,203 +1,176 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAssignmentStore } from '../store/useAssignmentStore.js';
-
+import '../../../styles/assignments.css';
+ 
 export const AssignmentsPage = () => {
   const { platformAdmins, restaurants, loading, fetchAllData, assignRestaurant } = useAssignmentStore();
   const [filter, setFilter] = useState('');
-
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
-  const getAdminId = (admin) => admin?.Id || admin?.id || admin?._id || admin?.userId || '';
-  const getAdminFirstName = (admin) => admin?.Name || admin?.name || admin?.firstName || admin?.username || '';
-  const getAdminLastName = (admin) => admin?.Surname || admin?.surname || admin?.lastName || '';
-  const getAdminEmail = (admin) => admin?.Email || admin?.email || admin?.userEmail || '';
-  const getRestaurantName = (restaurant) => restaurant?.name || restaurant?.nombre || '';
-  const getRestaurantCity = (restaurant) => restaurant?.city || restaurant?.ciudad || '';
-
+ 
+  useEffect(() => { fetchAllData(); }, []);
+ 
+  /* ── Helpers — INTACTOS ── */
+  const getAdminId        = (a) => a?.Id||a?.id||a?._id||a?.userId||'';
+  const getAdminFirstName = (a) => a?.Name||a?.name||a?.firstName||a?.username||'';
+  const getAdminLastName  = (a) => a?.Surname||a?.surname||a?.lastName||'';
+  const getAdminEmail     = (a) => a?.Email||a?.email||a?.userEmail||'';
+  const getRestaurantName = (r) => r?.name||r?.nombre||'';
+  const getRestaurantCity = (r) => r?.city||r?.ciudad||'';
+ 
   const [selectedRestaurantIds, setSelectedRestaurantIds] = useState({});
   const [assigning, setAssigning] = useState({});
-
+ 
   useEffect(() => {
-    const newSelection = {};
-    platformAdmins.forEach((admin) => {
-      const adminId = getAdminId(admin);
-      if (admin.RestaurantId) {
-        newSelection[adminId] = admin.RestaurantId;
-      }
+    const sel = {};
+    platformAdmins.forEach(admin => {
+      const id = getAdminId(admin);
+      if (admin.RestaurantId) sel[id] = admin.RestaurantId;
     });
-    setSelectedRestaurantIds(newSelection);
+    setSelectedRestaurantIds(sel);
   }, [platformAdmins]);
-
-  const handleRestaurantSelection = (adminId, restaurantId) => {
-    setSelectedRestaurantIds((prev) => ({
-      ...prev,
-      [adminId]: restaurantId,
-    }));
-  };
-
+ 
+  const handleRestaurantSelection = (adminId, restaurantId) =>
+    setSelectedRestaurantIds(prev => ({ ...prev, [adminId]:restaurantId }));
+ 
   const handleAssign = async (adminId) => {
     const restaurantId = selectedRestaurantIds[adminId];
-    if (!restaurantId) {
-      return toast.error('Selecciona un restaurante para asignar.');
-    }
-
-    setAssigning((prev) => ({ ...prev, [adminId]: true }));
+    if (!restaurantId) { toast.error('Selecciona un restaurante para asignar.'); return; }
+    setAssigning(prev => ({ ...prev, [adminId]:true }));
     try {
-      const assignmentResult = await assignRestaurant(adminId, restaurantId);
+      const result = await assignRestaurant(adminId, restaurantId);
       toast.success('Restaurante asignado correctamente.');
-      console.log('Usuario actualizado:', assignmentResult.updatedAdmin || assignmentResult.result || assignmentResult);
-    } catch (error) {
-      console.error('Error asignando restaurante:', error);
-      toast.error(error.response?.data?.message || error.message || 'Error al asignar restaurante');
-    } finally {
-      setAssigning((prev) => ({ ...prev, [adminId]: false }));
-    }
+    } catch (err) { toast.error(err.response?.data?.message||err.message||'Error al asignar restaurante'); }
+    finally { setAssigning(prev => ({ ...prev, [adminId]:false })); }
   };
-
-  const assignments = platformAdmins.map(admin => {
-    const assignedRestaurant = restaurants.find(r => r._id === admin.RestaurantId || r._id === admin?.RestaurantId);
-    return {
-      admin,
-      restaurant: assignedRestaurant || null
-    };
-  });
-
-  // Filtrar asignaciones
+ 
+  const assignments = platformAdmins.map(admin => ({
+    admin,
+    restaurant: restaurants.find(r => r._id===admin.RestaurantId||r._id===admin?.RestaurantId)||null,
+  }));
+ 
   const filteredAssignments = assignments.filter(item => {
-    const adminName = `${getAdminFirstName(item.admin)} ${getAdminLastName(item.admin)}`.trim().toLowerCase();
-    const restaurantName = getRestaurantName(item.restaurant).toLowerCase() || '';
-    const searchTerm = filter.toLowerCase();
-    return adminName.includes(searchTerm) || restaurantName.includes(searchTerm);
+    const name = `${getAdminFirstName(item.admin)} ${getAdminLastName(item.admin)}`.trim().toLowerCase();
+    const rest = getRestaurantName(item.restaurant).toLowerCase();
+    const q    = filter.toLowerCase();
+    return name.includes(q) || rest.includes(q);
   });
-
-  const assignedCount = assignments.filter(item => item.restaurant).length;
-
+ 
+  const assignedCount = assignments.filter(i => i.restaurant).length;
+ 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2D4F4F] mx-auto mb-4"></div>
-          <p className="text-[#5A5146]">Cargando asignaciones...</p>
-        </div>
+      <div className="as-root">
+        <div className="as-loading-wrap"><div className="as-spinner" />Cargando asignaciones...</div>
       </div>
     );
   }
-
+ 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-serif text-[#2D4F4F]">Asignaciones de Restaurantes</h1>
-          <p className="text-[#5A5146] mt-1">Control de administradores asignados a restaurantes</p>
+    <div className="as-root">
+ 
+      {/* HEADER */}
+      <div className="as-header">
+        <div className="as-header-left">
+          <div className="as-header-badge"><i className="ti ti-link" aria-hidden="true" />Control de asignaciones</div>
+          <h1 className="as-header-title">Asignaciones de Restaurantes</h1>
+          <p className="as-header-sub">Control de administradores asignados a restaurantes</p>
         </div>
-        <div className="text-sm text-[#5A5146]">
-          Total asignaciones: {assignedCount}
-        </div>
+        <span className="as-header-stat">Total asignaciones: <strong style={{color:'var(--as-gold)'}}>{assignedCount}</strong></span>
       </div>
-
-      {/* Search */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder="Buscar por nombre de admin o restaurante..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="w-full px-4 py-2 border border-[#E8D4B8] rounded-lg bg-[#FDFBF7] focus:outline-none focus:ring-2 focus:ring-[#2D4F4F] focus:border-transparent"
-          />
-        </div>
+ 
+      {/* BUSCADOR */}
+      <div className="as-search-wrap">
+        <i className="ti ti-search as-search-icon" aria-hidden="true" />
+        <input
+          type="text"
+          placeholder="Buscar por nombre de admin o restaurante..."
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          className="as-search-input"
+        />
       </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-[#E8D4B8] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-[#F5EFEA] border-b border-[#E8D4B8]">
+ 
+      {/* TABLA */}
+      <div className="as-section">
+        <div style={{overflowX:'auto'}}>
+          <table className="as-table">
+            <thead>
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-[#2D4F4F]">Administrador</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-[#2D4F4F]">Email</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-[#2D4F4F]">Restaurante Asignado</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-[#2D4F4F]">Estado</th>
+                <th style={{width:'28%'}}>Administrador</th>
+                <th style={{width:'24%'}}>Email</th>
+                <th style={{width:'34%'}}>Restaurante Asignado</th>
+                <th style={{width:'14%'}}>Estado</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E8D4B8]">
-              {filteredAssignments.map((item, index) => (
-                <tr key={item.admin.Id || index} className="hover:bg-[#F9F7F3]">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-[#2D4F4F] flex items-center justify-center text-white font-semibold mr-3">
-                        {item.admin.Name?.[0]}{item.admin.Surname?.[0]}
-                      </div>
-                      <div>
-                        <div className="font-medium text-[#2D4F4F]">
-                          {getAdminFirstName(item.admin) || getAdminEmail(item.admin) || getAdminId(item.admin)} {getAdminLastName(item.admin)}
+            <tbody>
+              {filteredAssignments.length === 0 ? (
+                <tr><td colSpan="4" style={{padding:0}}>
+                  <div className="as-table-empty">
+                    <i className="ti ti-link-off" aria-hidden="true" />
+                    No se encontraron asignaciones
+                  </div>
+                </td></tr>
+              ) : (
+                filteredAssignments.map((item, idx) => {
+                  const adminId = getAdminId(item.admin);
+                  const initials = `${getAdminFirstName(item.admin)?.[0]||''}${getAdminLastName(item.admin)?.[0]||''}`.toUpperCase();
+                  return (
+                    <tr key={adminId||idx} style={{animationDelay:`${idx*.03}s`}}>
+                      <td>
+                        <div className="as-admin-cell">
+                          <div className="as-avatar">{initials||'?'}</div>
+                          <div>
+                            <div className="as-admin-name">{getAdminFirstName(item.admin)||getAdminEmail(item.admin)||adminId} {getAdminLastName(item.admin)}</div>
+                            <div className="as-admin-id">ID: {adminId}</div>
+                          </div>
                         </div>
-                        <div className="text-sm text-[#5A5146]">ID: {getAdminId(item.admin)}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-[#5A5146]">
-                    {getAdminEmail(item.admin)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="space-y-2">
-                      {item.restaurant ? (
-                        <div>
-                          <div className="font-medium text-[#2D4F4F]">{getRestaurantName(item.restaurant)}</div>
-                          <div className="text-sm text-[#5A5146]">{getRestaurantCity(item.restaurant)}</div>
+                      </td>
+                      <td className="as-admin-email">{getAdminEmail(item.admin)}</td>
+                      <td>
+                        {item.restaurant ? (
+                          <>
+                            <div className="as-restaurant-name">{getRestaurantName(item.restaurant)}</div>
+                            <div className="as-restaurant-city">{getRestaurantCity(item.restaurant)}</div>
+                          </>
+                        ) : (
+                          <div className="as-unassigned"><i className="ti ti-alert-circle" aria-hidden="true" />Sin asignar</div>
+                        )}
+                        <div className="as-inline-assign">
+                          <select
+                            value={selectedRestaurantIds[adminId]||''}
+                            onChange={e => handleRestaurantSelection(adminId, e.target.value)}
+                            className="as-inline-select"
+                          >
+                            <option value="">Seleccionar restaurante...</option>
+                            {restaurants.map(r => (
+                              <option key={r._id} value={r._id}>{r.name||r.nombre} — {r.city||r.ciudad}</option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => handleAssign(adminId)}
+                            disabled={assigning[adminId]}
+                            className="as-assign-btn"
+                          >
+                            {assigning[adminId] ? 'Asignando...' : 'Asignar'}
+                          </button>
                         </div>
-                      ) : (
-                        <span className="text-[#D1574F] font-medium">Sin asignar</span>
-                      )}
-                      <div className="flex items-center gap-2 mt-2">
-                        <select
-                          value={selectedRestaurantIds[getAdminId(item.admin)] || ''}
-                          onChange={(e) => handleRestaurantSelection(getAdminId(item.admin), e.target.value)}
-                          className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-2 text-sm text-[#2D4F4F] outline-none"
-                        >
-                          <option value="">Seleccionar restaurante...</option>
-                          {restaurants.map((restaurant) => (
-                            <option key={restaurant._id} value={restaurant._id}>
-                              {restaurant.name} - {restaurant.city}
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => handleAssign(getAdminId(item.admin))}
-                          disabled={assigning[getAdminId(item.admin)]}
-                          className="px-3 py-2 rounded-md bg-[#2D4F4F] text-white text-xs font-medium hover:bg-[#3A6B6B] disabled:opacity-50"
-                        >
-                          {assigning[getAdminId(item.admin)] ? 'Asignando...' : 'Asignar'}
-                        </button>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      item.restaurant
-                        ? 'bg-[#69A77F] text-white'
-                        : 'bg-[#FFF5E6] text-[#C87A55]'
-                    }`}>
-                      {item.restaurant ? 'Asignado' : 'Sin asignar'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                      </td>
+                      <td>
+                        <span className={`as-chip ${item.restaurant?'as-chip--assigned':'as-chip--unassigned'}`}>
+                          <i className={`ti ${item.restaurant?'ti-check':'ti-clock'}`} aria-hidden="true" />
+                          {item.restaurant?'Asignado':'Sin asignar'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
-
-        {filteredAssignments.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-[#5A5146]">No se encontraron asignaciones</p>
-          </div>
-        )}
       </div>
+ 
     </div>
   );
 };

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Card, CardBody, CardHeader, IconButton, Typography } from '@material-tailwind/react';
 import { EventFilters } from '../components/EventFilters.jsx';
 import { EventFormModal } from '../components/EventFormModal.jsx';
 import { useEventStore } from '../store/useEventStore.js';
@@ -7,202 +6,111 @@ import { useRestaurantStore } from '../../restaurants/store/useRestaurantStore.j
 import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
 import { NoRestaurantAssigned } from '../../../shared/components/layout/NoRestaurantAssigned.jsx';
 import { notyfError, notyfSuccess } from '../../../shared/utils/notyf.js';
-
-const getEventTypeLabel = (type) => {
-  const labels = {
-    PROMOCION: 'Promoción',
-    DESCUENTO: 'Descuento',
-    COMBO: 'Combo',
-    HAPPY_HOUR: 'Happy Hour',
-    EVENTO_ESPECIAL: 'Evento Especial',
-    OFERTA_TEMPORAL: 'Oferta Temporal',
-  };
-  return labels[type] || type;
+import '../../../styles/events.css';
+ 
+/* ── Helpers — INTACTOS ── */
+const getEventTypeLabel = (type) => ({
+  PROMOCION:'Promoción', DESCUENTO:'Descuento', COMBO:'Combo',
+  HAPPY_HOUR:'Happy Hour', EVENTO_ESPECIAL:'Evento Especial', OFERTA_TEMPORAL:'Oferta Temporal',
+}[type]||type);
+ 
+const getDiscountLabel = (tipo, valor) => tipo==='PORCENTAJE' ? `${valor}%` : `Q ${Number(valor).toFixed(2)}`;
+ 
+const getEventStatus = (fechaInicio, fechaFin) => {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const s = new Date(fechaInicio); s.setHours(0,0,0,0);
+  const e = new Date(fechaFin); e.setHours(0,0,0,0);
+  if (today < s) return { label:'Próximamente', css:'ev-status-badge--proximo' };
+  if (today > e) return { label:'Expirado',     css:'ev-status-badge--expirado' };
+  return             { label:'Vigente',          css:'ev-status-badge--vigente' };
 };
-
-const getDiscountLabel = (tipo, valor) => {
-  return tipo === 'PORCENTAJE' ? `${valor}%` : `Q ${valor.toFixed(2)}`;
-};
-
-const getEventStatusBadge = (fechaInicio, fechaFin) => {
-  const now = new Date();
-  // Strip times for comparison to focus on dates only (like the expiration logic)
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const start = new Date(fechaInicio);
-  const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-  const end = new Date(fechaFin);
-  const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-
-  if (today < startDate) {
-    return { label: 'Próximamente', class: 'bg-blue-100 text-blue-800' };
-  } else if (today > endDate) {
-    return { label: '✗ Expirado', class: 'bg-red-100 text-red-800' };
-  } else {
-    return { label: '✓ Vigente', class: 'bg-green-100 text-green-800' };
-  }
-};
-
+ 
+const fmtDate = (d) => new Date(d).toLocaleDateString('es-ES');
+ 
 export const EventsAdminPage = () => {
   const { restaurantId, role, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
-
-  const restaurants = useRestaurantStore((s) => s.restaurants);
-  const fetchRestaurants = useRestaurantStore((s) => s.fetchRestaurants);
-  
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState(restaurantId || null);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const restaurants        = useRestaurantStore((s) => s.restaurants);
+  const fetchRestaurants   = useRestaurantStore((s) => s.fetchRestaurants);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState(restaurantId||null);
+ 
+  const [isModalOpen,   setIsModalOpen]   = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventToDelete, setEventToDelete] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-
-  const events = useEventStore((state) => state.events);
-  const loading = useEventStore((state) => state.loading);
-  const fetchRestaurantEvents = useEventStore((state) => state.fetchRestaurantEvents);
-  const deleteEventAction = useEventStore((state) => state.deleteEventAction);
-  const activateEventAction = useEventStore((state) => state.activateEventAction);
-  const deactivateEventAction = useEventStore((state) => state.deactivateEventAction);
-  const clearSelectedEvent = useEventStore((state) => state.clearSelectedEvent);
-
-  // Filtrar eventos según criterios
+  const [deletingId,    setDeletingId]    = useState(null);
+  const [searchTerm,    setSearchTerm]    = useState('');
+  const [statusFilter,  setStatusFilter]  = useState('');
+  const [typeFilter,    setTypeFilter]    = useState('');
+ 
+  const events                  = useEventStore((s) => s.events);
+  const loading                 = useEventStore((s) => s.loading);
+  const fetchRestaurantEvents   = useEventStore((s) => s.fetchRestaurantEvents);
+  const deleteEventAction       = useEventStore((s) => s.deleteEventAction);
+  const activateEventAction     = useEventStore((s) => s.activateEventAction);
+  const deactivateEventAction   = useEventStore((s) => s.deactivateEventAction);
+  const clearSelectedEvent      = useEventStore((s) => s.clearSelectedEvent);
+ 
+  /* ── Filtrado — INTACTO ── */
   const filteredEvents = useMemo(() => {
     let result = [...events];
-
-    // Filtro por búsqueda
-    if (searchTerm.trim()) {
-      const normalizedSearch = searchTerm.trim().toLowerCase();
-      result = result.filter((event) =>
-        event.nombre?.toLowerCase().includes(normalizedSearch) ||
-        event.descripcion?.toLowerCase().includes(normalizedSearch)
-      );
-    }
-
-    // Filtro por estado
-    if (statusFilter) {
-      result = result.filter((event) => event.estado === statusFilter);
-    }
-
-    // Filtro por tipo
-    if (typeFilter) {
-      result = result.filter((event) => event.tipo === typeFilter);
-    }
-
+    if (searchTerm.trim()) { const q = searchTerm.trim().toLowerCase(); result = result.filter(e => e.nombre?.toLowerCase().includes(q)||e.descripcion?.toLowerCase().includes(q)); }
+    if (statusFilter) result = result.filter(e => e.estado===statusFilter);
+    if (typeFilter)   result = result.filter(e => e.tipo===typeFilter);
     return result;
   }, [events, searchTerm, statusFilter, typeFilter]);
-
-  useEffect(() => {
-    if (role === 'PLATFORM_ADMIN') {
-      fetchRestaurants(1, 50);
-    }
-  }, [fetchRestaurants, role]);
-
-  useEffect(() => {
-    if (restaurantId) {
-      setSelectedRestaurantId(restaurantId);
-    }
-  }, [restaurantId]);
-
-  useEffect(() => {
-    if (selectedRestaurantId) {
-      fetchRestaurantEvents(selectedRestaurantId);
-    }
-  }, [fetchRestaurantEvents, selectedRestaurantId]);
-
-  if (isRestaurantAdmin && !hasRestaurantAssigned) {
-    return <NoRestaurantAssigned />;
-  }
-
-  const handleCreateEvent = () => {
-    clearSelectedEvent();
-    setSelectedEvent(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditEvent = (event) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedEvent(null);
-    clearSelectedEvent();
-  };
-
-  const handleRequestDeleteEvent = (event) => {
-    setEventToDelete(event);
-  };
-
-  const handleCloseDeleteDialog = () => {
-    setEventToDelete(null);
-  };
-
-  const handleConfirmDeleteEvent = async () => {
-    if (!eventToDelete?._id) {
-      return;
-    }
-
+ 
+  useEffect(() => { if (role==='PLATFORM_ADMIN') fetchRestaurants(1,50); }, [fetchRestaurants,role]);
+  useEffect(() => { if (restaurantId) setSelectedRestaurantId(restaurantId); }, [restaurantId]);
+  useEffect(() => { if (selectedRestaurantId) fetchRestaurantEvents(selectedRestaurantId); }, [fetchRestaurantEvents,selectedRestaurantId]);
+ 
+  if (isRestaurantAdmin && !hasRestaurantAssigned) return <NoRestaurantAssigned />;
+ 
+  /* ── Handlers — INTACTOS ── */
+  const handleCreateEvent = () => { clearSelectedEvent(); setSelectedEvent(null); setIsModalOpen(true); };
+  const handleEditEvent   = (ev) => { setSelectedEvent(ev); setIsModalOpen(true); };
+  const handleCloseModal  = () => { setIsModalOpen(false); setSelectedEvent(null); clearSelectedEvent(); };
+ 
+  const handleConfirmDelete = async () => {
+    if (!eventToDelete?._id) return;
+    setDeletingId(eventToDelete._id);
     const result = await deleteEventAction(eventToDelete._id);
-    if (result.success) {
-      notyfSuccess('Evento eliminado correctamente');
-      handleCloseDeleteDialog();
-    } else {
-      notyfError(result.error || 'Error al eliminar evento');
-    }
+    setDeletingId(null);
+    if (result.success) { notyfSuccess('Evento eliminado correctamente'); setEventToDelete(null); }
+    else notyfError(result.error||'Error al eliminar evento');
   };
-
-  const handleToggleActive = async (event) => {
-    const isCurrentlyActive = event.isActive !== false;
-    const result = isCurrentlyActive
-      ? await deactivateEventAction(event._id)
-      : await activateEventAction(event._id);
-
-    if (result.success) {
-      notyfSuccess(isCurrentlyActive ? 'Evento desactivado' : 'Evento activado');
-    } else {
-      notyfError(result.error || 'Error al cambiar estado del evento');
-    }
+ 
+  const handleToggleActive = async (ev) => {
+    const isActive = ev.isActive !== false;
+    const result   = isActive ? await deactivateEventAction(ev._id) : await activateEventAction(ev._id);
+    if (result.success) notyfSuccess(isActive?'Evento desactivado':'Evento activado');
+    else notyfError(result.error||'Error al cambiar estado del evento');
   };
-
-  if (!selectedRestaurantId && role === 'PLATFORM_ADMIN') {
+ 
+  /* ── Selección de restaurante (Platform Admin) ── */
+  if (!selectedRestaurantId && role==='PLATFORM_ADMIN') {
     return (
-      <div className="min-h-screen bg-[#FDFBF7] text-gray-800 p-6 md:p-8 fade-in">
-        <div className="mb-6">
-          <Typography variant="h3" className="text-gray-800">Selecciona un Restaurante</Typography>
-          <Typography variant="small" className="text-[#2D4F4F]">
-            Administrador, selecciona un restaurante para ver y gestionar sus eventos.
-          </Typography>
+      <div className="ev-root">
+        <div className="ev-header">
+          <div>
+            <div className="ev-header-badge"><i className="ti ti-calendar-event" aria-hidden="true" />Administración</div>
+            <h1 className="ev-header-title">Selecciona un Restaurante</h1>
+            <p className="ev-header-sub">Administrador, selecciona un restaurante para ver y gestionar sus eventos.</p>
+          </div>
         </div>
-
         {restaurants.length === 0 ? (
-          <div className="rounded-2xl border border-[#E8D4B8] bg-white p-10 text-center">
-            <p className="text-gray-600">No hay restaurantes disponibles</p>
+          <div className="ev-empty-box">
+            <span className="ev-empty-box-icon">🍽️</span>
+            <div className="ev-empty-box-title">No hay restaurantes disponibles</div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {restaurants.map((restaurant) => (
-              <button
-                key={restaurant._id}
-                onClick={() => setSelectedRestaurantId(restaurant._id)}
-                className="overflow-hidden rounded-2xl border border-[#E8D4B8] bg-white text-left transition hover:-translate-y-1 hover:shadow-lg"
-              >
-                <div className="h-32 bg-gradient-to-br from-[#F5EFEA] to-[#FDFBF7]">
-                  {restaurant.fotos && restaurant.fotos.length > 0 ? (
-                    <img
-                      src={restaurant.fotos[0]}
-                      alt={restaurant.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-3xl">🍽️</div>
-                  )}
+          <div className="ev-restaurant-grid">
+            {restaurants.map((restaurant, idx) => (
+              <button key={restaurant._id} onClick={() => setSelectedRestaurantId(restaurant._id)} className="ev-restaurant-card" style={{animationDelay:`${idx*.05}s`}}>
+                <div className="ev-restaurant-img">
+                  {restaurant.fotos?.length>0 ? <img src={restaurant.fotos[0]} alt={restaurant.name} /> : <div className="ev-restaurant-no-img">🍽️</div>}
                 </div>
-                <div className="p-4">
-                  <h3 className="font-['Playfair_Display'] text-lg font-bold text-gray-800">
-                    {restaurant.name}
-                  </h3>
-                  <p className="text-sm text-gray-600">{restaurant.category || 'Restaurante'}</p>
+                <div className="ev-restaurant-body">
+                  <div className="ev-restaurant-name">{restaurant.name}</div>
+                  <div className="ev-restaurant-cat">{restaurant.category||'Restaurante'}</div>
                 </div>
               </button>
             ))}
@@ -211,181 +119,103 @@ export const EventsAdminPage = () => {
       </div>
     );
   }
-
-  if (loading && events.length === 0) {
-    return (
-      <div className="p-6">
-        <p className="text-[#2D4F4F]">Cargando eventos...</p>
-      </div>
-    );
+ 
+  if (loading && events.length===0) {
+    return <div className="ev-loading"><div className="ev-spinner" />Cargando eventos...</div>;
   }
-
-  const selectedRestaurant = restaurants.find((r) => r._id === selectedRestaurantId);
-
+ 
+  const selectedRestaurant = restaurants.find(r => r._id===selectedRestaurantId);
+ 
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+    <div className="ev-root">
+ 
+      {/* HEADER */}
+      <div className="ev-header">
         <div>
-          <Typography variant="h3" className="text-gray-800">
-            Eventos {selectedRestaurant ? `- ${selectedRestaurant.name}` : ''}
-          </Typography>
-          <Typography variant="small" className="text-[#2D4F4F]">
-            Gestiona eventos especiales, promociones y descuentos.
-          </Typography>
+          <div className="ev-header-badge"><i className="ti ti-calendar-event" aria-hidden="true" />Gestión de eventos</div>
+          <h1 className="ev-header-title">Eventos{selectedRestaurant ? ` — ${selectedRestaurant.name}` : ''}</h1>
+          <p className="ev-header-sub">Gestiona eventos especiales, promociones y descuentos.</p>
         </div>
-        <div className="flex gap-2">
-          {role === 'PLATFORM_ADMIN' && (
-            <Button
-              onClick={() => setSelectedRestaurantId(null)}
-              className="border border-[#2D4F4F] text-[#2D4F4F] bg-transparent rounded-lg hover:bg-[#F5EFEA] transition-all duration-200"
-            >
-              ← Cambiar Restaurante
-            </Button>
+        <div className="ev-header-actions">
+          {role==='PLATFORM_ADMIN' && (
+            <button onClick={() => setSelectedRestaurantId(null)} className="ev-btn-back ev-btn-back--gold">
+              <i className="ti ti-arrow-left" aria-hidden="true" />Cambiar Restaurante
+            </button>
           )}
-          <Button
-            onClick={handleCreateEvent}
-            className="bg-[#2D4F4F] text-white rounded-lg shadow-[0_10px_22px_rgba(45,79,79,0.3)] hover:shadow-[0_14px_30px_rgba(45,79,79,0.35)] transition-all duration-200"
-          >
-            + Nuevo Evento
-          </Button>
+          <button onClick={handleCreateEvent} className="ev-btn-new">
+            <i className="ti ti-plus" aria-hidden="true" />+ Nuevo Evento
+          </button>
         </div>
       </div>
-
+ 
+      {/* FILTROS */}
       <EventFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        typeFilter={typeFilter}
-        onTypeChange={setTypeFilter}
+        searchTerm={searchTerm} onSearchChange={setSearchTerm}
+        statusFilter={statusFilter} onStatusChange={setStatusFilter}
+        typeFilter={typeFilter} onTypeChange={setTypeFilter}
       />
-
-      {/* Tabla de eventos */}
+ 
+      {/* TABLA */}
       {filteredEvents.length > 0 ? (
-        <Card className="border border-[#E8D4B8] bg-[#FDFBF7]">
-          <CardHeader floated={false} shadow={false} className="m-0 rounded-none border-b border-[#E8D4B8] p-4">
-            <Typography variant="small" className="text-[#2D4F4F]">
-              {filteredEvents.length} evento{filteredEvents.length !== 1 ? 's' : ''} encontrado{filteredEvents.length !== 1 ? 's' : ''}
-            </Typography>
-          </CardHeader>
-          <CardBody className="overflow-x-auto p-0">
-            <table className="w-full">
+        <div className="ev-section">
+          <div className="ev-section-header">
+            <span style={{fontSize:13,fontWeight:500,color:'var(--ev-text-primary)'}}>Lista de eventos</span>
+            <span className="ev-section-count">{filteredEvents.length} evento{filteredEvents.length!==1?'s':''}</span>
+          </div>
+          <div style={{overflowX:'auto'}}>
+            <table className="ev-table">
               <thead>
-                <tr className="border-b border-[#E8D4B8] bg-[#F5EFEA]">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-[#2D4F4F]">Nombre</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-[#2D4F4F]">Tipo</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-[#2D4F4F]">Descuento</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-[#2D4F4F]">Vigencia</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-[#2D4F4F]">Estado</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-[#2D4F4F]">Acciones</th>
+                <tr>
+                  <th style={{width:'30%'}}>Nombre</th>
+                  <th style={{width:'13%'}}>Tipo</th>
+                  <th style={{width:'12%'}}>Descuento</th>
+                  <th style={{width:'20%'}}>Vigencia</th>
+                  <th style={{width:'10%'}} className="center">Estado</th>
+                  <th style={{width:'15%'}} className="center">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredEvents.map((event) => {
-                  const statusBadge = getEventStatusBadge(event.fechaInicio, event.fechaFin);
-                  const isEventActive = event.isActive !== false;
-
+                {filteredEvents.map((ev, idx) => {
+                  const statusInfo  = getEventStatus(ev.fechaInicio, ev.fechaFin);
+                  const isActive    = ev.isActive !== false;
                   return (
-                    <tr key={event._id} className="border-b border-[#E8D4B8] hover:bg-[#F5EFEA] transition">
-                      {/* Nombre */}
-                      <td className="px-4 py-3">
-                        <div>
-                          <Typography variant="small" className="font-semibold text-gray-800">
-                            {event.nombre}
-                          </Typography>
-                          <Typography variant="small" className="text-stone-600">
-                            {event.descripcion?.substring(0, 50)}
-                            {event.descripcion?.length > 50 ? '...' : ''}
-                          </Typography>
-                          <div className="mt-2 flex flex-col gap-1">
-                            {event.platosAplicables?.length > 0 && (
-                              <Typography variant="small" className="text-blue-600">
-                                📍 {event.platosAplicables.length} plato{event.platosAplicables.length !== 1 ? 's' : ''}
-                              </Typography>
-                            )}
-                            {event.menusAplicables?.length > 0 && (
-                              <Typography variant="small" className="text-amber-600">
-                                📍 {event.menusAplicables.length} menú{event.menusAplicables.length !== 1 ? 's' : ''}
-                              </Typography>
-                            )}
-                          </div>
+                    <tr key={ev._id} style={{animationDelay:`${idx*.03}s`}}>
+                      <td>
+                        <div className="ev-event-name">{ev.nombre}</div>
+                        <div className="ev-event-desc">{ev.descripcion?.substring(0,60)}{ev.descripcion?.length>60?'...':''}</div>
+                        <div className="ev-event-pills">
+                          {ev.platosAplicables?.length>0 && <span className="ev-event-pill"><i className="ti ti-tools-kitchen-2" style={{fontSize:10}} aria-hidden="true" /> {ev.platosAplicables.length} plato{ev.platosAplicables.length!==1?'s':''}</span>}
+                          {ev.menusAplicables?.length>0  && <span className="ev-event-pill ev-event-pill--menus"><i className="ti ti-book" style={{fontSize:10}} aria-hidden="true" /> {ev.menusAplicables.length} menú{ev.menusAplicables.length!==1?'s':''}</span>}
                         </div>
                       </td>
-
-                      {/* Tipo */}
-                      <td className="px-4 py-3">
-                        <span className="inline-block px-3 py-1 bg-[#C49A2B] text-white text-xs font-semibold rounded-full">
-                          {getEventTypeLabel(event.tipo)}
+                      <td><span className="ev-tipo-badge">{getEventTypeLabel(ev.tipo)}</span></td>
+                      <td><span className="ev-discount-val">{getDiscountLabel(ev.descuentoTipo, ev.descuentoValor)}</span></td>
+                      <td>
+                        <div className="ev-date-range">{fmtDate(ev.fechaInicio)} – {fmtDate(ev.fechaFin)}</div>
+                        <span className={`ev-status-badge ${statusInfo.css}`}>
+                          <i className={`ti ${statusInfo.label==='Vigente'?'ti-check':statusInfo.label==='Próximamente'?'ti-clock':'ti-clock-off'}`} aria-hidden="true" />
+                          {statusInfo.label}
                         </span>
                       </td>
-
-                      {/* Descuento */}
-                      <td className="px-4 py-3">
-                        <Typography variant="small" className="font-semibold text-[#2D4F4F]">
-                          {getDiscountLabel(event.descuentoTipo, event.descuentoValor)}
-                        </Typography>
-                      </td>
-
-                      {/* Vigencia */}
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col gap-1">
-                          <Typography variant="small" className="text-gray-800">
-                            {new Date(event.fechaInicio).toLocaleDateString('es-ES')} -{' '}
-                            {new Date(event.fechaFin).toLocaleDateString('es-ES')}
-                          </Typography>
-                          <span
-                            className={`inline-block px-2 py-1 text-xs font-semibold rounded-full w-fit ${statusBadge.class}`}
-                          >
-                            {statusBadge.label}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Estado (Toggle) */}
-                      <td className="px-4 py-3 text-center">
+                      <td className="ev-td-center">
                         <button
-                          onClick={() => handleToggleActive(event)}
+                          onClick={() => handleToggleActive(ev)}
                           disabled={loading}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                            isEventActive ? 'bg-green-500' : 'bg-gray-300'
-                          } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'}`}
-                          title={isEventActive ? 'Desactivar' : 'Activar'}
+                          className={`ev-toggle${isActive?' ev-toggle--on':' ev-toggle--off'}`}
+                          title={isActive?'Desactivar':'Activar'}
+                          aria-label={isActive?'Desactivar evento':'Activar evento'}
                         >
-                          <span
-                            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
-                              isEventActive ? 'translate-x-5' : 'translate-x-0.5'
-                            }`}
-                          />
+                          <span className="ev-toggle-thumb" />
                         </button>
                       </td>
-
-                      {/* Acciones */}
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <IconButton
-                            size="sm"
-                            onClick={() => handleEditEvent(event)}
-                            disabled={loading}
-                            className="bg-[#2D4F4F] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
-                            title="Editar evento"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                              <path d="M12 20h9" />
-                              <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
-                            </svg>
-                          </IconButton>
-                          <IconButton
-                            size="sm"
-                            onClick={() => handleRequestDeleteEvent(event)}
-                            disabled={loading}
-                            className="bg-[#D97065] shadow-md hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
-                            title="Eliminar evento"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                              <path d="M3 6h18" />
-                              <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6m-4-1V3a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2" />
-                            </svg>
-                          </IconButton>
+                      <td>
+                        <div className="ev-action-btns">
+                          <button className="ev-action-btn ev-action-btn--edit" onClick={() => handleEditEvent(ev)} disabled={loading} title="Editar">
+                            <i className="ti ti-pencil" aria-hidden="true" />
+                          </button>
+                          <button className="ev-action-btn ev-action-btn--del" onClick={() => setEventToDelete(ev)} disabled={loading} title="Eliminar">
+                            <i className="ti ti-trash" aria-hidden="true" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -393,47 +223,37 @@ export const EventsAdminPage = () => {
                 })}
               </tbody>
             </table>
-          </CardBody>
-        </Card>
+          </div>
+        </div>
       ) : (
-        <div className="rounded-2xl border border-[#E8D4B8] bg-[#FDFBF7] p-10 text-center">
-          <Typography variant="small" className="text-gray-600">
-            {searchTerm || statusFilter || typeFilter
-              ? 'No se encontraron eventos con los criterios especificados'
-              : 'No hay eventos disponibles. ¡Crea el primero!'}
-          </Typography>
+        <div className="ev-empty-box">
+          <span className="ev-empty-box-icon">📭</span>
+          <div className="ev-empty-box-title">
+            {searchTerm||statusFilter||typeFilter ? 'No se encontraron eventos con los criterios especificados' : 'No hay eventos disponibles. ¡Crea el primero!'}
+          </div>
+          {!(searchTerm||statusFilter||typeFilter) && (
+            <button onClick={handleCreateEvent} className="ev-empty-box-btn">
+              <i className="ti ti-plus" aria-hidden="true" />Crear primer evento
+            </button>
+          )}
         </div>
       )}
-
-      {/* Modal de crear/editar */}
-      <EventFormModal
-        open={isModalOpen}
-        onClose={handleCloseModal}
-        event={selectedEvent}        restaurantId={selectedRestaurantId}      />
-
-      {/* Diálogo de confirmación de eliminación */}
+ 
+      {/* MODAL FORM */}
+      <EventFormModal open={isModalOpen} onClose={handleCloseModal} event={selectedEvent} restaurantId={selectedRestaurantId} />
+ 
+      {/* CONFIRM DELETE */}
       {eventToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-2xl">
-            <h3 className="mb-2 text-lg font-bold text-gray-800">¿Eliminar evento?</h3>
-            <p className="mb-4 text-sm text-gray-600">
-              ¿Estás seguro de que deseas eliminar el evento "{eventToDelete.nombre}"? Esta acción no se puede deshacer.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="text"
-                onClick={handleCloseDeleteDialog}
-                className="text-gray-600"
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleConfirmDeleteEvent}
-                disabled={loading}
-                className="bg-[#D97065] text-white"
-              >
-                {loading ? 'Eliminando...' : 'Eliminar'}
-              </Button>
+        <div className="ev-confirm-overlay">
+          <div className="ev-confirm-box">
+            <div className="ev-confirm-icon"><i className="ti ti-trash" aria-hidden="true" /></div>
+            <div className="ev-confirm-title">¿Eliminar evento?</div>
+            <div className="ev-confirm-msg">¿Estás seguro de que deseas eliminar el evento <strong>"{eventToDelete.nombre}"</strong>? Esta acción no se puede deshacer.</div>
+            <div className="ev-confirm-btns">
+              <button onClick={() => setEventToDelete(null)} className="ev-btn-cancel-confirm">Cancelar</button>
+              <button onClick={handleConfirmDelete} disabled={!!deletingId} className="ev-btn-del-confirm">
+                {deletingId ? <><span style={{width:12,height:12,border:'2px solid rgba(200,80,80,.25)',borderTopColor:'var(--ev-red)',borderRadius:'50%',animation:'ev-spin .7s linear infinite',display:'inline-block'}} />Eliminando...</> : <><i className="ti ti-trash" aria-hidden="true" />Eliminar</>}
+              </button>
             </div>
           </div>
         </div>

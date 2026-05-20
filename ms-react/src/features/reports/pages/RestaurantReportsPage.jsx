@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Button, Input, Typography } from '@material-tailwind/react';
+import { Typography } from '@material-tailwind/react';
+import '../../../styles/reports.css';
 import { getIncomeReport, getTopPlatosReport } from '../../../shared/api/reportService.js';
 import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
 
 const formatCurrency = (value) => new Intl.NumberFormat('es-ES', {
   style: 'currency',
-  currency: 'MXN',
+  currency: 'GTQ',
   maximumFractionDigits: 2,
 }).format(Number(value || 0));
 
@@ -69,72 +70,74 @@ export const RestaurantReportsPage = () => {
   };
 
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-        <div>
-          <Typography variant="h3" className="text-gray-800">Reportes</Typography>
-          <Typography variant="small" className="text-[#2D4F4F]">
-            Genera reportes acotados al restaurante asignado ({user?.restaurantId?.name || user?.restaurantId?.nombre || 'tu restaurante'}).
-          </Typography>
-        </div>
-      </div>
-
-      <div className="mb-6 rounded-lg border border-stone-200 bg-white p-5">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+    <div className="reports-root">
+      <div className="reports-container">
+        <div className="reports-header">
           <div>
-            <Typography variant="small" className="mb-2 text-sm text-gray-700">Fecha inicio</Typography>
-            <Input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
-          </div>
-          <div>
-            <Typography variant="small" className="mb-2 text-sm text-gray-700">Fecha fin</Typography>
-            <Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={handleGenerateIncome} disabled={loading} className="bg-[#2D4F4F]">{loading ? 'Generando...' : 'Ingresos'}</Button>
-            <Button onClick={handleGenerateTopPlatos} disabled={loading} className="bg-[#C87A55]">{loading ? 'Generando...' : 'Top platos'}</Button>
+            <Typography className="reports-title">Reportes</Typography>
+            <Typography className="reports-sub">Genera reportes acotados al restaurante asignado ({user?.restaurantId?.name || user?.restaurantId?.nombre || 'tu restaurante'}).</Typography>
           </div>
         </div>
-      </div>
 
-      {error && (
-        <div className="mb-6 rounded-md border border-red-200 bg-[#FFF6F6] p-4 text-sm text-red-700">{error}</div>
-      )}
-
-      {income && (
-        <div className="mb-6 rounded-lg border border-stone-200 bg-white p-5">
-          <Typography variant="h6" className="mb-3">Resumen de ingresos</Typography>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <p className="text-sm text-gray-600">Total ingresos</p>
-              <p className="text-2xl font-bold text-[#2D4F4F]">{formatCurrency(income?.data?.resumen?.totalIngresos ?? income?.resumen?.totalIngresos ?? 0)}</p>
+        <div className="mb-6 reports-card">
+          <div className="reports-controls">
+            <div className="reports-field">
+              <label className="reports-label">Fecha inicio</label>
+              <input className="reports-input" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
             </div>
-            <div>
-              <p className="text-sm text-gray-600">Cobros pagados</p>
-              <p className="text-2xl font-bold text-[#2D4F4F]">{income?.data?.resumen?.pagadas ?? income?.resumen?.pagadas ?? 0}</p>
+            <div className="reports-field">
+              <label className="reports-label">Fecha fin</label>
+              <input className="reports-input" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
+            </div>
+            <div className="reports-actions">
+              <button onClick={handleGenerateIncome} disabled={loading} className="reports-btn reports-btn--income">{loading ? 'Generando...' : 'Ingresos'}</button>
+              <button onClick={handleGenerateTopPlatos} disabled={loading} className="reports-btn reports-btn--topplatos">{loading ? 'Generando...' : 'Top platos'}</button>
             </div>
           </div>
         </div>
-      )}
 
-      {topPlatos.length > 0 && (
-        <div className="rounded-lg border border-stone-200 bg-white p-5">
-          <Typography variant="h6" className="mb-3">Top platos</Typography>
-          <div className="space-y-2">
-            {topPlatos.map((p, idx) => (
-              <div key={p._id || p.id || p.nombre || idx} className="flex items-center justify-between border p-3 rounded">
-                <div>
-                  <p className="font-semibold text-gray-800">{p.nombre || p.platoNombre || p.plato?.nombre || `Plato ${idx + 1}`}</p>
-                  <p className="text-sm text-gray-600">Vendidos: {p.total || p.cantidad || p.ventas || 0}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">Ingresos</p>
-                  <p className="font-semibold text-[#2D4F4F]">{formatCurrency(p.ingresos || p.revenue || 0)}</p>
-                </div>
+        {error && (
+          <div className="da-error">{error}</div>
+        )}
+
+        {income && (
+          <div className="mb-6 reports-card">
+            <Typography variant="h6" className="mb-3 da-text-primary">Resumen de ingresos</Typography>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <p className="text-sm da-text-muted">Total ingresos</p>
+                <p className="text-2xl font-bold da-text-primary">{formatCurrency(income?.data?.resumen?.totalIngresos ?? income?.resumen?.totalIngresos ?? 0)}</p>
               </div>
-            ))}
+              <div>
+                <p className="text-sm da-text-muted">Cobros pagados</p>
+                <p className="text-2xl font-bold da-text-primary">{income?.data?.resumen?.pagadas ?? income?.resumen?.pagadas ?? 0}</p>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {topPlatos.length > 0 && (
+          <div className="reports-card">
+            <Typography variant="h6" className="mb-3 da-text-primary">Top platos</Typography>
+            <div className="space-y-2">
+              {topPlatos.map((p, idx) => (
+                <div key={p._id || p.id || p.nombre || idx} className="flex items-center justify-between p-3 rounded" style={{ border: '0.5px solid var(--da-border-subtle)', background: 'rgba(255,255,255,0.02)' }}>
+                  <div>
+                    <p className="font-semibold da-text-primary">{p.nombre || p.platoNombre || p.plato?.nombre || `Plato ${idx + 1}`}</p>
+                    <p className="text-sm da-text-muted">Vendidos: {p.total || p.cantidad || p.ventas || 0}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm da-text-muted">Ingresos</p>
+                    <p className="font-semibold da-text-primary">{formatCurrency(p.ingresos || p.revenue || 0)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="reports-empty-space" />
+      </div>
     </div>
   );
 };

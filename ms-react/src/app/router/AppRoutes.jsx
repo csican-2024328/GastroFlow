@@ -49,27 +49,28 @@ export const AppRoutes = () => {
                         </RoleGuard>
                     </ProtectedRoute>
                 }
-            />
-            <Route
-                path="/cliente/pedidos"
-                element={
-                    <ProtectedRoute>
-                        <RoleGuard allowedRoles={['CLIENT']}>
-                            <Navigate to="/cliente/pedidos/hacer" replace />
-                        </RoleGuard>
-                    </ProtectedRoute>
-                }
-            />
-            <Route path="/cliente/pedidos/hacer" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientMakeOrderPage /></RoleGuard></ProtectedRoute>} />
-            <Route path="/cliente/pedidos/mis" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientMyOrdersPage /></RoleGuard></ProtectedRoute>} />
-            <Route path="/cliente/pedidos/:orderId" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientOrderTrackingPage /></RoleGuard></ProtectedRoute>} />
-            <Route path="/cliente/pedidos/legacy" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientOrdersPage /></RoleGuard></ProtectedRoute>} />
-            <Route path="/cliente/eventos" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><EventsPage /></RoleGuard></ProtectedRoute>} />
-            <Route path="/cliente/reservaciones" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ReservationsPage /></RoleGuard></ProtectedRoute>} />
-            <Route path="/cliente/cupones" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><CouponsPage /></RoleGuard></ProtectedRoute>} />
-            <Route path="/cliente/resenas" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientReviewsHistoryPage /></RoleGuard></ProtectedRoute>} />
-            <Route path="/cliente/restaurante/:restaurantId/resenas" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientRestaurantReviewsPage /></RoleGuard></ProtectedRoute>} />
-            <Route path="/cliente/restaurante/:restaurantId/plato/:dishId/resenas" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientDishReviewsPage /></RoleGuard></ProtectedRoute>} />
+            >
+                <Route
+                    path="pedidos"
+                    element={
+                        <ProtectedRoute>
+                            <RoleGuard allowedRoles={['CLIENT']}>
+                                <Navigate to="/cliente/pedidos/hacer" replace />
+                            </RoleGuard>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route path="pedidos/hacer" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientMakeOrderPage /></RoleGuard></ProtectedRoute>} />
+                <Route path="pedidos/mis" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientMyOrdersPage /></RoleGuard></ProtectedRoute>} />
+                <Route path="pedidos/:orderId" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientOrderTrackingPage /></RoleGuard></ProtectedRoute>} />
+                <Route path="pedidos/legacy" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientOrdersPage /></RoleGuard></ProtectedRoute>} />
+                <Route path="eventos" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><EventsPage /></RoleGuard></ProtectedRoute>} />
+                <Route path="reservaciones" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ReservationsPage /></RoleGuard></ProtectedRoute>} />
+                <Route path="cupones" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><CouponsPage /></RoleGuard></ProtectedRoute>} />
+                <Route path="resenas" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientReviewsHistoryPage /></RoleGuard></ProtectedRoute>} />
+                <Route path="restaurante/:restaurantId/resenas" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientRestaurantReviewsPage /></RoleGuard></ProtectedRoute>} />
+                <Route path="restaurante/:restaurantId/plato/:dishId/resenas" element={<ProtectedRoute><RoleGuard allowedRoles={['CLIENT']}><ClientDishReviewsPage /></RoleGuard></ProtectedRoute>} />
+            </Route>
             <Route
                 path="/restaurant-dashboard"
                 element={

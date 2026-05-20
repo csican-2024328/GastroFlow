@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../features/auth/store/authStore.js';
 import { useOrderStore } from '../../features/orders/store/useOrderStore.js';
 import { useRestaurantStore } from '../../features/restaurants/store/useRestaurantStore.js';
@@ -124,14 +124,6 @@ export const ClientPage = () => {
         { label: 'Ofertas y Eventos', icon: '🎉', path: '/cliente/eventos' },
       ],
     },
-    {
-      group: 'Cuenta',
-      items: [
-        { label: 'Favoritos', icon: '❤️', path: '/cliente' },
-        { label: 'Direcciones', icon: '📍', path: '/cliente' },
-        { label: 'Configuracion', icon: '⚙️', path: '/cliente' },
-      ],
-    },
   ];
 
   const currentTitle = useMemo(() => {
@@ -141,6 +133,8 @@ export const ClientPage = () => {
     if (location.pathname.includes('/cupones')) return 'Cupones';
     return 'Inicio';
   }, [location.pathname]);
+
+  const isClientHome = location.pathname === '/cliente' || location.pathname === '/cliente/';
 
   const handleLogout = () => {
     logout();
@@ -195,18 +189,17 @@ export const ClientPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#3D2C1E]">
-      <aside className="border-r border-[#E8D9C4] bg-white md:fixed md:inset-y-0 md:w-[220px]">
+    <div className="min-h-screen bg-[#0b0a08] text-[#f5ede0]">
+      <aside className="border-r border-[#2f2218] bg-[#111009] md:fixed md:inset-y-0 md:w-[220px]">
         <div className="flex h-full flex-col px-4 py-5">
           <div className="pb-6">
-            <h1 className="text-2xl font-bold tracking-tight text-[#3D2C1E]">GastroFlow</h1>
-            <p className="text-xs text-[#B59070]">Client Dashboard</p>
+            <h1 className="text-2xl font-bold tracking-tight text-[#f5ede0]">GastroFlow</h1>
           </div>
 
           <div className="space-y-5">
             {navItems.map((group) => (
               <section key={group.group}>
-                <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-[#B59070]">
+                <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-[#c9a66a]">
                   {group.group}
                 </p>
                 <div className="space-y-1">
@@ -218,8 +211,8 @@ export const ClientPage = () => {
                         onClick={() => navigate(item.path)}
                         className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition ${
                           isActive
-                            ? 'bg-[#F5EDE0] text-[#C49A2B]'
-                            : 'text-[#8A7060] hover:bg-[#F5EDE0]'
+                            ? 'bg-gradient-to-r from-[#c88c28] to-[#9a6a18] text-[#0a0a08] shadow-[0_8px_18px_rgba(0,0,0,0.35)]'
+                            : 'text-[#cbb9a1] hover:bg-[#1a1a14] hover:text-[#f5ede0]'
                         }`}
                       >
                         <span className="inline-flex items-center gap-2">
@@ -227,7 +220,7 @@ export const ClientPage = () => {
                           <span>{item.label}</span>
                         </span>
                         {item.badge && (
-                          <span className="rounded-full bg-[#C49A2B] px-2 py-[2px] text-[10px] font-bold text-white">
+                          <span className="rounded-full bg-[#c88c28] px-2 py-[2px] text-[10px] font-bold text-[#0a0a08]">
                             {item.badge}
                           </span>
                         )}
@@ -239,31 +232,31 @@ export const ClientPage = () => {
             ))}
           </div>
 
-          <div className="mt-auto rounded-2xl border border-[#E8D9C4] bg-[#FAF7F2] p-3">
+          <div className="mt-auto rounded-2xl border border-[#2f2218] bg-[#0e0d0a] p-3 shadow-[0_10px_24px_rgba(0,0,0,0.35)]">
             <div className="flex items-center gap-3">
               <img
                 src={avatarSrc}
                 alt="Perfil"
-                className="h-12 w-12 rounded-full border-2 border-[#2C4035] bg-white object-cover"
+                className="h-12 w-12 rounded-full border-2 border-[#c88c28] bg-[#111009] object-cover"
                 onError={(event) => {
                   event.currentTarget.onerror = null;
                   event.currentTarget.src = defaultAvatar;
                 }}
               />
               <div className="min-w-0">
-                <p className="truncate font-semibold text-[#3D2C1E]">{user?.name || 'Cliente'}</p>
-                <p className="truncate text-xs text-[#8A7060]">@{user?.username || 'usuario'}</p>
+                <p className="truncate font-semibold text-[#f5ede0]">{user?.name || 'Cliente'}</p>
+                <p className="truncate text-xs text-[#b8a48a]">@{user?.username || 'usuario'}</p>
               </div>
             </div>
             <button
               onClick={() => openProfileModal(true)}
-              className="mt-3 w-full rounded-xl border border-[#C49A2B] bg-white px-3 py-2 text-sm font-semibold text-[#3D2C1E] hover:bg-[#F5EDE0]"
+              className="mt-3 w-full rounded-xl border border-[#c88c28] bg-[#111009] px-3 py-2 text-sm font-semibold text-[#f5ede0] hover:bg-[#1a1a14]"
             >
               Editar perfil
             </button>
             <button
               onClick={handleLogout}
-              className="mt-3 w-full rounded-xl border border-[#E8D9C4] px-3 py-2 text-sm font-semibold text-[#8A7060] hover:bg-[#F5EDE0]"
+              className="mt-3 w-full rounded-xl border border-[#2f2218] px-3 py-2 text-sm font-semibold text-[#cbb9a1] hover:bg-[#1a1a14] hover:text-[#f5ede0]"
             >
               Cerrar sesion
             </button>
@@ -272,47 +265,47 @@ export const ClientPage = () => {
       </aside>
 
       <main className="space-y-5 px-4 py-5 md:ml-[220px] md:px-7 md:py-7">
-        <section className="flex flex-col gap-3 rounded-2xl border border-[#E8D9C4] bg-white px-4 py-3 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-2xl font-semibold text-[#3D2C1E]">{currentTitle}</h2>
-          <div className="flex items-center gap-3 relative">
+        <section className="flex flex-col gap-3 rounded-2xl border border-[#2f2218] bg-[#111009] px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.28)] md:flex-row md:items-center md:justify-between">
+          <h2 className="text-2xl font-semibold text-[#f5ede0]">{currentTitle}</h2>
+          <div className="relative flex items-center gap-3">
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar restaurantes..."
-              className="w-56 rounded-xl border border-[#E8D9C4] bg-[#FAF7F2] px-3 py-2 text-sm text-[#3D2C1E] outline-none placeholder:text-[#B59070] focus:border-[#C49A2B]"
+              className="w-56 rounded-xl border border-[#2f2218] bg-[#0e0d0a] px-3 py-2 text-sm text-[#f5ede0] outline-none placeholder:text-[#8e7a63] focus:border-[#c88c28]"
             />
             <button
               onClick={() => {
                 setShowNotifications((s) => !s);
                 if (!showNotifications) fetchNotifications();
               }}
-              className="relative rounded-xl border border-[#E8D9C4] bg-[#FAF7F2] px-3 py-2 text-lg"
+              className="relative rounded-xl border border-[#2f2218] bg-[#0e0d0a] px-3 py-2 text-lg"
             >
               🔔
-              <span className="absolute -right-1 -top-1 rounded-full bg-[#C49A2B] px-[6px] text-[10px] font-bold text-white">
+              <span className="absolute -right-1 -top-1 rounded-full bg-[#c88c28] px-[6px] text-[10px] font-bold text-[#0a0a08]">
                 {unreadCount || stats.activeOrders}
               </span>
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 top-12 z-50 w-80 rounded-xl border border-[#E8D9C4] bg-white p-3 shadow-lg">
+              <div className="absolute right-0 top-12 z-50 w-80 rounded-xl border border-[#2f2218] bg-[#111009] p-3 shadow-[0_16px_30px_rgba(0,0,0,0.45)]">
                 <div className="flex items-center justify-between mb-2">
                   <strong>Notificaciones</strong>
-                  <button onClick={markAllRead} className="text-xs text-[#8A7060]">Marcar todas como leídas</button>
+                  <button onClick={markAllRead} className="text-xs text-[#c9a66a]">Marcar todas como leídas</button>
                 </div>
                 <div className="max-h-64 overflow-auto">
                   {notifications.length === 0 && (
-                    <p className="text-sm text-[#8A7060]">No hay notificaciones</p>
+                    <p className="text-sm text-[#b8a48a]">No hay notificaciones</p>
                   )}
                   {notifications.map((n) => (
-                    <div key={n._id} className={`mb-2 flex items-start gap-2 rounded p-2 ${n.isRead ? 'bg-white' : 'bg-[#F5EDE0]'}`}>
+                    <div key={n._id} className={`mb-2 flex items-start gap-2 rounded p-2 ${n.isRead ? 'bg-[#0e0d0a]' : 'bg-[#1a1a14]'}`}>
                       <div className="flex-1">
-                        <div className="text-sm text-[#3D2C1E]">{n.message}</div>
-                        <div className="text-xs text-[#8A7060]">{new Date(n.createdAt).toLocaleString()}</div>
+                        <div className="text-sm text-[#f5ede0]">{n.message}</div>
+                        <div className="text-xs text-[#8e7a63]">{new Date(n.createdAt).toLocaleString()}</div>
                       </div>
                       {!n.isRead && (
-                        <button onClick={() => markAsRead(n._id)} className="text-xs text-[#1A3D25]">Marcar</button>
+                        <button onClick={() => markAsRead(n._id)} className="text-xs text-[#c9a66a]">Marcar</button>
                       )}
                     </div>
                   ))}
@@ -322,78 +315,86 @@ export const ClientPage = () => {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-[#E8D9C4] bg-white p-5">
-          <div className="grid gap-5 md:grid-cols-[1.3fr_1fr]">
-            <div>
-              <p className="text-sm font-semibold text-[#B59070]">{greeting}</p>
-              <h3 className="mt-1 text-2xl font-bold text-[#3D2C1E]">{user?.name || 'Cliente'}</h3>
-              <div className="mt-3 space-y-1 text-sm text-[#8A7060]">
-                <p>✉️ {user?.email || 'sin email'}</p>
-                <p>👤 {user?.username || 'sin username'}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-xl border border-[#E8D9C4] bg-[#FAF7F2] p-3">
-                <p className="text-[11px] uppercase tracking-wide text-[#B59070]">Pedidos</p>
-                <p className="mt-1 text-xl font-bold text-[#3D2C1E]">{stats.totalOrders}</p>
-              </div>
-              <div className="rounded-xl border border-[#E8D9C4] bg-[#FAF7F2] p-3">
-                <p className="text-[11px] uppercase tracking-wide text-[#B59070]">Favoritos</p>
-                <p className="mt-1 text-xl font-bold text-[#3D2C1E]">{stats.favoritos}</p>
-              </div>
-              <div className="rounded-xl border border-[#E8D9C4] bg-[#FAF7F2] p-3">
-                <p className="text-[11px] uppercase tracking-wide text-[#B59070]">Rating</p>
-                <p className="mt-1 text-xl font-bold text-[#3D2C1E]">{stats.rating}</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-[#E8D9C4] bg-white px-4 py-3">
-          {stats.activeOrders > 0 ? (
-            <div className="rounded-xl border border-[#E8D9C4] bg-[#F5EDE0] px-4 py-3 text-sm font-medium text-[#3D2C1E]">
-              Pedido activo en curso: {stats.activeOrders} pedido(s) en preparacion.
-            </div>
-          ) : (
-            <div className="rounded-xl border border-[#E8D9C4] bg-[#FAF7F2] px-4 py-3 text-sm text-[#8A7060]">
-              No tienes pedidos activos en este momento.
-            </div>
-          )}
-        </section>
-
-        <section>
-          <h3 className="mb-3 text-lg font-semibold text-[#3D2C1E]">Restaurantes destacados</h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filteredRestaurants.slice(0, 9).map((restaurant) => (
-              <article
-                key={restaurant._id}
-                className="overflow-hidden rounded-2xl border border-[#E8D9C4] bg-white transition hover:-translate-y-1 hover:shadow-lg"
-              >
-                <div className="h-36 bg-[#F5EDE0]">
-                  {restaurant.photos && restaurant.photos.length > 0 ? (
-                    <img
-                      src={restaurant.photos[0]}
-                      alt={restaurant.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-4xl">🍽️</div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h4 className="truncate font-semibold text-[#3D2C1E]">{restaurant.name}</h4>
-                  <p className="mt-1 text-sm text-[#8A7060]">{restaurant.category || 'Cocina de autor'}</p>
-                  <p className="mt-2 truncate text-xs text-[#B59070]">📍 {restaurant.address || 'Dirección no disponible'}</p>
-                  <div className="mt-3 flex items-center justify-between text-xs text-[#B59070]">
-                    <span>⏱️ 25-35 min</span>
-                    <span>⭐ 4.8</span>
+        {isClientHome ? (
+          <>
+            <section className="rounded-2xl border border-[#2f2218] bg-[#111009] p-5 shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+              <div className="grid gap-5 md:grid-cols-[1.3fr_1fr]">
+                <div>
+                  <p className="text-sm font-semibold text-[#c9a66a]">{greeting}</p>
+                  <h3 className="mt-1 text-2xl font-bold text-[#f5ede0]">{user?.name || 'Cliente'}</h3>
+                  <div className="mt-3 space-y-1 text-sm text-[#b8a48a]">
+                    <p>✉️ {user?.email || 'sin email'}</p>
+                    <p>👤 {user?.username || 'sin username'}</p>
                   </div>
                 </div>
-              </article>
-            ))}
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl border border-[#2f2218] bg-[#0e0d0a] p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-[#c9a66a]">Pedidos</p>
+                    <p className="mt-1 text-xl font-bold text-[#f5ede0]">{stats.totalOrders}</p>
+                  </div>
+                  <div className="rounded-xl border border-[#2f2218] bg-[#0e0d0a] p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-[#c9a66a]">Favoritos</p>
+                    <p className="mt-1 text-xl font-bold text-[#f5ede0]">{stats.favoritos}</p>
+                  </div>
+                  <div className="rounded-xl border border-[#2f2218] bg-[#0e0d0a] p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-[#c9a66a]">Rating</p>
+                    <p className="mt-1 text-xl font-bold text-[#f5ede0]">{stats.rating}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-[#2f2218] bg-[#111009] px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.22)]">
+              {stats.activeOrders > 0 ? (
+                <div className="rounded-xl border border-[#2f2218] bg-[#1a1a14] px-4 py-3 text-sm font-medium text-[#f5ede0]">
+                  Pedido activo en curso: {stats.activeOrders} pedido(s) en preparacion.
+                </div>
+              ) : (
+                <div className="rounded-xl border border-[#2f2218] bg-[#0e0d0a] px-4 py-3 text-sm text-[#b8a48a]">
+                  No tienes pedidos activos en este momento.
+                </div>
+              )}
+            </section>
+
+            <section>
+              <h3 className="mb-3 text-lg font-semibold text-[#f5ede0]">Restaurantes destacados</h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {filteredRestaurants.slice(0, 9).map((restaurant) => (
+                  <article
+                    key={restaurant._id}
+                    className="overflow-hidden rounded-2xl border border-[#2f2218] bg-[#111009] transition hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(0,0,0,0.4)]"
+                  >
+                    <div className="h-36 bg-[#0e0d0a]">
+                      {restaurant.photos && restaurant.photos.length > 0 ? (
+                        <img
+                          src={restaurant.photos[0]}
+                          alt={restaurant.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-4xl">🍽️</div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h4 className="truncate font-semibold text-[#f5ede0]">{restaurant.name}</h4>
+                      <p className="mt-1 text-sm text-[#b8a48a]">{restaurant.category || 'Cocina de autor'}</p>
+                      <p className="mt-2 truncate text-xs text-[#c9a66a]">📍 {restaurant.address || 'Dirección no disponible'}</p>
+                      <div className="mt-3 flex items-center justify-between text-xs text-[#b8a48a]">
+                        <span>⏱️ 25-35 min</span>
+                        <span>⭐ 4.8</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </>
+        ) : (
+          <div className="space-y-5">
+            <Outlet />
           </div>
-        </section>
+        )}
       </main>
 
       <ProfileModal />

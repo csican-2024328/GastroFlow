@@ -1,35 +1,24 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useEventStore } from '../store/useEventStore.js';
-
-export const EventCard = ({ event, onEventUsed }) => {
+ 
+export const EventCard = ({ event, onEventUsed, delay = 0 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const useEventAction = useEventStore((s) => s.useEventAction);
-
-  // Determine event status
-  const isActive = event.estado === 'ACTIVO';
+ 
+  const isActive   = event.estado === 'ACTIVO';
   const isUpcoming = event.estado === 'PRÓXIMO';
   const hasBeenUsed = event.usado === true;
-
-  // Format dates
+ 
   const formatDate = (date) => {
     if (!date) return 'No especificada';
-    const d = new Date(date);
-    return d.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return new Date(date).toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
   };
-
-  // Handle use event
+ 
   const handleUseEvent = async () => {
     setIsLoading(true);
     const result = await useEventAction(event._id);
     setIsLoading(false);
-
     if (result.success) {
       toast.success('¡Evento utilizado correctamente!');
       if (onEventUsed) onEventUsed(event._id);
@@ -37,90 +26,52 @@ export const EventCard = ({ event, onEventUsed }) => {
       toast.error(result.error || 'Error al usar el evento');
     }
   };
-
+ 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_10px_24px_rgba(61,44,30,0.10)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(61,44,30,0.14)]">
-      {/* Image container */}
-      <div className="relative h-48 bg-gradient-to-br from-gray-200 to-[#FAF9F6]">
+    <article className={`ev-card${hasBeenUsed?' ev-card--used':''}`} style={{ animationDelay:`${delay}s` }}>
+ 
+      {/* Imagen */}
+      <div className="ev-card-img">
         {event.imagen && event.imagen !== '' ? (
-          <img
-            src={event.imagen}
-            alt={event.nombre}
-            className="h-full w-full object-cover"
-          />
+          <img src={event.imagen} alt={event.nombre} />
         ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#E8956B] to-[#C49A2B] text-5xl">
-            🎉
-          </div>
+          <div className="ev-card-img-fallback">🎉</div>
         )}
-
-        {/* Status badge */}
-        <div className="absolute right-3 top-3">
-          {isActive && (
-            <span className="inline-flex items-center rounded-full bg-[#2D4F4F] px-3 py-1 text-xs font-semibold text-white">
-              ✓ Activo
-            </span>
-          )}
-          {isUpcoming && (
-            <span className="inline-flex items-center rounded-full bg-[#C49A2B] px-3 py-1 text-xs font-semibold text-white">
-              ⏰ Próximamente
-            </span>
-          )}
-          {hasBeenUsed && (
-            <span className="inline-flex items-center rounded-full bg-[#5A5146] px-3 py-1 text-xs font-semibold text-white">
-              ✓ Utilizado
-            </span>
-          )}
+        <div className="ev-card-badge">
+          {isActive    && !hasBeenUsed && <span className="ev-card-badge-activo"><i className="ti ti-check" style={{fontSize:9}} aria-hidden="true" />Activo</span>}
+          {isUpcoming  && !hasBeenUsed && <span className="ev-card-badge-proximo"><i className="ti ti-clock" style={{fontSize:9}} aria-hidden="true" />Próximamente</span>}
+          {hasBeenUsed && <span className="ev-card-badge-usado"><i className="ti ti-circle-check" style={{fontSize:9}} aria-hidden="true" />Utilizado</span>}
         </div>
       </div>
-
-      {/* Content container */}
-      <div className="flex flex-col p-4">
-        {/* Title */}
-        <h3 className="mb-2 line-clamp-2 font-['Playfair_Display'] text-lg font-bold text-gray-800">
-          {event.nombre}
-        </h3>
-
-        {/* Description */}
-        <p className="mb-4 line-clamp-2 text-sm text-gray-600">
-          {event.descripcion || 'Sin descripción disponible'}
-        </p>
-
-        {/* Dates */}
-        <div className="mb-4 space-y-1 text-xs text-gray-600">
-          <div className="flex items-start gap-2">
-            <span className="mt-0.5 text-[#E8956B]">📅</span>
-            <div className="flex-1">
-              <div className="font-semibold text-gray-800">Inicio:</div>
-              <div>{formatDate(event.fechaInicio)}</div>
-            </div>
+ 
+      {/* Cuerpo */}
+      <div className="ev-card-body">
+        <div>
+          <h3 className="ev-card-name">{event.nombre}</h3>
+          <p className="ev-card-desc">{event.descripcion||'Sin descripción disponible'}</p>
+        </div>
+ 
+        <div className="ev-card-dates">
+          <div className="ev-card-date-row">
+            <i className="ti ti-calendar-event" aria-hidden="true" />
+            <span><span className="ev-card-date-label">Inicio:</span> {formatDate(event.fechaInicio)}</span>
           </div>
-          <div className="flex items-start gap-2">
-            <span className="mt-0.5 text-[#E8956B]">📅</span>
-            <div className="flex-1">
-              <div className="font-semibold text-gray-800">Fin:</div>
-              <div>{formatDate(event.fechaFin)}</div>
-            </div>
+          <div className="ev-card-date-row">
+            <i className="ti ti-calendar-event" aria-hidden="true" />
+            <span><span className="ev-card-date-label">Fin:</span> {formatDate(event.fechaFin)}</span>
           </div>
         </div>
-
-        {/* Action button */}
-        {(isActive || isUpcoming) && !hasBeenUsed && (
-          <button
-            onClick={handleUseEvent}
-            disabled={isLoading}
-            className="w-full rounded-lg bg-gradient-to-r from-[#E8956B] to-[#C49A2B] px-4 py-2 text-sm font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
-          >
-            {isLoading ? 'Procesando...' : 'Usar evento'}
+ 
+        {(isActive || isUpcoming) && !hasBeenUsed ? (
+          <button onClick={handleUseEvent} disabled={isLoading} className="ev-card-use-btn">
+            {isLoading
+              ? <><span style={{width:13,height:13,border:'2px solid rgba(10,10,8,.25)',borderTopColor:'#0a0a08',borderRadius:'50%',animation:'ev-spin .7s linear infinite',flexShrink:0}} />Procesando...</>
+              : <><i className="ti ti-bolt" aria-hidden="true" />Usar evento</>}
           </button>
-        )}
-
-        {hasBeenUsed && (
-          <div className="w-full rounded-lg bg-gray-200 px-4 py-2 text-center text-sm font-semibold text-gray-800">
-            Evento ya utilizado
-          </div>
-        )}
+        ) : hasBeenUsed ? (
+          <div className="ev-card-used-msg">Evento ya utilizado</div>
+        ) : null}
       </div>
-    </div>
+    </article>
   );
 };

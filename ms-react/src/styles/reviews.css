@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+ 
+:root {
+  --rw-gold:        #c88c28;
+  --rw-gold-dark:   #9a6a18;
+  --rw-gold-light:  #e8a830;
+  --rw-green:       #64b464;
+  --rw-red:         #e06060;
+  --rw-star:        #c88c28;
+  --rw-star-empty:  rgba(200,140,40,0.18);
+ 
+  --rw-bg-root:     #0b0a08;
+  --rw-bg-panel:    #111009;
+  --rw-bg-card:     #131108;
+  --rw-bg-input:    rgba(255,255,255,0.04);
+  --rw-bg-field:    rgba(200,140,40,0.04);
+ 
+  --rw-text-primary:   #f5ede0;
+  --rw-text-secondary: rgba(245,237,224,0.50);
+  --rw-text-tertiary:  rgba(245,237,224,0.28);
+  --rw-text-hint:      rgba(245,237,224,0.15);
+ 
+  --rw-border:        rgba(200,140,40,0.13);
+  --rw-border-strong: rgba(200,140,40,0.26);
+  --rw-border-subtle: rgba(200,140,40,0.07);
+}
+ 
+@keyframes rw-fade-up  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+@keyframes rw-card-in  { from{opacity:0;transform:translateY(6px) scale(.99)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes rw-shimmer  { 0%{left:-100%} 100%{left:200%} }
+@keyframes rw-orbit-cw { to{transform:rotate(360deg)} }
+@keyframes rw-spin     { to{transform:rotate(360deg)} }
+@keyframes rw-star-pop { 0%{transform:scale(1)} 40%{transform:scale(1.35)} 100%{transform:scale(1)} }
+ 
+/* ══ RAÍZ ══ */
+.rw-root {
+  min-height:100vh; width:100%; border:none !important;
+  background:
+    radial-gradient(ellipse 70% 55% at 15% 40%, rgba(61,31,10,.50) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 85% 75%, rgba(26,46,26,.38) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 35% at 55% 5%,  rgba(80,50,8,.20) 0%, transparent 50%),
+    #0b0a08;
+  background-attachment:fixed;
+  color:var(--rw-text-primary);
+  font-family:'DM Sans',ui-sans-serif,system-ui,sans-serif;
+  padding:24px 28px; position:relative; margin:0; box-sizing:border-box;
+}
+main:has(> .rw-root) { background:#0b0a08 !important; padding:0 !important; margin:0 !important; border:none !important; }
+.rw-root::before { content:''; position:fixed; top:8%; left:3%; width:300px; height:300px; border-radius:50%; border:.5px solid rgba(200,140,40,.06); animation:rw-orbit-cw 34s linear infinite; pointer-events:none; z-index:0; }
+ 
+/* ══ HEADER ADMIN ══ */
+.rw-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:22px; animation:rw-fade-up .4s ease-out; position:relative; z-index:1; flex-wrap:wrap; }
+.rw-header-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(200,140,40,.10); border:.5px solid var(--rw-border-strong); border-radius:20px; padding:3px 10px; font-size:9px; color:var(--rw-gold); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:7px; }
+.rw-header-badge i { font-size:10px; }
+.rw-header-title { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:var(--rw-text-primary); margin:0 0 3px; }
+.rw-header-sub   { font-size:12px; color:var(--rw-text-tertiary); margin:0; }
+.rw-header-stats { display:flex; gap:10px; flex-shrink:0; }
+ 
+/* ══ STAT CARDS ══ */
+.rw-stat {
+  background:var(--rw-bg-panel); border:.5px solid var(--rw-border);
+  border-radius:12px; padding:12px 18px; min-width:120px;
+  position:relative;
+}
+.rw-stat::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; border-radius:12px 12px 0 0; background:var(--rw-gold); opacity:.5; }
+.rw-stat-label { font-size:10px; color:var(--rw-text-tertiary); margin-bottom:4px; }
+.rw-stat-value { font-family:'Playfair Display',serif; font-size:22px; font-weight:700; color:var(--rw-gold); line-height:1.1; }
+.rw-stat-sub    { font-size:10px; color:var(--rw-text-hint); margin-top:1px; }
+ 
+/* ══ SECCIÓN TABLA ══ */
+.rw-section { background:var(--rw-bg-panel); border:.5px solid var(--rw-border); border-radius:16px; overflow:hidden; animation:rw-fade-up .4s .1s ease-out both; position:relative; z-index:1; }
+.rw-section::before { content:''; position:absolute; top:9px; left:9px; width:10px; height:10px; border-top:1px solid rgba(200,140,40,.2); border-left:1px solid rgba(200,140,40,.2); pointer-events:none; }
+.rw-section::after  { content:''; position:absolute; bottom:9px; right:9px; width:10px; height:10px; border-bottom:1px solid rgba(200,140,40,.2); border-right:1px solid rgba(200,140,40,.2); pointer-events:none; }
+ 
+.rw-table { width:100%; border-collapse:collapse; }
+.rw-table thead tr { background:rgba(200,140,40,.07); }
+.rw-table th { font-size:9px; letter-spacing:1.3px; text-transform:uppercase; color:var(--rw-text-tertiary); padding:10px 14px; text-align:left; font-weight:500; white-space:nowrap; }
+.rw-table th.center { text-align:center; }
+.rw-table td { font-size:12px; color:var(--rw-text-secondary); padding:12px 14px; border-bottom:.5px solid var(--rw-border-subtle); }
+.rw-table tbody tr:last-child td { border-bottom:none; }
+.rw-table tbody tr { transition:background .15s; animation:rw-card-in .3s ease-out both; }
+.rw-table tbody tr:nth-child(even) td { background:rgba(255,255,255,.015); }
+.rw-table tbody tr:hover td { background:rgba(200,140,40,.04); }
+.rw-td-main  { color:var(--rw-text-primary) !important; font-weight:500; }
+.rw-td-sub   { font-size:10px; color:var(--rw-text-hint); margin-top:2px; }
+.rw-td-comment { max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rw-td-center { text-align:center; }
+ 
+/* ══ ESTRELLAS ══ */
+.rw-stars { display:flex; gap:2px; align-items:center; }
+.rw-star svg { transition:transform .15s; }
+.rw-star svg:hover { transform:scale(1.15); }
+.rw-star-label { font-size:11px; font-weight:500; color:var(--rw-gold); margin-left:5px; }
+ 
+/* Estrellas del formulario (interactivas) */
+.rw-star-interactive svg { cursor:pointer; transition:transform .15s; }
+.rw-star-interactive svg:hover { animation:rw-star-pop .25s ease-out; }
+.rw-star-feedback { font-size:11px; color:var(--rw-gold); margin-top:4px; font-weight:500; }
+ 
+/* ══ BOTÓN ELIMINAR EN TABLA ══ */
+.rw-del-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:5px 11px; border-radius:7px;
+  background:rgba(200,80,80,.10); border:.5px solid rgba(200,80,80,.2);
+  font-size:11px; font-weight:500; color:var(--rw-red);
+  cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .15s;
+}
+.rw-del-btn:hover { background:rgba(200,80,80,.20); }
+.rw-del-btn i { font-size:12px; }
+ 
+/* Botón eliminar icono (ReviewsList) */
+.rw-del-icon-btn { width:32px; height:32px; border-radius:8px; background:rgba(200,80,80,.08); border:.5px solid rgba(200,80,80,.15); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--rw-red); transition:background .15s; }
+.rw-del-icon-btn:hover { background:rgba(200,80,80,.20); }
+.rw-del-icon-btn i { font-size:14px; }
+ 
+/* ══ EMPTY / LOADING ══ */
+.rw-empty { background:var(--rw-bg-panel); border:.5px dashed var(--rw-border-strong); border-radius:14px; padding:48px 24px; text-align:center; }
+.rw-empty i { font-size:36px; display:block; margin-bottom:10px; opacity:.22; color:var(--rw-gold); }
+.rw-empty-title { font-size:14px; color:var(--rw-text-tertiary); margin-bottom:5px; font-weight:500; }
+.rw-empty-sub   { font-size:12px; color:var(--rw-text-hint); }
+.rw-loading { display:flex; align-items:center; justify-content:center; gap:10px; padding:40px; font-size:12px; color:var(--rw-text-tertiary); }
+.rw-spinner { width:18px; height:18px; border:2px solid rgba(200,140,40,.2); border-top-color:var(--rw-gold); border-radius:50%; animation:rw-spin .8s linear infinite; }
+ 
+/* ══ REVIEW FORM ══ */
+.rw-form-card {
+  background:var(--rw-bg-panel); border:.5px solid var(--rw-border);
+  border-radius:16px; padding:20px 22px; margin-bottom:20px;
+  position:relative; animation:rw-fade-up .3s ease-out;
+}
+.rw-form-card::before { content:''; position:absolute; top:9px; left:9px; width:10px; height:10px; border-top:1px solid rgba(200,140,40,.2); border-left:1px solid rgba(200,140,40,.2); pointer-events:none; }
+.rw-form-title { font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:var(--rw-text-primary); margin-bottom:16px; }
+.rw-form { display:flex; flex-direction:column; gap:14px; }
+.rw-form-field { display:flex; flex-direction:column; gap:5px; }
+.rw-form-label { font-size:9px; color:var(--rw-text-tertiary); letter-spacing:1.4px; text-transform:uppercase; font-weight:500; }
+.rw-form-textarea {
+  width:100%; background:var(--rw-bg-input); border:.5px solid var(--rw-border);
+  border-radius:9px; padding:10px 12px; font-size:12px; color:var(--rw-text-primary);
+  font-family:'DM Sans',sans-serif; outline:none; resize:none; min-height:90px;
+  transition:border-color .2s,background .2s; box-sizing:border-box;
+}
+.rw-form-textarea::placeholder { color:var(--rw-text-hint); }
+.rw-form-textarea:focus { border-color:rgba(200,140,40,.45); background:var(--rw-bg-field); }
+.rw-char-count { font-size:10px; color:var(--rw-text-hint); text-align:right; }
+ 
+.rw-submit-btn {
+  width:100%; padding:12px; border:none; border-radius:9px;
+  background:linear-gradient(135deg,var(--rw-gold),var(--rw-gold-dark));
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; color:#0a0a08;
+  cursor:pointer; position:relative; overflow:hidden; transition:opacity .2s;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.rw-submit-btn:hover:not(:disabled) { opacity:.9; }
+.rw-submit-btn:disabled { background:rgba(255,255,255,.08); color:var(--rw-text-hint); cursor:not-allowed; }
+.rw-submit-btn::after { content:''; position:absolute; top:0; left:-100%; width:60%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent); animation:rw-shimmer 2.5s infinite; }
+.rw-submit-spinner { width:13px; height:13px; border:2px solid rgba(10,10,8,.25); border-top-color:#0a0a08; border-radius:50%; animation:rw-spin .7s linear infinite; }
+ 
+/* ══ REVIEWS LIST ══ */
+.rw-avg-card {
+  background:var(--rw-bg-panel); border:.5px solid var(--rw-border);
+  border-radius:14px; padding:16px 20px; margin-bottom:16px;
+  display:flex; align-items:center; gap:16px;
+}
+.rw-avg-num { font-family:'Playfair Display',serif; font-size:36px; font-weight:700; color:var(--rw-gold); line-height:1; }
+.rw-avg-stars-wrap { display:flex; flex-direction:column; gap:5px; }
+.rw-avg-count { font-size:11px; color:var(--rw-text-tertiary); }
+ 
+.rw-list { display:flex; flex-direction:column; gap:10px; }
+ 
+.rw-review-card {
+  background:var(--rw-bg-card); border:.5px solid var(--rw-border);
+  border-radius:14px; padding:16px 18px;
+  animation:rw-card-in .3s ease-out both;
+  transition:border-color .2s;
+}
+.rw-review-card:hover { border-color:var(--rw-border-strong); }
+.rw-review-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; gap:10px; }
+.rw-review-header-left { display:flex; flex-direction:column; gap:4px; flex:1; }
+.rw-review-user { font-size:12px; font-weight:500; color:var(--rw-text-primary); }
+.rw-review-meta  { font-size:11px; color:var(--rw-text-hint); }
+.rw-review-date  { font-size:11px; color:var(--rw-text-tertiary); }
+.rw-review-restaurant { font-size:11px; color:var(--rw-text-secondary); }
+.rw-review-restaurant strong { color:var(--rw-text-primary); }
+.rw-review-plato { font-size:11px; color:var(--rw-text-secondary); }
+.rw-review-plato strong { color:var(--rw-text-primary); }
+.rw-review-comment { font-size:12px; color:var(--rw-text-secondary); line-height:1.6; }
+ 
+/* ══ PÁGINA CLIENTE (historial) ══ */
+.rw-client-root { min-height:100vh; background:#0b0a08; color:var(--rw-text-primary); font-family:'DM Sans',sans-serif; border:none !important; }
+.rw-client-header { background:rgba(14,13,11,.95); border-bottom:.5px solid var(--rw-border); padding:18px 28px; }
+.rw-client-header-inner { max-width:1000px; margin:0 auto; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.rw-client-header-title { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:var(--rw-text-primary); margin:0 0 3px; }
+.rw-client-header-sub   { font-size:12px; color:var(--rw-text-tertiary); margin:0; }
+.rw-client-header-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+ 
+.rw-btn-back {
+  display:inline-flex; align-items:center; gap:5px; padding:8px 14px;
+  border-radius:8px; font-size:12px; font-weight:500;
+  font-family:'DM Sans',sans-serif; cursor:pointer;
+  background:rgba(255,255,255,.04); border:.5px solid var(--rw-border);
+  color:var(--rw-text-secondary); transition:border-color .2s,color .2s;
+}
+.rw-btn-back:hover { border-color:var(--rw-border-strong); color:var(--rw-text-primary); }
+.rw-btn-back--gold { border-color:var(--rw-border-strong); color:var(--rw-gold); }
+.rw-btn-back i { font-size:13px; }
+ 
+.rw-client-main { max-width:1000px; margin:0 auto; padding:24px 28px; }
+ 
+/* ══ PÁGINA CLIENTE (restaurante/plato reviews) ══ */
+.rw-page-root { min-height:100vh; background:#0b0a08; color:var(--rw-text-primary); font-family:'DM Sans',sans-serif; border:none !important; }
+.rw-page-header { background:rgba(14,13,11,.95); border-bottom:.5px solid var(--rw-border); padding:18px 28px; }
+.rw-page-header-inner { max-width:860px; margin:0 auto; }
+.rw-page-title { font-family:'Playfair Display',serif; font-size:24px; font-weight:700; color:var(--rw-text-primary); margin:0 0 4px; }
+.rw-page-sub   { font-size:12px; color:var(--rw-text-tertiary); margin:0; }
+.rw-page-main  { max-width:860px; margin:0 auto; padding:24px 28px; }
+ 
+.rw-error-box { background:rgba(200,80,80,.08); border:.5px solid rgba(200,80,80,.2); border-radius:10px; padding:14px 18px; font-size:12px; color:var(--rw-red); }
+ 
+/* ══ RATING WIDGET ══ */
+.rw-widget { display:inline-flex; align-items:center; gap:6px; }
+.rw-widget-stars { display:flex; gap:1px; }
+.rw-widget-score { font-size:11px; font-weight:600; color:var(--rw-gold); }
+.rw-widget-count { font-size:10px; color:var(--rw-text-tertiary); }
+.rw-widget-none  { font-size:11px; color:var(--rw-text-hint); }
+.rw-widget-loading { font-size:11px; color:var(--rw-text-hint); }
+ 
+/* ══ RESTAURANTE SELECCIONADO (admin) ══ */
+.rw-rest-banner {
+  background:var(--rw-bg-panel); border:.5px solid var(--rw-border);
+  border-radius:12px; padding:12px 16px; margin-bottom:18px;
+  display:flex; align-items:center; gap:10px;
+  animation:rw-fade-up .3s ease-out; position:relative; z-index:1;
+}
+.rw-rest-banner i { font-size:16px; color:var(--rw-gold); flex-shrink:0; }
+.rw-rest-banner-label { font-size:10px; color:var(--rw-text-tertiary); }
+.rw-rest-banner-name  { font-size:14px; font-weight:500; color:var(--rw-text-primary); }

@@ -1,0 +1,130 @@
+/* Styles específicos para la página de Reportes — tema oscuro coherente */
+
+:root {
+	/* hereda variables globales de index.css / dashboard-admin.css */
+}
+
+.reports-root {
+	min-height: 100vh;
+	width: 100%;
+	padding: 24px 28px;
+	color: var(--da-text-primary);
+	/* Fondo oscuro con gradientes cálidos coherente con el resto */
+	background:
+		radial-gradient(ellipse 80% 55% at 15% 40%, rgba(61,31,10,0.45) 0%, transparent 60%),
+		radial-gradient(ellipse 60% 50% at 85% 85%, rgba(26,46,26,0.35) 0%, transparent 55%),
+		radial-gradient(ellipse 50% 40% at 55% 5%, rgba(80,50,10,0.18) 0%, transparent 50%),
+		var(--da-bg-root, #0b0a08);
+	background-attachment: fixed;
+}
+
+.reports-container {
+	max-width: 1100px;
+	margin: 0 auto;
+}
+
+.reports-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 18px;
+}
+
+.reports-title {
+	font-family: 'Playfair Display', serif;
+	font-size: 28px;
+	color: var(--da-text-primary);
+	margin: 0 0 6px;
+}
+.reports-sub { font-size: 13px; color: var(--da-text-tertiary); margin: 0; }
+
+.reports-card {
+	background: var(--da-bg-panel);
+	border: 0.5px solid var(--da-border-subtle);
+	border-radius: 10px;
+	padding: 16px;
+	box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+}
+
+.reports-controls {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.reports-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.reports-label { font-size: 11px; color: var(--da-text-tertiary); text-transform: uppercase; letter-spacing: 1px; }
+
+.reports-input {
+	min-width: 240px;
+	padding: 10px 12px;
+	border-radius: 8px;
+	background: var(--da-bg-input);
+	border: 0.5px solid var(--da-border);
+	color: var(--da-text-primary);
+	outline: none;
+}
+.reports-input:focus { border-color: var(--da-border-strong); }
+
+.reports-actions { display: flex; gap: 10px; align-items: center; }
+
+.reports-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 9px 16px;
+	border-radius: 9px;
+	font-size: 12px;
+	font-weight: 500;
+	font-family: 'DM Sans', sans-serif;
+	cursor: pointer;
+	border: none;
+	transition: opacity .2s, transform .1s;
+	white-space: nowrap;
+}
+.reports-btn:active { transform: scale(.97); }
+.reports-btn:disabled { opacity: .52; cursor: not-allowed; }
+
+.reports-btn--income {
+	background: linear-gradient(135deg, var(--da-gold), var(--da-gold-dark));
+	color: #0a0a08;
+	position: relative;
+	overflow: hidden;
+	box-shadow: 0 8px 18px rgba(0,0,0,.18);
+}
+.reports-btn--income:hover:not(:disabled) { opacity: .9; }
+.reports-btn--income::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 60%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+	animation: or-shimmer 2.5s infinite;
+}
+
+.reports-btn--topplatos {
+	background: rgba(255,255,255,.04);
+	color: var(--da-text-secondary);
+	border: .5px solid rgba(255,255,255,.08);
+	box-shadow: none;
+}
+.reports-btn--topplatos:hover:not(:disabled) { background: rgba(255,255,255,.07); color: var(--da-text-primary); }
+
+/* Empty / large space area for consistency with mockup */
+.reports-empty-space { min-height: 420px; }
+
+@media (max-width: 800px) {
+	.reports-controls { flex-direction: column; align-items: stretch; }
+	.reports-input { width: 100%; min-width: 0; }
+	.reports-actions { justify-content: flex-start; }
+}
+
