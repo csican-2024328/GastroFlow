@@ -7,6 +7,7 @@ import { notyfError } from '../../../shared/utils/notyf.js';
 import { useAuthStore } from '../../auth/store/authStore.js';
 import { useUserManagmentStore } from '../store/useUserManagmentStore.js';
 import { AuthInput } from '../../../shared/components/auth/AuthInput.jsx';
+import '../../../styles/users.css'
 
 const normalizeRole = (role) => (role || '').toString().trim().toUpperCase();
 

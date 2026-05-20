@@ -1,626 +1,410 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
 import { NoRestaurantAssigned } from '../../../shared/components/layout/NoRestaurantAssigned.jsx';
-import {
-  getOrders,
-  updateOrderStatus,
-  cancelOrder
-} from '../../../shared/api/orderService.js';
+import { getOrders, updateOrderStatus, cancelOrder } from '../../../shared/api/orderService.js';
 import { getRestaurants } from '../../../shared/api/restaurantService.js';
-import StatusBadge from '../../../shared/components/ui/StatusBadge.jsx';
-import Modal from '../../../shared/components/ui/Modal.jsx';
-
+import '../../../styles/orders.css';
+ 
+/* ── Helpers — INTACTOS ── */
+const VALID_TRANSITIONS = {
+  PENDIENTE:    ['EN_PREPARACION', 'CANCELADO'],
+  EN_PREPARACION: (tipo) => tipo === 'A_DOMICILIO' ? ['ENTREGADO_AL_REPARTIDOR','CANCELADO'] : ['LISTO','CANCELADO'],
+  LISTO:                  [],
+  ENTREGADO_AL_REPARTIDOR: ['ENTREGADO','CANCELADO'],
+  ENTREGADO: [],
+  CANCELADO: [],
+};
+const getStatusOptions = (estado, tipoPedido) => {
+  const t = VALID_TRANSITIONS[estado];
+  if (!t) return [];
+  return typeof t === 'function' ? t(tipoPedido) || [] : t;
+};
+const STATUS_LABEL = { PENDIENTE:'Pendiente', EN_PREPARACION:'En Preparación', LISTO:'Listo', ENTREGADO_AL_REPARTIDOR:'Entregado al Repartidor', ENTREGADO:'Entregado', CANCELADO:'Cancelado' };
+const STATUS_ICON  = { PENDIENTE:'🕐', EN_PREPARACION:'🍳', LISTO:'✅', ENTREGADO_AL_REPARTIDOR:'🚚', ENTREGADO:'✅', CANCELADO:'❌' };
+const STATUS_CSS   = { PENDIENTE:'or-status-badge--pendiente', EN_PREPARACION:'or-status-badge--preparacion', LISTO:'or-status-badge--listo', ENTREGADO_AL_REPARTIDOR:'or-status-badge--repartidor', ENTREGADO:'or-status-badge--entregado', CANCELADO:'or-status-badge--cancelado' };
+ 
+const formatFecha = (v) => { const d = new Date(v); return isNaN(d) ? '-' : d.toLocaleString('es-ES'); };
+const formatCurrency = (v) => `Q ${Number(v||0).toFixed(2)}`;
+ 
 const OrderManagement = () => {
   const { restaurantId, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
-  const [orders, setOrders] = useState([]);
+  const [orders,      setOrders]      = useState([]);
   const [restaurants, setRestaurants] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading,     setLoading]     = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
-
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [newStatus, setNewStatus] = useState('');
-
-  useEffect(() => {
-    fetchOrders();
-    fetchRestaurants();
-  }, [restaurantId]);
-
-  if (isRestaurantAdmin && !hasRestaurantAssigned) {
-    return <NoRestaurantAssigned />;
-  }
-
-  const fetchRestaurants = async () => {
-    if (restaurantId) {
-      return;
-    }
-
+  const [notes, setNotes] = useState('');
+ 
+  useEffect(() => { fetchOrders(); fetchRestaurantsList(); }, [restaurantId]);
+ 
+  if (isRestaurantAdmin && !hasRestaurantAssigned) return <NoRestaurantAssigned />;
+ 
+  const fetchRestaurantsList = async () => {
+    if (restaurantId) return;
     try {
       const res = await getRestaurants();
-      const list = res?.data?.data || res?.data || [];
-      setRestaurants(list);
-    } catch (_) {}
+      setRestaurants(res?.data?.data || res?.data || []);
+    } catch {}
   };
-
-  // Busca el nombre del restaurante por su _id
-  const getRestaurantName = (restaurantID) => {
-    if (!restaurantID) return '-';
-    // Si ya viene populado con nombre
-    if (restaurantID?.nombre) return restaurantID.nombre;
-    if (restaurantID?.name)   return restaurantID.name;
-    // Si solo viene el _id, buscar en la lista local
-    const id = restaurantID?._id || restaurantID;
-    const found = restaurants.find(r => (r._id || r.id) === id);
+ 
+  const getRestaurantName = (rID) => {
+    if (!rID) return '-';
+    if (rID?.nombre) return rID.nombre;
+    if (rID?.name)   return rID.name;
+    const id = rID?._id || rID;
+    const found = restaurants.find(r => (r._id||r.id) === id);
     return found?.nombre || found?.name || '-';
   };
-
+ 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await getOrders({ restaurantID: restaurantId || undefined, restaurantId: restaurantId || undefined });
+      const res = await getOrders({ restaurantID: restaurantId||undefined, restaurantId: restaurantId||undefined });
       setOrders(res?.data?.data || res?.data || []);
-    } catch (error) {
-      toast.error('Error al cargar pedidos');
-    } finally {
-      setLoading(false);
-    }
+    } catch { toast.error('Error al cargar pedidos'); }
+    finally { setLoading(false); }
   };
-
+ 
   const handleUpdateStatus = async () => {
     if (!selectedOrder) return;
     try {
       setStatusLoading(true);
       await updateOrderStatus(selectedOrder._id, newStatus);
       toast.success('Estado actualizado correctamente');
-      setIsStatusModalOpen(false);
+      setIsStatusOpen(false);
       fetchOrders();
-    } catch (error) {
-      toast.error(error?.response?.data?.message || 'Error al actualizar estado');
-    } finally {
-      setStatusLoading(false);
-    }
+    } catch (err) { toast.error(err?.response?.data?.message || 'Error al actualizar estado'); }
+    finally { setStatusLoading(false); }
   };
-
+ 
   const handleCancelOrder = async (orderId) => {
     if (!window.confirm('¿Está seguro de cancelar este pedido?')) return;
     try {
       await cancelOrder(orderId);
       toast.success('Pedido cancelado');
       fetchOrders();
-    } catch (error) {
-      toast.error(error?.response?.data?.message || 'Error al cancelar el pedido');
-    }
+    } catch (err) { toast.error(err?.response?.data?.message || 'Error al cancelar el pedido'); }
   };
-
-  const formatFecha = (val) => {
-    const d = new Date(val);
-    return isNaN(d) ? '-' : d.toLocaleString('es-ES');
-  };
-
-  const VALID_TRANSITIONS = {
-    // PENDIENTE puede ir a EN_PREPARACION o CANCELADO
-    'PENDIENTE': ['EN_PREPARACION', 'CANCELADO'],
-    
-    // EN_PREPARACION depende del tipo de pedido
-    'EN_PREPARACION': (tipoPedido) => {
-      if (tipoPedido === 'A_DOMICILIO') {
-        return ['ENTREGADO_AL_REPARTIDOR', 'CANCELADO'];
-      }
-      // EN_MESA y PARA_LLEVAR
-      return ['LISTO', 'CANCELADO'];
-    },
-    
-    // LISTO solo para EN_MESA y PARA_LLEVAR - no editable después
-    'LISTO': [],
-    
-    // ENTREGADO_AL_REPARTIDOR solo para A_DOMICILIO
-    'ENTREGADO_AL_REPARTIDOR': ['ENTREGADO', 'CANCELADO'],
-    
-    // ENTREGADO - no editable
-    'ENTREGADO': [],
-    
-    // CANCELADO - no editable
-    'CANCELADO': []
-  };
-
-  const getStatusOptions = (estadoActual, tipoPedido) => {
-    const transitions = VALID_TRANSITIONS[estadoActual];
-    if (!transitions) return [];
-    if (typeof transitions === 'function') {
-      return transitions(tipoPedido) || [];
-    }
-    return transitions;
-  };
-
-  const statusLabel = {
-    'PENDIENTE': 'Pendiente',
-    'EN_PREPARACION': 'En Preparación',
-    'LISTO': 'Listo',
-    'ENTREGADO_AL_REPARTIDOR': 'Entregado al Repartidor',
-    'ENTREGADO': 'Entregado',
-    'CANCELADO': 'Cancelado'
-  };
-
+ 
+  /* Stats rápidas */
+  const totalOrders   = orders.length;
+  const enPrep        = orders.filter(o => o.estado === 'EN_PREPARACION').length;
+  const listos        = orders.filter(o => o.estado === 'LISTO').length;
+  const cancelados    = orders.filter(o => o.estado === 'CANCELADO').length;
+ 
   return (
-    <div className="p-6 min-h-screen bg-[#FDFBF7]">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-
-        {/* Header */}
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-[#FAF9F6]">
-          <h1 className="text-2xl font-bold text-gray-800">Gestión de Pedidos</h1>
-          {!(isRestaurantAdmin && hasRestaurantAssigned) ? (
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
-              </svg>
-              Filtrar
-            </button>
-          ) : null}
+    <div className="or-root">
+ 
+      {/* HEADER */}
+      <div className="or-header">
+        <div>
+          <div className="or-header-badge">
+            <i className="ti ti-shopping-cart" aria-hidden="true" />
+            Gestión de pedidos
+          </div>
+          <h1 className="or-header-title">Pedidos</h1>
+          <p className="or-header-sub">Administra y actualiza el estado de todos los pedidos.</p>
         </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-[#FAF9F6] text-gray-700 font-semibold border-b border-gray-200">
+        {!(isRestaurantAdmin && hasRestaurantAssigned) && (
+          <button className="or-btn-filter">
+            <i className="ti ti-filter" aria-hidden="true" />
+            Filtrar
+          </button>
+        )}
+      </div>
+ 
+      {/* STATS */}
+      <div className="or-stats">
+        <div className="or-stat or-stat--gold">
+          <div className="or-stat-top"><div className="or-stat-icon"><i className="ti ti-shopping-cart" aria-hidden="true" /></div></div>
+          <div className="or-stat-label">Total pedidos</div>
+          <div className="or-stat-value">{totalOrders}</div>
+        </div>
+        <div className="or-stat or-stat--orange">
+          <div className="or-stat-top"><div className="or-stat-icon or-stat-icon--o"><i className="ti ti-chef-hat" aria-hidden="true" /></div></div>
+          <div className="or-stat-label">En preparación</div>
+          <div className="or-stat-value or-stat-value--orange">{enPrep}</div>
+        </div>
+        <div className="or-stat or-stat--green">
+          <div className="or-stat-top"><div className="or-stat-icon or-stat-icon--g"><i className="ti ti-check" aria-hidden="true" /></div></div>
+          <div className="or-stat-label">Listos</div>
+          <div className="or-stat-value or-stat-value--green">{listos}</div>
+        </div>
+        <div className="or-stat or-stat--red">
+          <div className="or-stat-top"><div className="or-stat-icon or-stat-icon--r"><i className="ti ti-x" aria-hidden="true" /></div></div>
+          <div className="or-stat-label">Cancelados</div>
+          <div className="or-stat-value or-stat-value--red">{cancelados}</div>
+        </div>
+      </div>
+ 
+      {/* TABLA */}
+      <div className="or-section">
+        <div className="or-section-header">
+          <span className="or-section-title">Lista de pedidos</span>
+          <span className="or-section-badge">{orders.length} registros</span>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="or-table">
+            <thead>
               <tr>
-                <th className="px-6 py-4">Número</th>
-                <th className="px-6 py-4">Restaurante</th>
-                <th className="px-6 py-4">Mesa</th>
-                <th className="px-6 py-4">Cliente</th>
-                <th className="px-6 py-4">Total</th>
-                <th className="px-6 py-4">Estado</th>
-                <th className="px-6 py-4">Fecha</th>
-                <th className="px-6 py-4 text-center">Acciones</th>
+                <th style={{ width: '12%' }}>Número</th>
+                <th style={{ width: '16%' }}>Restaurante</th>
+                <th style={{ width: '8%'  }}>Mesa</th>
+                <th style={{ width: '14%' }}>Cliente</th>
+                <th style={{ width: '10%' }}>Total</th>
+                <th style={{ width: '14%' }}>Estado</th>
+                <th style={{ width: '16%' }}>Fecha</th>
+                <th style={{ width: '10%', textAlign:'center' }}>Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan="8" className="px-6 py-8 text-center text-gray-500">Cargando pedidos...</td>
-                </tr>
+                <tr><td colSpan="8" style={{ padding: 0 }}>
+                  <div className="or-table-loading"><div className="or-table-spinner" />Cargando pedidos...</div>
+                </td></tr>
               ) : orders.length > 0 ? (
-                orders.map((order, index) => {
-                  const estado = order.estado;
+                orders.map((order, idx) => {
+                  const estado     = order.estado;
                   const isCompleted = estado === 'ENTREGADO' || estado === 'CANCELADO';
-                  const mesaNumero = order.mesaID?.numero ?? order.mesaID?.number ?? '-';
-
+                  const opts = getStatusOptions(estado, order.tipoPedido);
                   return (
-                    <tr key={order._id || index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 font-medium">{order.numeroOrden || '-'}</td>
-                      <td className="px-6 py-4">{getRestaurantName(order.restaurantID)}</td>
-                      <td className="px-6 py-4">{mesaNumero}</td>
-                      <td className="px-6 py-4">{order.clienteNombre || 'Cliente General'}</td>
-                      <td className="px-6 py-4">${Number(order.total || 0).toFixed(2)}</td>
-                      <td className="px-6 py-4"><StatusBadge status={estado} /></td>
-                      <td className="px-6 py-4">{formatFecha(order.createdAt)}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
-
-                          {/* Ver factura */}
-                          <button
-                            onClick={() => { setSelectedOrder(order); setIsDetailModalOpen(true); }}
-                            className="p-1.5 text-gray-500 hover:text-blue-600 border border-gray-200 rounded transition"
-                            title="Ver detalles de factura"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                            </svg>
+                    <tr key={order._id || idx} style={{ animationDelay:`${idx*.03}s` }}>
+                      <td className="or-td-main">{order.numeroOrden || '-'}</td>
+                      <td>{getRestaurantName(order.restaurantID)}</td>
+                      <td>{order.mesaID?.numero ?? order.mesaID?.number ?? '-'}</td>
+                      <td>{order.clienteNombre || 'Cliente General'}</td>
+                      <td className="or-td-gold">{formatCurrency(order.total)}</td>
+                      <td>
+                        <span className={`or-status-badge ${STATUS_CSS[estado] || ''}`}>
+                          {STATUS_ICON[estado]} {STATUS_LABEL[estado] || estado}
+                        </span>
+                      </td>
+                      <td style={{ fontSize:11, color:'rgba(245,237,224,.35)' }}>{formatFecha(order.createdAt)}</td>
+                      <td>
+                        <div className="or-action-btns" style={{ justifyContent:'center' }}>
+                          <button className="or-action-btn or-action-btn--view" onClick={() => { setSelectedOrder(order); setIsDetailOpen(true); }} title="Ver detalle" aria-label="Ver detalle">
+                            <i className="ti ti-eye" aria-hidden="true" />
                           </button>
-
-                          {/* Editar estado */}
-                          <button
-                            onClick={() => {
-                              const opciones = getStatusOptions(estado, order.tipoPedido);
-                              setSelectedOrder(order);
-                              setNewStatus(opciones[0] || '');
-                              setIsStatusModalOpen(true);
-                            }}
-                            disabled={isCompleted || getStatusOptions(estado, order.tipoPedido).length === 0}
-                            className={`p-1.5 border border-gray-200 rounded transition ${isCompleted || getStatusOptions(estado, order.tipoPedido).length === 0 ? 'opacity-40 cursor-not-allowed text-gray-300' : 'text-gray-500 hover:text-[#2D4F4F]'}`}
-                            title={isCompleted ? 'No se puede cambiar estado' : 'Cambiar estado'}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 18 4.5h-2.25A2.25 2.25 0 0 0 13.5 6.75v10.5m0 0H6a2.25 2.25 0 0 1-2.25-2.25V6.75A2.25 2.25 0 0 1 6 4.5h2.25A2.25 2.25 0 0 1 10.5 6.75v10.5" />
-                            </svg>
+                          <button className="or-action-btn or-action-btn--edit" onClick={() => { setSelectedOrder(order); setNewStatus(opts[0]||''); setIsStatusOpen(true); }} disabled={isCompleted||opts.length===0} title="Cambiar estado" aria-label="Cambiar estado">
+                            <i className="ti ti-clipboard-list" aria-hidden="true" />
                           </button>
-
-                          {/* Cancelar */}
-                          <button
-                            onClick={() => handleCancelOrder(order._id)}
-                            disabled={isCompleted}
-                            className={`p-1.5 border border-gray-200 rounded transition ${isCompleted ? 'opacity-40 cursor-not-allowed text-gray-300' : 'text-gray-500 hover:text-red-600'}`}
-                            title={isCompleted ? 'No se puede cancelar' : 'Cancelar pedido'}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                          <button className="or-action-btn or-action-btn--cancel" onClick={() => handleCancelOrder(order._id)} disabled={isCompleted} title="Cancelar" aria-label="Cancelar">
+                            <i className="ti ti-x" aria-hidden="true" />
                           </button>
-
                         </div>
                       </td>
                     </tr>
                   );
                 })
               ) : (
-                <tr>
-                  <td colSpan="8" className="px-6 py-8 text-center text-gray-500">No hay pedidos disponibles</td>
-                </tr>
+                <tr><td colSpan="8" style={{ padding:0 }}>
+                  <div className="or-table-empty">
+                    <i className="ti ti-shopping-cart-off" aria-hidden="true" />
+                    No hay pedidos disponibles
+                  </div>
+                </td></tr>
               )}
             </tbody>
           </table>
         </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500 bg-[#FAF9F6]">
-          <span>Mostrando 1 a {Math.min(10, orders.length)} de {orders.length} pedidos</span>
-          <div className="flex items-center gap-2">
-            <span>Registros por página</span>
-            <select className="border border-gray-300 rounded px-2 py-1 bg-white">
-              <option>10</option>
-              <option>20</option>
-              <option>50</option>
+        <div className="or-table-footer">
+          <span className="or-table-footer-info">Mostrando 1 a {Math.min(10, orders.length)} de {orders.length} pedidos</span>
+          <div className="or-table-footer-right">
+            Registros por página
+            <select className="or-page-select">
+              <option>10</option><option>20</option><option>50</option>
             </select>
           </div>
         </div>
       </div>
-
-      {/* Modal: Ver Factura */}
-      <Modal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        title="Detalle de Factura"
-        maxWidth="max-w-2xl"
-      >
-        {selectedOrder ? (
-          <div className="space-y-6">
-
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <div className="border-b pb-2">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Número de Pedido</p>
-                  <p className="text-lg font-semibold text-gray-800">{selectedOrder.numeroOrden || '-'}</p>
-                </div>
-                <div className="border-b pb-2">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Restaurante</p>
-                  <p className="text-lg font-semibold text-gray-800">{getRestaurantName(selectedOrder.restaurantID)}</p>
-                </div>
-                <div className="border-b pb-2">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Mesa</p>
-                  <p className="text-lg font-semibold text-gray-800">
-                    {selectedOrder.mesaID?.numero ?? selectedOrder.mesaID?.number ?? '-'}
-                  </p>
+ 
+      {/* MODAL DETALLE */}
+      {isDetailOpen && selectedOrder && (
+        <div className="or-modal-overlay">
+          <div className="or-modal or-modal--lg">
+            <div className="or-modal-header">
+              <div className="or-modal-header-left">
+                <div className="or-modal-icon"><i className="ti ti-receipt" aria-hidden="true" /></div>
+                <div>
+                  <div className="or-modal-title">Detalle del pedido</div>
+                  <div className="or-modal-sub">#{selectedOrder.numeroOrden}</div>
                 </div>
               </div>
-              <div className="space-y-3">
-                <div className="border-b pb-2">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Cliente</p>
-                  <p className="text-lg font-semibold text-gray-800">{selectedOrder.clienteNombre || 'Cliente General'}</p>
-                </div>
-                <div className="border-b pb-2">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Tipo de Pedido</p>
-                  <p className="text-lg font-semibold text-gray-800">
-                    {selectedOrder.tipoPedido === 'EN_MESA' && '🍽️ En Mesa'}
-                    {selectedOrder.tipoPedido === 'A_DOMICILIO' && '🏠 A Domicilio'}
-                    {selectedOrder.tipoPedido === 'PARA_LLEVAR' && '📦 Para Llevar'}
-                  </p>
-                </div>
-                <div className="border-b pb-2">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Fecha</p>
-                  <p className="text-lg font-semibold text-gray-800">{formatFecha(selectedOrder.createdAt)}</p>
-                </div>
-              </div>
+              <button onClick={() => setIsDetailOpen(false)} className="or-modal-close" aria-label="Cerrar">
+                <i className="ti ti-x" aria-hidden="true" />
+              </button>
             </div>
-
-            <div className="border-t pt-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Estado</p>
-                <StatusBadge status={selectedOrder.estado} />
+            <div className="or-modal-body">
+ 
+              {/* Info básica */}
+              <div className="or-modal-section" style={{ marginBottom:16 }}>
+                <div className="or-modal-section-title">Información del pedido</div>
+                <div className="or-detail-grid">
+                  <div className="or-detail-item"><div className="or-detail-label"><i className="ti ti-hash" aria-hidden="true" />Número</div><div className="or-detail-value">{selectedOrder.numeroOrden||'-'}</div></div>
+                  <div className="or-detail-item"><div className="or-detail-label"><i className="ti ti-building-store" aria-hidden="true" />Restaurante</div><div className="or-detail-value">{getRestaurantName(selectedOrder.restaurantID)}</div></div>
+                  <div className="or-detail-item"><div className="or-detail-label"><i className="ti ti-armchair" aria-hidden="true" />Mesa</div><div className="or-detail-value">{selectedOrder.mesaID?.numero??selectedOrder.mesaID?.number??'-'}</div></div>
+                  <div className="or-detail-item"><div className="or-detail-label"><i className="ti ti-user" aria-hidden="true" />Cliente</div><div className="or-detail-value">{selectedOrder.clienteNombre||'Cliente General'}</div></div>
+                  <div className="or-detail-item"><div className="or-detail-label"><i className="ti ti-truck-delivery" aria-hidden="true" />Tipo</div>
+                    <div className="or-detail-value">{selectedOrder.tipoPedido==='EN_MESA'?'🍽️ En Mesa':selectedOrder.tipoPedido==='A_DOMICILIO'?'🏠 A Domicilio':'📦 Para Llevar'}</div>
+                  </div>
+                  <div className="or-detail-item"><div className="or-detail-label"><i className="ti ti-calendar" aria-hidden="true" />Fecha</div><div className="or-detail-value" style={{fontSize:11}}>{formatFecha(selectedOrder.createdAt)}</div></div>
+                  <div className="or-detail-item"><div className="or-detail-label"><i className="ti ti-activity" aria-hidden="true" />Estado</div>
+                    <div className="or-detail-value"><span className={`or-status-badge ${STATUS_CSS[selectedOrder.estado]||''}`}>{STATUS_ICON[selectedOrder.estado]} {STATUS_LABEL[selectedOrder.estado]||selectedOrder.estado}</span></div>
+                  </div>
+                  <div className="or-detail-item"><div className="or-detail-label"><i className="ti ti-credit-card" aria-hidden="true" />Pago</div><div className="or-detail-value">{selectedOrder.metodoPago||'PENDIENTE'}</div></div>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Método de Pago</p>
-                <p className="text-sm font-medium text-gray-700">{selectedOrder.metodoPago || 'PENDIENTE'}</p>
+ 
+              {/* Items */}
+              {selectedOrder.items?.length > 0 && (
+                <div className="or-modal-section" style={{ marginBottom:16 }}>
+                  <div className="or-modal-section-title">Ítems del pedido</div>
+                  <table className="or-items-table">
+                    <thead><tr><th style={{width:'40%'}}>Plato</th><th style={{width:'15%'}}>Cant.</th><th style={{width:'20%'}}>P. Unit.</th><th style={{width:'25%',textAlign:'right'}}>Subtotal</th></tr></thead>
+                    <tbody>
+                      {selectedOrder.items.map((item, idx) => {
+                        const nombre = item.nombre||item.plato?.nombre||item.plato?.name||item.menu?.nombre||item.menu?.name||'N/A';
+                        const qty = item.cantidad||1;
+                        const pUnit = item.precioUnitario||0;
+                        const sub = item.subtotal||(pUnit*qty);
+                        return (
+                          <tr key={idx}>
+                            <td className="or-td-main">{nombre}</td>
+                            <td>{qty}</td>
+                            <td>{formatCurrency(pUnit)}</td>
+                            <td className="td-right">{formatCurrency(sub)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+ 
+              {/* Financiero */}
+              <div className="or-finance-box">
+                <div className="or-finance-row"><span>Subtotal</span><span className="or-finance-val">{formatCurrency(selectedOrder.subtotal)}</span></div>
+                <div className="or-finance-row"><span>Impuesto</span><span className="or-finance-val">{formatCurrency(selectedOrder.impuesto)}</span></div>
+                {Number(selectedOrder.descuento) > 0 && <div className="or-finance-row or-finance-row--discount"><span>Descuento</span><span>-{formatCurrency(selectedOrder.descuento)}</span></div>}
+                {Number(selectedOrder.descuentoPorCoupon) > 0 && <div className="or-finance-row or-finance-row--discount"><span>Cupón {selectedOrder.couponCode?`(${selectedOrder.couponCode})`:''}</span><span>-{formatCurrency(selectedOrder.descuentoPorCoupon)}</span></div>}
+                {Number(selectedOrder.propina) > 0 && <div className="or-finance-row"><span>Propina</span><span className="or-finance-val">{formatCurrency(selectedOrder.propina)}</span></div>}
+                {Number(selectedOrder.cargosExtra) > 0 && <div className="or-finance-row"><span>Cargos extra</span><span className="or-finance-val">{formatCurrency(selectedOrder.cargosExtra)}</span></div>}
+                <div className="or-finance-row or-finance-row--total"><span>TOTAL</span><span>{formatCurrency(selectedOrder.total)}</span></div>
               </div>
+ 
             </div>
-
-            {selectedOrder.items?.length > 0 && (
-              <div className="border-t pt-4">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-3">Ítems del Pedido</p>
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 py-2 text-left text-gray-700 font-semibold">Plato</th>
-                      <th className="px-3 py-2 text-center text-gray-700 font-semibold">Cant.</th>
-                      <th className="px-3 py-2 text-right text-gray-700 font-semibold">P. Unit.</th>
-                      <th className="px-3 py-2 text-right text-gray-700 font-semibold">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedOrder.items.map((item, idx) => {
-                      const nombre = item.nombre
-                        || item.plato?.nombre || item.plato?.name
-                        || item.menu?.nombre  || item.menu?.name
-                        || 'N/A';
-                      const precioUnit = item.precioUnitario || 0;
-                      const cantidad = item.cantidad || 1;
-                      const subtotalItem = item.subtotal || (precioUnit * cantidad);
-                      return (
-                        <tr key={idx} className="border-b border-gray-100">
-                          <td className="px-3 py-2 text-gray-800">{nombre}</td>
-                          <td className="px-3 py-2 text-center text-gray-800">{cantidad}</td>
-                          <td className="px-3 py-2 text-right text-gray-800">${Number(precioUnit).toFixed(2)}</td>
-                          <td className="px-3 py-2 text-right font-semibold text-gray-800">${Number(subtotalItem).toFixed(2)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            <div className="border-t pt-4">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-3">Desglose de Factura</p>
-              <div className="space-y-2 bg-gray-50 p-4 rounded">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${Number(selectedOrder.subtotal || 0).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Impuesto</span>
-                  <span className="font-medium">${Number(selectedOrder.impuesto || 0).toFixed(2)}</span>
-                </div>
-                {Number(selectedOrder.descuento) > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Descuento</span>
-                    <span className="font-medium text-green-600">-${Number(selectedOrder.descuento).toFixed(2)}</span>
-                  </div>
-                )}
-                {Number(selectedOrder.descuentoPorCoupon) > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Cupón {selectedOrder.couponCode ? `(${selectedOrder.couponCode})` : ''}</span>
-                    <span className="font-medium text-green-600">-${Number(selectedOrder.descuentoPorCoupon).toFixed(2)}</span>
-                  </div>
-                )}
-                {Number(selectedOrder.descuentoPorEvento) > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Descuento por Evento</span>
-                    <span className="font-medium text-green-600">-${Number(selectedOrder.descuentoPorEvento).toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Propina</span>
-                  <span className="font-medium">${Number(selectedOrder.propina || 0).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Cargos Extra</span>
-                  <span className="font-medium">${Number(selectedOrder.cargosExtra || 0).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between border-t pt-2 font-bold text-base">
-                  <span>TOTAL</span>
-                  <span className="text-[#2D4F4F]">${Number(selectedOrder.total || 0).toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => setIsDetailModalOpen(false)}
-                className="px-6 py-2 bg-[#2D4F4F] text-white rounded-md hover:bg-[#3A6B6B] transition"
-              >
-                Cerrar
+            <div className="or-modal-footer">
+              <button onClick={() => setIsDetailOpen(false)} className="or-btn or-btn-ghost">
+                <i className="ti ti-x" aria-hidden="true" />Cerrar
               </button>
             </div>
           </div>
-        ) : (
-          <p className="text-gray-500">Pedido no encontrado</p>
-        )}
-      </Modal>
-
-      {/* Modal: Cambiar Estado */}
-      <Modal
-        isOpen={isStatusModalOpen}
-        onClose={() => setIsStatusModalOpen(false)}
-        title={`Editar Estado del Pedido - Pedido #${selectedOrder?.numeroOrden}`}
-        maxWidth="max-w-2xl"
-      >
-        {selectedOrder && (
-          <div className="space-y-6">
-            
-            {/* 1. RESUMEN DEL PEDIDO */}
-            <div className="border-l-4 border-[#2D4F4F] pl-4">
-              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">1. Resumen del Pedido</p>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+        </div>
+      )}
+ 
+      {/* MODAL CAMBIAR ESTADO */}
+      {isStatusOpen && selectedOrder && (
+        <div className="or-modal-overlay">
+          <div className="or-modal or-modal--lg">
+            <div className="or-modal-header">
+              <div className="or-modal-header-left">
+                <div className="or-modal-icon"><i className="ti ti-clipboard-list" aria-hidden="true" /></div>
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Pedido:</p>
-                  <p className="font-semibold text-gray-800">#{selectedOrder.numeroOrden}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Tipo de Pedido:</p>
-                  <p className="font-semibold text-gray-800">
-                    {selectedOrder.tipoPedido === 'EN_MESA' && '🍽️ EN_MESA'}
-                    {selectedOrder.tipoPedido === 'A_DOMICILIO' && '🏠 A_DOMICILIO'}
-                    {selectedOrder.tipoPedido === 'PARA_LLEVAR' && '📦 PARA_LLEVAR'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Restaurante:</p>
-                  <p className="font-semibold text-gray-800">{getRestaurantName(selectedOrder.restaurantID)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Ubicación:</p>
-                  <p className="font-semibold text-gray-800">
-                    {selectedOrder.mesaID?.numero ?? selectedOrder.mesaID?.number ?? 'Mesa ' + (selectedOrder.mesaID?.numero || '-')}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Cliente:</p>
-                  <p className="font-semibold text-gray-800">{selectedOrder.clienteNombre || 'Cliente General'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Total:</p>
-                  <p className="font-semibold text-gray-800">${Number(selectedOrder.total || 0).toFixed(2)}</p>
+                  <div className="or-modal-title">Cambiar estado</div>
+                  <div className="or-modal-sub">Pedido #{selectedOrder.numeroOrden}</div>
                 </div>
               </div>
-
-              {/* Resumen de items */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-xs text-gray-600 mb-2">Productos:</p>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {selectedOrder.items?.map((item, idx) => {
-                    const nombre = item.nombre || item.plato?.nombre || item.plato?.name || item.menu?.nombre || item.menu?.name || 'N/A';
-                    const cantidad = item.cantidad || 1;
-                    return (
-                      <p key={idx} className="text-xs text-gray-700">
-                        {idx + 1}. {nombre} x{cantidad}
-                      </p>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* 2. PROGRESIÓN DE ESTADO */}
-            <div className="border-l-4 border-orange-400 pl-4">
-              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-4">2. Progresión de Estado ({selectedOrder.tipoPedido})</p>
-              
-              {selectedOrder.tipoPedido === 'EN_MESA' && (
-                <div className="flex items-center justify-start gap-4">
-                  <div className={`flex flex-col items-center ${selectedOrder.estado === 'PENDIENTE' ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>
-                    <div className="w-12 h-12 rounded-full border-2 border-current flex items-center justify-center text-lg">📋</div>
-                    <p className="text-xs mt-1 font-semibold">PENDIENTE</p>
-                    <p className="text-xs text-gray-500">Estado actual</p>
-                  </div>
-                  <div className="flex-1 h-1 bg-gradient-to-r from-orange-400 to-gray-300"></div>
-                  <div className={`flex flex-col items-center ${selectedOrder.estado === 'EN_PREPARACION' ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>
-                    <div className="w-12 h-12 rounded-full border-2 border-current flex items-center justify-center text-lg">🍳</div>
-                    <p className="text-xs mt-1 font-semibold">EN_PREPARACION</p>
-                    <p className="text-xs text-gray-500">Siguiente estado</p>
-                  </div>
-                  <div className={`flex-1 h-1 ${selectedOrder.estado === 'LISTO' || selectedOrder.estado === 'EN_PREPARACION' ? 'bg-gradient-to-r from-orange-400 to-gray-300' : 'bg-gray-300'}`}></div>
-                  <div className={`flex flex-col items-center ${selectedOrder.estado === 'LISTO' ? 'text-green-500 font-bold' : 'text-gray-400'}`}>
-                    <div className="w-12 h-12 rounded-full border-2 border-current flex items-center justify-center text-lg">✅</div>
-                    <p className="text-xs mt-1 font-semibold">LISTO</p>
-                    <p className="text-xs text-gray-500">Estado final</p>
-                  </div>
-                </div>
-              )}
-
-              {selectedOrder.tipoPedido === 'A_DOMICILIO' && (
-                <div className="flex items-center justify-start gap-4">
-                  <div className={`flex flex-col items-center ${selectedOrder.estado === 'PENDIENTE' ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>
-                    <div className="w-12 h-12 rounded-full border-2 border-current flex items-center justify-center text-lg">📋</div>
-                    <p className="text-xs mt-1 font-semibold">PENDIENTE</p>
-                  </div>
-                  <div className="flex-1 h-1 bg-gradient-to-r from-orange-400 to-gray-300"></div>
-                  <div className={`flex flex-col items-center ${selectedOrder.estado === 'EN_PREPARACION' ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>
-                    <div className="w-12 h-12 rounded-full border-2 border-current flex items-center justify-center text-lg">🍳</div>
-                    <p className="text-xs mt-1 font-semibold">EN_PREPARACION</p>
-                  </div>
-                  <div className={`flex-1 h-1 ${selectedOrder.estado === 'ENTREGADO_AL_REPARTIDOR' || selectedOrder.estado === 'EN_PREPARACION' ? 'bg-gradient-to-r from-orange-400 to-gray-300' : 'bg-gray-300'}`}></div>
-                  <div className={`flex flex-col items-center ${selectedOrder.estado === 'ENTREGADO_AL_REPARTIDOR' ? 'text-blue-500 font-bold' : 'text-gray-400'}`}>
-                    <div className="w-12 h-12 rounded-full border-2 border-current flex items-center justify-center text-lg">🚚</div>
-                    <p className="text-xs mt-1 font-semibold">ENTREGADO_AL_REPARTIDOR</p>
-                  </div>
-                  <div className={`flex-1 h-1 ${selectedOrder.estado === 'ENTREGADO' ? 'bg-gradient-to-r from-blue-400 to-gray-300' : 'bg-gray-300'}`}></div>
-                  <div className={`flex flex-col items-center ${selectedOrder.estado === 'ENTREGADO' ? 'text-green-500 font-bold' : 'text-gray-400'}`}>
-                    <div className="w-12 h-12 rounded-full border-2 border-current flex items-center justify-center text-lg">✅</div>
-                    <p className="text-xs mt-1 font-semibold">ENTREGADO</p>
-                  </div>
-                </div>
-              )}
-
-              {selectedOrder.tipoPedido === 'PARA_LLEVAR' && (
-                <div className="flex items-center justify-start gap-4">
-                  <div className={`flex flex-col items-center ${selectedOrder.estado === 'PENDIENTE' ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>
-                    <div className="w-12 h-12 rounded-full border-2 border-current flex items-center justify-center text-lg">📋</div>
-                    <p className="text-xs mt-1 font-semibold">PENDIENTE</p>
-                  </div>
-                  <div className="flex-1 h-1 bg-gradient-to-r from-orange-400 to-gray-300"></div>
-                  <div className={`flex flex-col items-center ${selectedOrder.estado === 'EN_PREPARACION' ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>
-                    <div className="w-12 h-12 rounded-full border-2 border-current flex items-center justify-center text-lg">🍳</div>
-                    <p className="text-xs mt-1 font-semibold">EN_PREPARACION</p>
-                  </div>
-                  <div className={`flex-1 h-1 ${selectedOrder.estado === 'LISTO' || selectedOrder.estado === 'EN_PREPARACION' ? 'bg-gradient-to-r from-orange-400 to-gray-300' : 'bg-gray-300'}`}></div>
-                  <div className={`flex flex-col items-center ${selectedOrder.estado === 'LISTO' ? 'text-green-500 font-bold' : 'text-gray-400'}`}>
-                    <div className="w-12 h-12 rounded-full border-2 border-current flex items-center justify-center text-lg">✅</div>
-                    <p className="text-xs mt-1 font-semibold">LISTO</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 3. CAMBIAR ESTADO */}
-            {getStatusOptions(selectedOrder?.estado, selectedOrder?.tipoPedido).length > 0 && (
-              <div className="border-l-4 border-blue-400 pl-4">
-                <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-4">3. Cambiar Estado</p>
-                <p className="text-xs text-gray-600 mb-3">Selecciona el nuevo estado para este pedido:</p>
-                <div className="space-y-2">
-                  {getStatusOptions(selectedOrder?.estado, selectedOrder?.tipoPedido).map((status) => (
-                    <label key={status} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-blue-50 cursor-pointer transition">
-                      <input
-                        type="radio"
-                        name="newStatus"
-                        value={status}
-                        checked={newStatus === status}
-                        onChange={(e) => setNewStatus(e.target.value)}
-                        className="w-4 h-4 text-blue-500 accent-blue-500"
-                      />
-                      <span className="ml-3 font-semibold text-gray-800">{statusLabel[status] || status}</span>
-                      <div className="ml-auto text-lg">
-                        {status === 'EN_PREPARACION' && '🍳'}
-                        {status === 'LISTO' && '✅'}
-                        {status === 'ENTREGADO_AL_REPARTIDOR' && '🚚'}
-                        {status === 'ENTREGADO' && '✅'}
-                        {status === 'CANCELADO' && '❌'}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 4. NOTAS ADICIONALES */}
-            <div className="border-l-4 border-green-400 pl-4">
-              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">4. Notas Adicionales (Opcional)</p>
-              <textarea
-                placeholder="El cliente espera cambio de mesa, orden es especial, etc."
-                className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 resize-none"
-                rows="3"
-              />
-            </div>
-
-            {/* Botones */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => setIsStatusModalOpen(false)}
-                className="px-6 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition font-medium"
-              >
-                Cancelar Pedido
+              <button onClick={() => setIsStatusOpen(false)} className="or-modal-close" aria-label="Cerrar">
+                <i className="ti ti-x" aria-hidden="true" />
               </button>
-              {getStatusOptions(selectedOrder?.estado, selectedOrder?.tipoPedido).length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleUpdateStatus}
-                  disabled={statusLoading}
-                  className="px-6 py-2 bg-[#2D4F4F] text-white rounded-md hover:bg-[#3A6B6B] disabled:opacity-50 transition font-medium flex items-center gap-2"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {statusLoading ? 'Guardando...' : 'Actualizar Estado'}
+            </div>
+            <div className="or-modal-body">
+ 
+              {/* Resumen */}
+              <div className="or-modal-section" style={{ marginBottom:16 }}>
+                <div className="or-modal-section-title">Resumen del pedido</div>
+                <div className="or-detail-grid">
+                  <div className="or-detail-item"><div className="or-detail-label">Pedido</div><div className="or-detail-value">#{selectedOrder.numeroOrden}</div></div>
+                  <div className="or-detail-item"><div className="or-detail-label">Tipo</div>
+                    <div className="or-detail-value">{selectedOrder.tipoPedido==='EN_MESA'?'🍽️ EN_MESA':selectedOrder.tipoPedido==='A_DOMICILIO'?'🏠 A_DOMICILIO':'📦 PARA_LLEVAR'}</div>
+                  </div>
+                  <div className="or-detail-item"><div className="or-detail-label">Restaurante</div><div className="or-detail-value">{getRestaurantName(selectedOrder.restaurantID)}</div></div>
+                  <div className="or-detail-item"><div className="or-detail-label">Cliente</div><div className="or-detail-value">{selectedOrder.clienteNombre||'Cliente General'}</div></div>
+                </div>
+              </div>
+ 
+              {/* Progresión */}
+              <div className="or-modal-section or-modal-section--orange" style={{ marginBottom:16 }}>
+                <div className="or-modal-section-title">Flujo del pedido ({selectedOrder.tipoPedido})</div>
+                {(() => {
+                  const steps = selectedOrder.tipoPedido==='A_DOMICILIO'
+                    ? ['PENDIENTE','EN_PREPARACION','ENTREGADO_AL_REPARTIDOR','ENTREGADO']
+                    : ['PENDIENTE','EN_PREPARACION','LISTO'];
+                  const cur = steps.indexOf(selectedOrder.estado);
+                  return (
+                    <div className="or-progress-track">
+                      {steps.map((s, i) => (
+                        <>
+                          <div key={s} className="or-progress-step">
+                            <div className={`or-progress-circle${i < cur ? ' or-progress-circle--done' : i === cur ? ' or-progress-circle--active' : ''}`}>
+                              {STATUS_ICON[s]}
+                            </div>
+                            <div className={`or-progress-label${i < cur ? ' or-progress-label--done' : i === cur ? ' or-progress-label--active' : ''}`}>
+                              {STATUS_LABEL[s]}
+                            </div>
+                          </div>
+                          {i < steps.length-1 && <div key={`line-${i}`} className={`or-progress-line${i < cur ? ' or-progress-line--done' : ''}`} />}
+                        </>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+ 
+              {/* Opciones de estado */}
+              {getStatusOptions(selectedOrder.estado, selectedOrder.tipoPedido).length > 0 && (
+                <div className="or-modal-section or-modal-section--blue" style={{ marginBottom:16 }}>
+                  <div className="or-modal-section-title">Seleccionar nuevo estado</div>
+                  <div className="or-status-options">
+                    {getStatusOptions(selectedOrder.estado, selectedOrder.tipoPedido).map((s) => (
+                      <label key={s} className="or-status-option">
+                        <input type="radio" name="newStatus" value={s} checked={newStatus===s} onChange={e => setNewStatus(e.target.value)} />
+                        <span className="or-status-option-label">{STATUS_LABEL[s]||s}</span>
+                        <span className="or-status-option-emoji">{STATUS_ICON[s]}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+ 
+              {/* Notas */}
+              <div className="or-modal-section or-modal-section--green">
+                <div className="or-modal-section-title">Notas adicionales (Opcional)</div>
+                <textarea value={notes} onChange={e => setNotes(e.target.value)} className="or-textarea" rows={3} placeholder="El cliente espera cambio de mesa, orden especial, etc." />
+              </div>
+ 
+            </div>
+            <div className="or-modal-footer">
+              <span className="or-modal-footer-hint"><i className="ti ti-info-circle" aria-hidden="true" />Confirmación requerida</span>
+              <button onClick={() => setIsStatusOpen(false)} className="or-btn or-btn-danger">
+                <i className="ti ti-x" aria-hidden="true" />Cancelar
+              </button>
+              {getStatusOptions(selectedOrder.estado, selectedOrder.tipoPedido).length > 0 && (
+                <button onClick={handleUpdateStatus} disabled={statusLoading} className="or-btn or-btn-primary">
+                  {statusLoading ? <><span className="or-spinner" />Guardando...</> : <><i className="ti ti-check" aria-hidden="true" />Actualizar estado</>}
                 </button>
               )}
             </div>
           </div>
-        )}
-      </Modal>
-
+        </div>
+      )}
+ 
     </div>
   );
 };
-
+ 
 export default OrderManagement;

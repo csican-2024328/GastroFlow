@@ -3,16 +3,15 @@ import toast from 'react-hot-toast';
 import { useReservationStore } from '../store/useReservationStore.js';
 import { useRestaurantScope } from '../../../shared/hooks/useRestaurantScope.js';
 import { NoRestaurantAssigned } from '../../../shared/components/layout/NoRestaurantAssigned.jsx';
-
-/* ─── helpers ─────────────────────────────────────────── */
+import '../../../styles/reservations.css';
+ 
+/* ── Helpers — INTACTOS ── */
 const formatFecha = (val) => {
   if (!val) return '-';
   const d = new Date(val);
-  return isNaN(d)
-    ? '-'
-    : d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  return isNaN(d) ? '-' : d.toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
 };
-
+ 
 const getMesaLabel = (reservation) => {
   const ubicacion = reservation.mesaID?.ubicacion || reservation.mesaID?.identificador || '';
   const numero    = reservation.mesaID?.numero    ?? reservation.mesaID?.number ?? '';
@@ -20,419 +19,210 @@ const getMesaLabel = (reservation) => {
   if (numero)              return `Mesa ${numero}`;
   return '-';
 };
-
-/* ─── status config ───────────────────────────────────── */
-const STATUS_CONFIG = {
-  PENDIENTE:   { label: 'Pendiente',   dot: 'bg-amber-400',  badge: 'bg-amber-50  text-amber-700  border border-amber-200'  },
-  CONFIRMADA:  { label: 'Aceptada',    dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-  CANCELADA:   { label: 'Rechazada',   dot: 'bg-red-400',    badge: 'bg-red-50    text-red-700    border border-red-200'    },
-  COMPLETADA:  { label: 'Completada',  dot: 'bg-blue-400',   badge: 'bg-blue-50   text-blue-700   border border-blue-200'   },
+ 
+const STATUS_CSS = {
+  CONFIRMADA: 'rv-status-badge--confirmada',
+  PENDIENTE:  'rv-status-badge--pendiente',
+  CANCELADA:  'rv-status-badge--cancelada',
+  COMPLETADA: 'rv-status-badge--completada',
 };
-
-const StatusBadge = ({ estado }) => {
-  const cfg = STATUS_CONFIG[estado] || STATUS_CONFIG.PENDIENTE;
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${cfg.badge}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {cfg.label}
-    </span>
-  );
-};
-
-/* ─── stat card ───────────────────────────────────────── */
-const StatCard = ({ icon, count, label, sublabel, iconBg }) => (
-  <div className="flex items-center gap-4 bg-white rounded-xl border border-[#E8D4B8] px-6 py-5 shadow-sm flex-1">
-    <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-      {icon}
-    </div>
-    <div>
-      <p className="text-sm text-gray-500 font-medium">{label}</p>
-      <p className="text-3xl font-bold text-gray-800 leading-tight">{count}</p>
-      <p className="text-xs text-gray-400 mt-0.5">{sublabel}</p>
-    </div>
-  </div>
-);
-
-/* ─── pagination ──────────────────────────────────────── */
+const STATUS_LABEL = { CONFIRMADA:'Aceptada', PENDIENTE:'Pendiente', CANCELADA:'Rechazada', COMPLETADA:'Completada' };
+const STATUS_ICON  = { CONFIRMADA:'ti-check', PENDIENTE:'ti-clock', CANCELADA:'ti-x', COMPLETADA:'ti-circle-check' };
+ 
+/* Paginación */
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const pages = [];
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-  } else {
+  if (totalPages <= 7) { for (let i=1;i<=totalPages;i++) pages.push(i); }
+  else {
     pages.push(1);
     if (currentPage > 3) pages.push('...');
-    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-      pages.push(i);
-    }
-    if (currentPage < totalPages - 2) pages.push('...');
+    for (let i=Math.max(2,currentPage-1); i<=Math.min(totalPages-1,currentPage+1); i++) pages.push(i);
+    if (currentPage < totalPages-2) pages.push('...');
     pages.push(totalPages);
   }
-
   return (
-    <div className="flex items-center gap-1">
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="w-8 h-8 flex items-center justify-center rounded-md border border-[#E8D4B8] text-gray-500 hover:bg-[#FDFBF7] disabled:opacity-40 disabled:cursor-not-allowed transition"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-        </svg>
+    <div className="rv-pagination">
+      <button onClick={() => onPageChange(currentPage-1)} disabled={currentPage===1} className="rv-page-btn" aria-label="Anterior">
+        <i className="ti ti-chevron-left" style={{fontSize:13}} aria-hidden="true" />
       </button>
-      {pages.map((p, i) =>
-        p === '...' ? (
-          <span key={`dots-${i}`} className="w-8 h-8 flex items-center justify-center text-gray-400 text-sm">…</span>
-        ) : (
-          <button
-            key={p}
-            onClick={() => onPageChange(p)}
-            className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium transition ${
-              p === currentPage
-                ? 'bg-[#2D4F4F] text-white'
-                : 'border border-[#E8D4B8] text-gray-600 hover:bg-[#FDFBF7]'
-            }`}
-          >
-            {p}
-          </button>
-        )
+      {pages.map((p,i) => p==='...'
+        ? <span key={`d-${i}`} className="rv-page-dots">…</span>
+        : <button key={p} onClick={() => onPageChange(p)} className={`rv-page-btn${p===currentPage?' rv-page-btn--active':''}`}>{p}</button>
       )}
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="w-8 h-8 flex items-center justify-center rounded-md border border-[#E8D4B8] text-gray-500 hover:bg-[#FDFBF7] disabled:opacity-40 disabled:cursor-not-allowed transition"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
+      <button onClick={() => onPageChange(currentPage+1)} disabled={currentPage===totalPages} className="rv-page-btn" aria-label="Siguiente">
+        <i className="ti ti-chevron-right" style={{fontSize:13}} aria-hidden="true" />
       </button>
     </div>
   );
 };
-
-/* ─── confirm modal ───────────────────────────────────── */
-const ConfirmModal = ({ isOpen, onClose, onConfirm, reservation, loading }) => {
-  if (!isOpen || !reservation) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4"
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-[#FDFBF7] rounded-xl border border-[#E8D4B8] w-full max-w-md shadow-[0_30px_70px_rgba(26,26,26,0.45)]">
-        <div className="border-b border-[#E8D4B8] px-6 py-5 bg-[#F5EFEA] rounded-t-xl">
-          <h3 className="text-lg font-semibold text-[#2D4F4F]">Confirmar Reservación</h3>
-        </div>
-        <div className="px-6 py-5 space-y-3">
-          <p className="text-gray-600 text-sm">¿Estás seguro de que deseas <span className="font-semibold text-emerald-600">aceptar</span> esta reservación?</p>
-          <div className="bg-[#F5EFEA] rounded-lg p-4 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Cliente:</span>
-              <span className="font-medium text-gray-800">{reservation.clienteNombre}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Fecha:</span>
-              <span className="font-medium text-gray-800">{formatFecha(reservation.fechaReserva)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Horario:</span>
-              <span className="font-medium text-gray-800">{reservation.horaInicio} – {reservation.horaFin}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Mesa:</span>
-              <span className="font-medium text-gray-800">{getMesaLabel(reservation)}</span>
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-[#E8D4B8] flex justify-end gap-3 px-6 py-4 bg-[#F5EFEA] rounded-b-xl">
-          <button onClick={onClose} className="px-4 py-2 rounded-md border border-[#E8D4B8] text-gray-700 bg-[#FDFBF7] hover:bg-[#F5EFEA] transition text-sm font-medium">
-            Cancelar
-          </button>
-          <button onClick={onConfirm} disabled={loading} className="px-4 py-2 rounded-md bg-[#2D4F4F] text-white hover:bg-[#3A6B6B] transition text-sm font-medium disabled:opacity-50 flex items-center gap-2">
-            {loading && <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>}
-            Confirmar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* ─── reject modal ────────────────────────────────────── */
-const RejectModal = ({ isOpen, onClose, onConfirm, reservation, loading }) => {
-  const [reason, setReason] = useState('');
-  if (!isOpen || !reservation) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4"
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-[#FDFBF7] rounded-xl border border-[#E8D4B8] w-full max-w-md shadow-[0_30px_70px_rgba(26,26,26,0.45)]">
-        <div className="border-b border-[#E8D4B8] px-6 py-5 bg-[#F5EFEA] rounded-t-xl">
-          <h3 className="text-lg font-semibold text-red-600">Rechazar Reservación</h3>
-        </div>
-        <div className="px-6 py-5 space-y-4">
-          <p className="text-gray-600 text-sm">¿Estás seguro de que deseas <span className="font-semibold text-red-600">rechazar</span> esta reservación?</p>
-          <div className="bg-[#F5EFEA] rounded-lg p-4 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Cliente:</span>
-              <span className="font-medium text-gray-800">{reservation.clienteNombre}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Mesa:</span>
-              <span className="font-medium text-gray-800">{getMesaLabel(reservation)}</span>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[#2D4F4F] mb-1.5">Motivo del rechazo (opcional)</label>
-            <textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Sin disponibilidad, horario no válido, etc."
-              rows={3}
-              className="w-full rounded-md border border-[#E8D4B8] bg-[#FDFBF7] px-3 py-2.5 text-gray-900 placeholder:text-gray-400 text-sm outline-none focus:border-[#2D4F4F] focus:ring-2 focus:ring-[#2D4F4F]/20 resize-none"
-            />
-          </div>
-        </div>
-        <div className="border-t border-[#E8D4B8] flex justify-end gap-3 px-6 py-4 bg-[#F5EFEA] rounded-b-xl">
-          <button onClick={onClose} className="px-4 py-2 rounded-md border border-[#E8D4B8] text-gray-700 bg-[#FDFBF7] hover:bg-[#F5EFEA] transition text-sm font-medium">
-            Volver
-          </button>
-          <button onClick={() => onConfirm(reason)} disabled={loading} className="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600 transition text-sm font-medium disabled:opacity-50 flex items-center gap-2">
-            {loading && <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>}
-            Rechazar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* ═══════════════════════════════════════════════════════
-   MAIN COMPONENT
-═══════════════════════════════════════════════════════ */
+ 
+/* ═══════════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════════ */
 const ReservationManagement = () => {
   const { restaurantId, isRestaurantAdmin, hasRestaurantAssigned } = useRestaurantScope();
-  const {
-    reservations,
-    loading,
-    pagination,
-    fetchUserReservations,
-    approveOrRejectReservationAction,
-  } = useReservationStore();
-
+  const { reservations, loading, pagination, fetchUserReservations, approveOrRejectReservationAction } = useReservationStore();
+ 
   const [actionLoading, setActionLoading] = useState(false);
-  const [confirmModal, setConfirmModal]   = useState({ open: false, reservation: null });
-  const [rejectModal, setRejectModal]     = useState({ open: false, reservation: null });
-  const [sortOrder, setSortOrder]         = useState('desc'); // 'asc' | 'desc'
-
-  /* fetch on mount and page change */
+  const [confirmModal, setConfirmModal]   = useState({ open:false, reservation:null });
+  const [rejectModal,  setRejectModal]    = useState({ open:false, reservation:null });
+  const [rejectReason, setRejectReason]   = useState('');
+  const [sortOrder,    setSortOrder]      = useState('desc');
+ 
   useEffect(() => {
-    fetchUserReservations(pagination.currentPage, pagination.limit, null, restaurantId || undefined);
+    fetchUserReservations(pagination.currentPage, pagination.limit, null, restaurantId||undefined);
   }, [pagination.currentPage, pagination.limit, fetchUserReservations, restaurantId]);
-
-  if (isRestaurantAdmin && !hasRestaurantAssigned) {
-    return <NoRestaurantAssigned />;
-  }
-
+ 
+  if (isRestaurantAdmin && !hasRestaurantAssigned) return <NoRestaurantAssigned />;
+ 
   const handlePageChange = (page) => {
-    if (page < 1 || page > pagination.totalPages) return;
-    fetchUserReservations(page, pagination.limit, null, restaurantId || undefined);
+    if (page<1 || page>pagination.totalPages) return;
+    fetchUserReservations(page, pagination.limit, null, restaurantId||undefined);
   };
-
-  /* stats */
-  const aceptadas  = reservations.filter((r) => r.estado === 'CONFIRMADA').length;
-  const rechazadas = reservations.filter((r) => r.estado === 'CANCELADA').length;
-  const pendientes = reservations.filter((r) => r.estado === 'PENDIENTE').length;
-
-  /* sorted table rows */
-  const sortedReservations = [...reservations].sort((a, b) => {
-    const da = new Date(a.fechaReserva);
-    const db = new Date(b.fechaReserva);
-    return sortOrder === 'asc' ? da - db : db - da;
+ 
+  const aceptadas  = reservations.filter(r => r.estado==='CONFIRMADA').length;
+  const rechazadas = reservations.filter(r => r.estado==='CANCELADA').length;
+  const pendientes = reservations.filter(r => r.estado==='PENDIENTE').length;
+ 
+  const sortedReservations = [...reservations].sort((a,b) => {
+    const da = new Date(a.fechaReserva), db = new Date(b.fechaReserva);
+    return sortOrder==='asc' ? da-db : db-da;
   });
-
-  /* actions */
+ 
   const handleConfirm = async () => {
     if (!confirmModal.reservation) return;
     setActionLoading(true);
     const result = await approveOrRejectReservationAction(confirmModal.reservation._id, {
-      accion: 'APROBAR',
-      clienteEmail: confirmModal.reservation.clienteEmail,
+      accion: 'APROBAR', clienteEmail: confirmModal.reservation.clienteEmail,
     });
     setActionLoading(false);
     if (result.success) {
       toast.success('Reservación confirmada correctamente');
-      setConfirmModal({ open: false, reservation: null });
-      fetchUserReservations(pagination.currentPage, pagination.limit, null, restaurantId || undefined);
-    } else {
-      toast.error(result.error || 'Error al confirmar reservación');
-    }
+      setConfirmModal({ open:false, reservation:null });
+      fetchUserReservations(pagination.currentPage, pagination.limit, null, restaurantId||undefined);
+    } else { toast.error(result.error||'Error al confirmar reservación'); }
   };
-
-  const handleReject = async (reason) => {
+ 
+  const handleReject = async () => {
     if (!rejectModal.reservation) return;
     setActionLoading(true);
     const result = await approveOrRejectReservationAction(rejectModal.reservation._id, {
-      accion: 'RECHAZAR',
-      razon: reason,
-      clienteEmail: rejectModal.reservation.clienteEmail,
+      accion:'RECHAZAR', razon:rejectReason, clienteEmail:rejectModal.reservation.clienteEmail,
     });
     setActionLoading(false);
     if (result.success) {
       toast.success('Reservación rechazada');
-      setRejectModal({ open: false, reservation: null });
-      fetchUserReservations(pagination.currentPage, pagination.limit, null, restaurantId || undefined);
-    } else {
-      toast.error(result.error || 'Error al rechazar reservación');
-    }
+      setRejectModal({ open:false, reservation:null }); setRejectReason('');
+      fetchUserReservations(pagination.currentPage, pagination.limit, null, restaurantId||undefined);
+    } else { toast.error(result.error||'Error al rechazar reservación'); }
   };
-
-  const isActionable = (estado) => estado === 'PENDIENTE';
-
+ 
   return (
-    <div className="p-6 min-h-screen bg-[#FDFBF7]">
-
-      {/* ── Page header ── */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Administración de Reservaciones</h1>
-        <p className="text-gray-500 mt-1 text-sm">Gestiona y actualiza el estado de las reservaciones.</p>
+    <div className="rv-root">
+ 
+      {/* HEADER */}
+      <div className="rv-header">
+        <div className="rv-header-badge"><i className="ti ti-calendar-event" aria-hidden="true" />Gestión de reservaciones</div>
+        <h1 className="rv-header-title">Administración de Reservaciones</h1>
+        <p className="rv-header-sub">Gestiona y actualiza el estado de las reservaciones.</p>
       </div>
-
-      {/* ── Stat cards ── */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <StatCard
-          iconBg="bg-[#2D4F4F]"
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="white" className="w-7 h-7">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
-          }
-          label="Aceptadas"
-          count={aceptadas}
-          sublabel="Reservaciones confirmadas"
-        />
-        <StatCard
-          iconBg="bg-[#C9695A]"
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="white" className="w-7 h-7">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          }
-          label="Rechazadas"
-          count={rechazadas}
-          sublabel="Reservaciones rechazadas"
-        />
-        <StatCard
-          iconBg="bg-[#C4A97A]"
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="white" className="w-7 h-7">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
-            </svg>
-          }
-          label="Pendientes"
-          count={pendientes}
-          sublabel="Reservaciones por confirmar"
-        />
+ 
+      {/* STATS */}
+      <div className="rv-stats">
+        <div className="rv-stat rv-stat--green">
+          <div className="rv-stat-icon-wrap rv-stat-icon-wrap--green"><i className="ti ti-check" aria-hidden="true" /></div>
+          <div className="rv-stat-info">
+            <div className="rv-stat-label">Aceptadas</div>
+            <div className={`rv-stat-value rv-stat-value--green`}>{aceptadas}</div>
+            <div className="rv-stat-sublabel">Reservaciones confirmadas</div>
+          </div>
+        </div>
+        <div className="rv-stat rv-stat--red">
+          <div className="rv-stat-icon-wrap rv-stat-icon-wrap--red"><i className="ti ti-x" aria-hidden="true" /></div>
+          <div className="rv-stat-info">
+            <div className="rv-stat-label">Rechazadas</div>
+            <div className={`rv-stat-value rv-stat-value--red`}>{rechazadas}</div>
+            <div className="rv-stat-sublabel">Reservaciones rechazadas</div>
+          </div>
+        </div>
+        <div className="rv-stat rv-stat--amber">
+          <div className="rv-stat-icon-wrap rv-stat-icon-wrap--amber"><i className="ti ti-clock" aria-hidden="true" /></div>
+          <div className="rv-stat-info">
+            <div className="rv-stat-label">Pendientes</div>
+            <div className={`rv-stat-value rv-stat-value--amber`}>{pendientes}</div>
+            <div className="rv-stat-sublabel">Reservaciones por confirmar</div>
+          </div>
+        </div>
       </div>
-
-      {/* ── Table card ── */}
-      <div className="bg-[#FDFBF7] rounded-xl border border-[#E8D4B8] shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-gray-600">
-            <thead className="bg-[#F5EFEA] border-b border-[#E8D4B8]">
+ 
+      {/* TABLA */}
+      <div className="rv-section">
+        <div style={{ overflowX:'auto' }}>
+          <table className="rv-table">
+            <thead>
               <tr>
-                <th className="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  <button
-                    onClick={() => setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))}
-                    className="flex items-center gap-1 hover:text-[#2D4F4F] transition"
-                  >
-                    Fecha
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15M8.25 9L12 5.25 15.75 9" />
-                    </svg>
+                <th>
+                  <button className="rv-sort-btn" onClick={() => setSortOrder(o => o==='asc'?'desc':'asc')}>
+                    Fecha <i className={`ti ${sortOrder==='asc'?'ti-sort-ascending':'ti-sort-descending'}`} aria-hidden="true" />
                   </button>
                 </th>
-                <th className="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Hora Inicio</th>
-                <th className="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Hora Fin</th>
-                <th className="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Mesa</th>
-                <th className="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Personas</th>
-                <th className="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
-                <th className="px-5 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Notas</th>
-                <th className="px-5 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Acciones</th>
+                <th>Hora Inicio</th>
+                <th>Hora Fin</th>
+                <th>Mesa</th>
+                <th style={{textAlign:'center'}}>Personas</th>
+                <th>Estado</th>
+                <th>Notas</th>
+                <th style={{textAlign:'center'}}>Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E8D4B8]">
+            <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan="8" className="px-5 py-12 text-center text-gray-400">
-                    <div className="flex flex-col items-center gap-2">
-                      <svg className="animate-spin w-6 h-6 text-[#2D4F4F]" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                      </svg>
-                      <span>Cargando reservaciones...</span>
-                    </div>
-                  </td>
-                </tr>
+                <tr><td colSpan="8" style={{padding:0}}>
+                  <div className="rv-table-loading"><div className="rv-table-spinner" />Cargando reservaciones...</div>
+                </td></tr>
               ) : sortedReservations.length === 0 ? (
-                <tr>
-                  <td colSpan="8" className="px-5 py-12 text-center text-gray-400">
+                <tr><td colSpan="8" style={{padding:0}}>
+                  <div className="rv-table-empty">
+                    <i className="ti ti-calendar-off" aria-hidden="true" />
                     No hay reservaciones disponibles
-                  </td>
-                </tr>
+                  </div>
+                </td></tr>
               ) : (
-                sortedReservations.map((reservation, index) => {
-                  const actionable = isActionable(reservation.estado);
+                sortedReservations.map((reservation, idx) => {
+                  const actionable = reservation.estado==='PENDIENTE';
                   return (
-                    <tr key={reservation._id || index} className="hover:bg-[#F5EFEA] transition">
-                      <td className="px-5 py-4 font-medium text-gray-700 whitespace-nowrap">
-                        {formatFecha(reservation.fechaReserva)}
+                    <tr key={reservation._id||idx} style={{ animationDelay:`${idx*.03}s` }}>
+                      <td className="rv-td-main">{formatFecha(reservation.fechaReserva)}</td>
+                      <td>{reservation.horaInicio||'-'}</td>
+                      <td>{reservation.horaFin||'-'}</td>
+                      <td>{getMesaLabel(reservation)}</td>
+                      <td className="rv-td-center">{reservation.cantidadPersonas??'-'}</td>
+                      <td>
+                        <span className={`rv-status-badge ${STATUS_CSS[reservation.estado]||'rv-status-badge--pendiente'}`}>
+                          <i className={`ti ${STATUS_ICON[reservation.estado]||'ti-clock'}`} aria-hidden="true" />
+                          {STATUS_LABEL[reservation.estado]||reservation.estado}
+                        </span>
                       </td>
-                      <td className="px-5 py-4 text-gray-600 whitespace-nowrap">
-                        {reservation.horaInicio || '-'}
-                      </td>
-                      <td className="px-5 py-4 text-gray-600 whitespace-nowrap">
-                        {reservation.horaFin || '-'}
-                      </td>
-                      <td className="px-5 py-4 text-gray-700 whitespace-nowrap">
-                        {getMesaLabel(reservation)}
-                      </td>
-                      <td className="px-5 py-4 text-gray-600 text-center">
-                        {reservation.cantidadPersonas ?? '-'}
-                      </td>
-                      <td className="px-5 py-4">
-                        <StatusBadge estado={reservation.estado} />
-                      </td>
-                      <td className="px-5 py-4 text-gray-500 max-w-[160px] truncate">
-                        {reservation.notas || '–'}
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          {/* Accept */}
+                      <td style={{maxWidth:140, overflow:'hidden', textOverflow:'ellipsis'}}>{reservation.notas||'–'}</td>
+                      <td>
+                        <div className="rv-action-btns">
                           <button
-                            onClick={() => setConfirmModal({ open: true, reservation })}
+                            className="rv-action-btn rv-action-btn--accept"
+                            onClick={() => setConfirmModal({open:true, reservation})}
                             disabled={!actionable}
-                            title={actionable ? 'Aceptar reservación' : 'No se puede modificar'}
-                            className={`w-8 h-8 flex items-center justify-center rounded-md transition ${
-                              actionable
-                                ? 'bg-[#2D4F4F] text-white hover:bg-[#3A6B6B] shadow-sm'
-                                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                            }`}
+                            title={actionable?'Aceptar':'No modificable'}
+                            aria-label="Aceptar"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                            </svg>
+                            <i className="ti ti-check" aria-hidden="true" />
                           </button>
-
-                          {/* Reject */}
                           <button
-                            onClick={() => setRejectModal({ open: true, reservation })}
+                            className="rv-action-btn rv-action-btn--reject"
+                            onClick={() => { setRejectModal({open:true, reservation}); setRejectReason(''); }}
                             disabled={!actionable}
-                            title={actionable ? 'Rechazar reservación' : 'No se puede modificar'}
-                            className={`w-8 h-8 flex items-center justify-center rounded-md transition ${
-                              actionable
-                                ? 'bg-[#C9695A] text-white hover:bg-red-600 shadow-sm'
-                                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                            }`}
+                            title={actionable?'Rechazar':'No modificable'}
+                            aria-label="Rechazar"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <i className="ti ti-x" aria-hidden="true" />
                           </button>
                         </div>
                       </td>
@@ -443,39 +233,80 @@ const ReservationManagement = () => {
             </tbody>
           </table>
         </div>
-
-        {/* ── Footer / Pagination ── */}
-        <div className="px-5 py-4 border-t border-[#E8D4B8] bg-[#F5EFEA] flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-gray-500">
-          <span>
-            Mostrando {Math.min((pagination.currentPage - 1) * pagination.limit + 1, pagination.totalRecords)} a{' '}
-            {Math.min(pagination.currentPage * pagination.limit, pagination.totalRecords)} de{' '}
-            {pagination.totalRecords} reservaciones
+ 
+        {/* Footer paginación */}
+        <div className="rv-table-footer">
+          <span className="rv-table-footer-info">
+            Mostrando {Math.min((pagination.currentPage-1)*pagination.limit+1, pagination.totalRecords)} a {Math.min(pagination.currentPage*pagination.limit, pagination.totalRecords)} de {pagination.totalRecords} reservaciones
           </span>
-          <Pagination
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            onPageChange={handlePageChange}
-          />
+          <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPageChange={handlePageChange} />
         </div>
       </div>
-
-      {/* ── Modals ── */}
-      <ConfirmModal
-        isOpen={confirmModal.open}
-        reservation={confirmModal.reservation}
-        loading={actionLoading}
-        onClose={() => setConfirmModal({ open: false, reservation: null })}
-        onConfirm={handleConfirm}
-      />
-      <RejectModal
-        isOpen={rejectModal.open}
-        reservation={rejectModal.reservation}
-        loading={actionLoading}
-        onClose={() => setRejectModal({ open: false, reservation: null })}
-        onConfirm={handleReject}
-      />
+ 
+      {/* MODAL CONFIRMAR */}
+      {confirmModal.open && confirmModal.reservation && (
+        <div className="rv-overlay">
+          <div className="rv-modal">
+            <div className="rv-modal-header">
+              <div className="rv-modal-header-left">
+                <div className="rv-modal-icon rv-modal-icon--green"><i className="ti ti-check" aria-hidden="true" /></div>
+                <div><div className="rv-modal-title">Confirmar Reservación</div><div className="rv-modal-sub">Esta acción notificará al cliente</div></div>
+              </div>
+              <button onClick={() => setConfirmModal({open:false,reservation:null})} className="rv-modal-close" aria-label="Cerrar"><i className="ti ti-x" aria-hidden="true" /></button>
+            </div>
+            <div className="rv-modal-body">
+              <p style={{fontSize:12,color:'var(--rv-text-secondary)',marginBottom:14}}>¿Estás seguro de que deseas <strong style={{color:'var(--rv-green)'}}>aceptar</strong> esta reservación?</p>
+              <div className="rv-info-grid">
+                <div className="rv-info-item"><div className="rv-info-label">Cliente</div><div className="rv-info-value">{confirmModal.reservation.clienteNombre||'-'}</div></div>
+                <div className="rv-info-item"><div className="rv-info-label">Fecha</div><div className="rv-info-value">{formatFecha(confirmModal.reservation.fechaReserva)}</div></div>
+                <div className="rv-info-item"><div className="rv-info-label">Horario</div><div className="rv-info-value">{confirmModal.reservation.horaInicio} – {confirmModal.reservation.horaFin}</div></div>
+                <div className="rv-info-item"><div className="rv-info-label">Mesa</div><div className="rv-info-value">{getMesaLabel(confirmModal.reservation)}</div></div>
+              </div>
+            </div>
+            <div className="rv-modal-footer">
+              <button onClick={() => setConfirmModal({open:false,reservation:null})} className="rv-btn rv-btn-ghost">Cancelar</button>
+              <button onClick={handleConfirm} disabled={actionLoading} className="rv-btn rv-btn-confirm">
+                {actionLoading ? <><span className="rv-btn-spinner rv-btn-spinner--green" />Confirmando...</> : <><i className="ti ti-check" aria-hidden="true" />Confirmar</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+ 
+      {/* MODAL RECHAZAR */}
+      {rejectModal.open && rejectModal.reservation && (
+        <div className="rv-overlay">
+          <div className="rv-modal">
+            <div className="rv-modal-header">
+              <div className="rv-modal-header-left">
+                <div className="rv-modal-icon rv-modal-icon--red"><i className="ti ti-x" aria-hidden="true" /></div>
+                <div><div className="rv-modal-title">Rechazar Reservación</div><div className="rv-modal-sub">Esto notificará al cliente</div></div>
+              </div>
+              <button onClick={() => setRejectModal({open:false,reservation:null})} className="rv-modal-close" aria-label="Cerrar"><i className="ti ti-x" aria-hidden="true" /></button>
+            </div>
+            <div className="rv-modal-body">
+              <p style={{fontSize:12,color:'var(--rv-text-secondary)',marginBottom:14}}>¿Estás seguro de que deseas <strong style={{color:'var(--rv-red)'}}>rechazar</strong> esta reservación?</p>
+              <div className="rv-info-grid" style={{marginBottom:14}}>
+                <div className="rv-info-item"><div className="rv-info-label">Cliente</div><div className="rv-info-value">{rejectModal.reservation.clienteNombre||'-'}</div></div>
+                <div className="rv-info-item"><div className="rv-info-label">Mesa</div><div className="rv-info-value">{getMesaLabel(rejectModal.reservation)}</div></div>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',gap:5}}>
+                <span style={{fontSize:9,color:'var(--rv-text-tertiary)',letterSpacing:'1.4px',textTransform:'uppercase',fontWeight:500}}>Motivo del rechazo (opcional)</span>
+                <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Sin disponibilidad, horario no válido, etc." rows={3} className="rv-textarea" />
+              </div>
+            </div>
+            <div className="rv-modal-footer">
+              <button onClick={() => setRejectModal({open:false,reservation:null})} className="rv-btn rv-btn-ghost">Volver</button>
+              <button onClick={handleReject} disabled={actionLoading} className="rv-btn rv-btn-danger">
+                {actionLoading ? <><span className="rv-btn-spinner rv-btn-spinner--red" />Rechazando...</> : <><i className="ti ti-x" aria-hidden="true" />Rechazar</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+ 
     </div>
   );
 };
-
+ 
 export default ReservationManagement;

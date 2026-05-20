@@ -3,436 +3,210 @@ import { useOrderCartStore } from '../../store/useOrderCartStore.js';
 import { useOrderStore } from '../../store/useOrderStore.js';
 import { validateCoupon } from '../../../../shared/api/couponService.js';
 import { notyfError, notyfSuccess } from '../../../../shared/utils/notyf.js';
-
+ 
+const PAYMENT_METHODS = [
+  { value:'EFECTIVO',      label:'Efectivo' },
+  { value:'TARJETA',       label:'Tarjeta' },
+  { value:'TRANSFERENCIA', label:'Transferencia' },
+];
+ 
 export const StepConfirmOrder = ({ onClose }) => {
-  const cart = useOrderCartStore();
+  const cart       = useOrderCartStore();
   const orderStore = useOrderStore();
-
+ 
   const [isValidatingStock, setIsValidatingStock] = useState(false);
-  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
-  const [couponInput, setCouponInput] = useState('');
-  const [couponMessage, setCouponMessage] = useState('');
-  const [couponMessageType, setCouponMessageType] = useState('');
-  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
-  const [addressInput, setAddressInput] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('');
-  const [showAdditionalFields, setShowAdditionalFields] = useState(false);
-
+  const [isCreatingOrder,   setIsCreatingOrder]   = useState(false);
+  const [couponInput,       setCouponInput]        = useState('');
+  const [couponMessage,     setCouponMessage]      = useState('');
+  const [couponMessageType, setCouponMessageType]  = useState('');
+  const [isValidatingCoupon,setIsValidatingCoupon] = useState(false);
+  const [addressInput,      setAddressInput]       = useState('');
+  const [scheduledTime,     setScheduledTime]      = useState('');
+ 
   const subtotal = cart.getSubtotal();
   const discount = cart.getDiscount();
-  const tax = cart.getTax();
-  const total = cart.getTotal();
-
-  // Show additional fields based on order type
-  useEffect(() => {
-    if (cart.orderType !== 'EN_MESA') {
-      setShowAdditionalFields(true);
-    }
-  }, [cart.orderType]);
-
+  const tax      = cart.getTax();
+  const total    = cart.getTotal();
+ 
+  /* ── Handlers — INTACTOS ── */
   const handleValidateStock = async () => {
-    if (!cart.clientName || !cart.clientPhone) {
-      notyfError('Ingresa nombre y teléfono');
-      return;
-    }
-
+    if (!cart.clientName || !cart.clientPhone) { notyfError('Ingresa nombre y teléfono'); return; }
     setIsValidatingStock(true);
-    const response = await orderStore.checkStock(cart.restaurantId, cart.items);
+    const res = await orderStore.checkStock(cart.restaurantId, cart.items);
     setIsValidatingStock(false);
-
-    if (!response.success) {
-      const faltantes = response.faltantes || [];
-      const message =
-        faltantes.length > 0
-          ? `Sin stock: ${faltantes.map((f) => f.nombre).join(', ')}`
-          : response.error;
-      notyfError(message);
+    if (!res.success) {
+      const faltantes = res.faltantes || [];
+      notyfError(faltantes.length > 0 ? `Sin stock: ${faltantes.map(f=>f.nombre).join(', ')}` : res.error);
       return;
     }
-
     notyfSuccess('✓ Stock disponible. Procede a confirmar tu pedido');
   };
-
+ 
   const handleValidateCoupon = async () => {
-    const couponCode = couponInput.trim().toUpperCase();
-
-    if (!couponCode) {
-      setCouponMessage('Ingresa un código de cupón');
-      setCouponMessageType('error');
-      notyfError('Ingresa un código de cupón');
-      return;
-    }
-
-    if (!cart.restaurantId) {
-      setCouponMessage('No se pudo identificar el restaurante');
-      setCouponMessageType('error');
-      notyfError('No se pudo identificar el restaurante');
-      return;
-    }
-
-    setIsValidatingCoupon(true);
-    setCouponMessage('');
-    setCouponMessageType('');
-
+    const code = couponInput.trim().toUpperCase();
+    if (!code) { setCouponMessage('Ingresa un código de cupón'); setCouponMessageType('error'); notyfError('Ingresa un código de cupón'); return; }
+    if (!cart.restaurantId) { setCouponMessage('No se pudo identificar el restaurante'); setCouponMessageType('error'); notyfError('No se pudo identificar el restaurante'); return; }
+    setIsValidatingCoupon(true); setCouponMessage(''); setCouponMessageType('');
     try {
-      const response = await validateCoupon({
-        codigo: couponCode,
-        montoTotal: subtotal,
-        restaurantID: cart.restaurantId,
-      });
-
-      const descuento = Number(response.data?.data?.descuento || 0);
-
-      useOrderCartStore.setState({
-        couponCode,
-        discount: descuento,
-        discountType: 'FIXED_AMOUNT',
-      });
-
-      setCouponMessage(
-        `Cupón aplicado correctamente. Descuento: $${descuento.toFixed(2)}`
-      );
-      setCouponMessageType('success');
+      const res = await validateCoupon({ codigo: code, montoTotal: subtotal, restaurantID: cart.restaurantId });
+      const desc = Number(res.data?.data?.descuento || 0);
+      useOrderCartStore.setState({ couponCode: code, discount: desc, discountType:'FIXED_AMOUNT' });
+      setCouponMessage(`Cupón aplicado. Descuento: Q${desc.toFixed(2)}`); setCouponMessageType('success');
       notyfSuccess('Cupón aplicado correctamente');
-    } catch (error) {
-      const message = error.response?.data?.message || 'No se pudo validar el cupón';
-
-      useOrderCartStore.setState({
-        couponCode: '',
-        discount: 0,
-        discountType: '',
-      });
-
-      setCouponMessage(message);
-      setCouponMessageType('error');
-      notyfError(message);
-    } finally {
-      setIsValidatingCoupon(false);
-    }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'No se pudo validar el cupón';
+      useOrderCartStore.setState({ couponCode:'', discount:0, discountType:'' });
+      setCouponMessage(msg); setCouponMessageType('error'); notyfError(msg);
+    } finally { setIsValidatingCoupon(false); }
   };
-
+ 
   const handleCreateOrder = async () => {
-    // Validate required fields
-    if (!cart.clientName?.trim()) {
-      notyfError('Nombre es obligatorio');
-      return;
-    }
-
-    if (!cart.clientPhone?.trim()) {
-      notyfError('Teléfono es obligatorio');
-      return;
-    }
-
-    if (cart.orderType === 'A_DOMICILIO' && !addressInput.trim()) {
-      notyfError('Dirección de entrega es obligatoria');
-      return;
-    }
-
-    if (cart.orderType === 'PARA_LLEVAR' && !scheduledTime) {
-      notyfError('Selecciona hora de retiro');
-      return;
-    }
-
-    // Build order data
+    if (!cart.clientName?.trim())  { notyfError('Nombre es obligatorio'); return; }
+    if (!cart.clientPhone?.trim()) { notyfError('Teléfono es obligatorio'); return; }
+    if (cart.orderType==='A_DOMICILIO' && !addressInput.trim()) { notyfError('Dirección es obligatoria'); return; }
+    if (cart.orderType==='PARA_LLEVAR' && !scheduledTime)       { notyfError('Selecciona hora de retiro'); return; }
+ 
     const orderData = {
-      tipoPedido: cart.orderType,
-      restaurantId: cart.restaurantId,
-      items: cart.items.map((item) => ({
-        tipo: item.tipo,
-        [item.tipo === 'PLATO' ? 'plato' : 'menu']: item.id,
-        cantidad: item.cantidad,
-        notas: '',
-      })),
-      clienteNombre: cart.clientName,
-      clienteTelefono: cart.clientPhone,
+      tipoPedido: cart.orderType, restaurantId: cart.restaurantId,
+      items: cart.items.map(item => ({ tipo:item.tipo, [item.tipo==='PLATO'?'plato':'menu']:item.id, cantidad:item.cantidad, notas:'' })),
+      clienteNombre: cart.clientName, clienteTelefono: cart.clientPhone,
       clienteEmail: cart.clientEmail || undefined,
-      ...(cart.orderType === 'EN_MESA' && { mesaID: cart.selectedMesa?._id }),
-      ...(cart.orderType === 'A_DOMICILIO' && { clienteDireccion: addressInput }),
-      ...(cart.orderType === 'PARA_LLEVAR' && { horaProgramada: scheduledTime }),
-      subtotal,
-      descuento: discount > 0 ? discount : undefined,
-      impuesto: tax,
-      total,
-      ...(cart.couponCode ? { couponCode: cart.couponCode } : {}),
+      ...(cart.orderType==='EN_MESA'     && { mesaID: cart.selectedMesa?._id }),
+      ...(cart.orderType==='A_DOMICILIO' && { clienteDireccion: addressInput }),
+      ...(cart.orderType==='PARA_LLEVAR' && { horaProgramada: scheduledTime }),
+      subtotal, descuento: discount>0?discount:undefined, impuesto:tax, total,
+      ...(cart.couponCode ? { couponCode:cart.couponCode } : {}),
     };
-
-    // Check for events/promotions before creating order
+ 
     setIsCreatingOrder(true);
     try {
-      const checkRes = await orderStore.checkEvents({ restaurantId: cart.restaurantId, items: orderData.items });
-      if (checkRes.success && checkRes.data && checkRes.data.data && checkRes.data.data.evento) {
+      const checkRes = await orderStore.checkEvents({ restaurantId:cart.restaurantId, items:orderData.items });
+      if (checkRes.success && checkRes.data?.data?.evento) {
         const evt = checkRes.data.data.evento;
-        const descuentoPreview = Number(checkRes.data.data.descuento || 0);
-        const mensaje = `Este restaurante tiene una promoción activa: ${evt.nombre} — ${evt.descripcion}.\nDescuento estimado: $${descuentoPreview.toFixed(2)}.\n\nSubtotal: $${subtotal.toFixed(2)}\nDescuento: -$${descuentoPreview.toFixed(2)}\nImpuesto: $${tax.toFixed(2)}\nTotal estimado: $${(subtotal - descuentoPreview + tax).toFixed(2)}\n\n¿Deseas aplicar la promoción y continuar?`;
-        const aceptar = window.confirm(mensaje);
-        if (!aceptar) {
-          setIsCreatingOrder(false);
-          return;
-        }
+        const descPrev = Number(checkRes.data.data.descuento||0);
+        const msg = `Promoción activa: ${evt.nombre} — ${evt.descripcion}.\nDescuento estimado: Q${descPrev.toFixed(2)}.\nTotal estimado: Q${(subtotal-descPrev+tax).toFixed(2)}\n\n¿Aplicar promoción y continuar?`;
+        if (!window.confirm(msg)) { setIsCreatingOrder(false); return; }
       }
-
-      const response = await orderStore.createOrderAction(orderData);
+      const res = await orderStore.createOrderAction(orderData);
       setIsCreatingOrder(false);
-
-      if (response.success) {
-        notyfSuccess('✓ Su pedido fue hecho exitosamente');
-        cart.resetCart();
-        setTimeout(() => onClose(), 1500);
-      } else {
-        notyfError(response.error || 'Error al crear pedido');
-      }
-    } catch (err) {
-      setIsCreatingOrder(false);
-      notyfError(err?.message || 'Error al comprobar promociones');
-    }
+      if (res.success) { notyfSuccess('✓ Su pedido fue hecho exitosamente'); cart.resetCart(); setTimeout(()=>onClose(),1500); }
+      else notyfError(res.error || 'Error al crear pedido');
+    } catch (err) { setIsCreatingOrder(false); notyfError(err?.message||'Error al comprobar promociones'); }
   };
-
+ 
   return (
-    <div className="space-y-6 relative">
-      {/* Order Summary */}
-      <div className="bg-gradient-to-br from-[#FFF8F0] to-[#F8F5F0] border border-[#E2D4B7] rounded-lg p-6">
-        <h3 className="text-xl font-bold text-[#1A1A1A] mb-4">Resumen de tu Pedido</h3>
-
-        <div className="space-y-3 mb-4">
-          {/* Order Type */}
-          <div className="flex justify-between items-center p-2 bg-white rounded border border-[#E2D4B7]">
-            <span className="text-[#4b4b4b] font-semibold">Tipo:</span>
-            <span className="font-semibold text-[#D4984E]">
-              {cart.orderType === 'EN_MESA'
-                ? `🪑 Mesa ${cart.selectedMesa?.numero}`
-                : cart.orderType === 'A_DOMICILIO'
-                ? '🚗 A Domicilio'
-                : '📦 Para Llevar'}
-            </span>
+    <div style={{ position:'relative' }}>
+ 
+      {/* Resumen */}
+      <div className="or-confirm-section">
+        <div className="or-confirm-section-title"><i className="ti ti-receipt" aria-hidden="true" />Resumen del pedido</div>
+        <div className="or-cart-box" style={{ marginBottom:0 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:'rgba(200,140,40,.08)', borderRadius:8, padding:'8px 12px', marginBottom:10, fontSize:12, fontWeight:500, color:'var(--or-gold)' }}>
+            <span>Tipo:</span>
+            <span>{cart.orderType==='EN_MESA'?`🪑 Mesa ${cart.selectedMesa?.numero}`:cart.orderType==='A_DOMICILIO'?'🚗 A Domicilio':'📦 Para Llevar'}</span>
           </div>
-
-          {/* Items */}
-          <div className="bg-white rounded border border-[#E2D4B7] p-3 max-h-40 overflow-y-auto">
-            <p className="font-semibold text-[#1A1A1A] mb-2">Artículos:</p>
-            {cart.items.map((item) => (
-              <div
-                key={`${item.tipo}-${item.id}`}
-                className="flex justify-between text-sm py-1 border-b border-[#E2D4B7] last:border-0"
-              >
-                <span className="text-[#4b4b4b]">
-                  {item.cantidad}x {item.nombre}
-                </span>
-                <span className="font-semibold">${(item.cantidad * item.precioUnitario).toFixed(2)}</span>
+          <div className="or-cart-items" style={{ maxHeight:120 }}>
+            {cart.items.map(item => (
+              <div key={`${item.tipo}-${item.id}`} className="or-cart-item">
+                <div className="or-cart-item-info">
+                  <div className="or-cart-item-name">{item.nombre}</div>
+                  <div className="or-cart-item-sub">{item.cantidad}x Q{item.precioUnitario.toFixed(2)}</div>
+                </div>
+                <span className="or-cart-item-total">Q{(item.cantidad*item.precioUnitario).toFixed(2)}</span>
               </div>
             ))}
           </div>
-
-          {/* Totals */}
-          <div className="bg-white rounded border border-[#E2D4B7] p-3 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-[#4b4b4b]">Subtotal:</span>
-              <span className="font-semibold">${subtotal.toFixed(2)}</span>
-            </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-sm text-green-600">
-                <span>Descuento:</span>
-                <span className="font-semibold">-${discount.toFixed(2)}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-sm">
-              <span className="text-[#4b4b4b]">Impuesto (19%):</span>
-              <span className="font-semibold">${tax.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between font-bold text-lg border-t border-[#E2D4B7] pt-2">
-              <span>Total a Pagar:</span>
-              <span className="text-[#D4984E]">${total.toFixed(2)}</span>
-            </div>
+          <div className="or-totals">
+            <div className="or-total-row"><span>Subtotal</span><span className="or-total-val">Q{subtotal.toFixed(2)}</span></div>
+            {discount > 0 && <div className="or-total-row or-total-row--discount"><span>Descuento</span><span>-Q{discount.toFixed(2)}</span></div>}
+            <div className="or-total-row"><span>Impuesto (19%)</span><span className="or-total-val">Q{tax.toFixed(2)}</span></div>
+            <div className="or-total-row or-total-row--final"><span>Total a Pagar</span><span className="or-total-val">Q{total.toFixed(2)}</span></div>
           </div>
         </div>
       </div>
-
-      {/* Client Information */}
-      <div className="space-y-3">
-        <h3 className="text-lg font-bold text-[#1A1A1A]">Tus Datos</h3>
-
-        <div>
-          <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-            Nombre *
-          </label>
-          <input
-            type="text"
-            value={cart.clientName}
-            onChange={(e) =>
-              useOrderCartStore.setState({ clientName: e.target.value })
-            }
-            placeholder="Tu nombre completo"
-            className="w-full px-4 py-2 border border-[#E2D4B7] rounded-lg focus:outline-none focus:border-[#D4984E] bg-white"
-          />
+ 
+      {/* Datos del cliente */}
+      <div className="or-confirm-section">
+        <div className="or-confirm-section-title"><i className="ti ti-user" aria-hidden="true" />Tus datos</div>
+        <div className="or-form-row" style={{ marginBottom:10 }}>
+          <div className="or-form-field">
+            <label className="or-form-label">Nombre <span className="or-form-label-req">*</span></label>
+            <input type="text" value={cart.clientName} onChange={e => useOrderCartStore.setState({clientName:e.target.value})} placeholder="Tu nombre completo" className="or-form-input" />
+          </div>
+          <div className="or-form-field">
+            <label className="or-form-label">Teléfono <span className="or-form-label-req">*</span></label>
+            <input type="tel" value={cart.clientPhone} onChange={e => useOrderCartStore.setState({clientPhone:e.target.value})} placeholder="Tu teléfono" className="or-form-input" />
+          </div>
         </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-            Teléfono *
-          </label>
-          <input
-            type="tel"
-            value={cart.clientPhone}
-            onChange={(e) =>
-              useOrderCartStore.setState({ clientPhone: e.target.value })
-            }
-            placeholder="Tu teléfono"
-            className="w-full px-4 py-2 border border-[#E2D4B7] rounded-lg focus:outline-none focus:border-[#D4984E] bg-white"
-          />
+        <div className="or-form-field">
+          <label className="or-form-label">Email (opcional)</label>
+          <input type="email" value={cart.clientEmail} onChange={e => useOrderCartStore.setState({clientEmail:e.target.value})} placeholder="tu@email.com" className="or-form-input" />
         </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-            Email (Opcional)
-          </label>
-          <input
-            type="email"
-            value={cart.clientEmail}
-            onChange={(e) =>
-              useOrderCartStore.setState({ clientEmail: e.target.value })
-            }
-            placeholder="tu@email.com"
-            className="w-full px-4 py-2 border border-[#E2D4B7] rounded-lg focus:outline-none focus:border-[#D4984E] bg-white"
-          />
-        </div>
-
-        {/* Conditional Fields */}
-        {cart.orderType === 'A_DOMICILIO' && (
-          <div>
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-              Dirección de Entrega *
-            </label>
-            <textarea
-              value={addressInput}
-              onChange={(e) => setAddressInput(e.target.value)}
-              placeholder="Calle, número, apartamento, referencias..."
-              rows="3"
-              className="w-full px-4 py-2 border border-[#E2D4B7] rounded-lg focus:outline-none focus:border-[#D4984E] bg-white"
-            />
+        {cart.orderType==='A_DOMICILIO' && (
+          <div className="or-form-field" style={{ marginTop:10 }}>
+            <label className="or-form-label">Dirección de entrega <span className="or-form-label-req">*</span></label>
+            <textarea value={addressInput} onChange={e => setAddressInput(e.target.value)} placeholder="Calle, número, apartamento, referencias..." className="or-form-textarea" rows={2} />
           </div>
         )}
-
-        {cart.orderType === 'PARA_LLEVAR' && (
-          <div>
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-              Hora de Retiro *
-            </label>
-            <input
-              type="time"
-              value={scheduledTime}
-              onChange={(e) => setScheduledTime(e.target.value)}
-              className="w-full px-4 py-2 border border-[#E2D4B7] rounded-lg focus:outline-none focus:border-[#D4984E] bg-white"
-            />
+        {cart.orderType==='PARA_LLEVAR' && (
+          <div className="or-form-field" style={{ marginTop:10 }}>
+            <label className="or-form-label">Hora de retiro <span className="or-form-label-req">*</span></label>
+            <input type="time" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)} className="or-form-input" />
           </div>
         )}
       </div>
-
-      {/* Coupon Section */}
-      <div className="space-y-2">
-        <label className="block text-sm font-semibold text-[#1A1A1A]">
-          Código de Cupón (Opcional)
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={couponInput}
-            onChange={(e) => {
-              const nextValue = e.target.value.toUpperCase();
-              setCouponInput(nextValue);
-              setCouponMessage('');
-              setCouponMessageType('');
-              useOrderCartStore.setState({
-                couponCode: '',
-                discount: 0,
-                discountType: '',
-              });
-            }}
-            placeholder="Ingresa tu cupón"
-            className="flex-1 px-4 py-2 border border-[#E2D4B7] rounded-lg focus:outline-none focus:border-[#D4984E] bg-white"
-          />
-          <button
-            type="button"
-            onClick={handleValidateCoupon}
-            disabled={isValidatingCoupon}
-            className="px-4 py-2 bg-[#E2D4B7] text-[#1A1A1A] rounded-lg hover:bg-[#d8c8a6] transition-colors font-semibold disabled:opacity-50"
-          >
+ 
+      {/* Cupón */}
+      <div className="or-confirm-section">
+        <div className="or-confirm-section-title"><i className="ti ti-tag" aria-hidden="true" />Código de Cupón (opcional)</div>
+        <div className="or-coupon-row">
+          <input type="text" value={couponInput} onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponMessage(''); setCouponMessageType(''); useOrderCartStore.setState({couponCode:'',discount:0,discountType:''}); }} placeholder="Ingresa tu cupón" className="or-coupon-input" />
+          <button onClick={handleValidateCoupon} disabled={isValidatingCoupon} className="or-coupon-btn">
             {isValidatingCoupon ? 'Validando...' : 'Aplicar'}
           </button>
         </div>
         {couponMessage && (
-          <p className={`text-sm font-medium ${couponMessageType === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+          <div className={couponMessageType==='success' ? 'or-coupon-ok' : 'or-coupon-err'} style={{ marginTop:6 }}>
+            <i className={`ti ${couponMessageType==='success'?'ti-circle-check':'ti-alert-circle'}`} aria-hidden="true" />
             {couponMessage}
-          </p>
-        )}
-        {cart.couponCode && discount > 0 && (
-          <p className="text-xs text-green-600 font-semibold">
-            Cupón aplicado: {cart.couponCode}
-          </p>
+          </div>
         )}
       </div>
-
-      {/* Notes */}
-      <div>
-        <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-          Notas Especiales (Opcional)
-        </label>
-        <textarea
-          value={cart.notes}
-          onChange={(e) => useOrderCartStore.setState({ notes: e.target.value })}
-          placeholder="Alergias, preferencias, indicaciones especiales..."
-          rows="2"
-          className="w-full px-4 py-2 border border-[#E2D4B7] rounded-lg focus:outline-none focus:border-[#D4984E] bg-white"
-        />
+ 
+      {/* Notas */}
+      <div className="or-confirm-section">
+        <div className="or-confirm-section-title"><i className="ti ti-notes" aria-hidden="true" />Notas especiales (opcional)</div>
+        <textarea value={cart.notes} onChange={e => useOrderCartStore.setState({notes:e.target.value})} placeholder="Alergias, preferencias, indicaciones especiales..." className="or-form-textarea" rows={2} />
       </div>
-
-      {/* Error Messages */}
+ 
+      {/* Error */}
       {orderStore.error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          <p className="font-semibold">Error:</p>
-          <p className="text-sm">{orderStore.error}</p>
+        <div style={{ background:'rgba(200,80,80,.10)', border:'.5px solid rgba(200,80,80,.25)', borderRadius:9, padding:'10px 14px', marginBottom:12, fontSize:12, color:'var(--or-red)' }}>
+          <strong>Error:</strong> {orderStore.error}
         </div>
       )}
-
-      {/* Action Buttons */}
-      <div className="flex gap-4 pt-6">
-        <button
-          onClick={() => useOrderCartStore.setState({ currentStep: 2 })}
-          className="flex-1 px-4 py-3 border border-[#d8c8a6] text-[#1A1A1A] rounded-lg hover:bg-[#F8F5F0] transition-colors font-semibold disabled:opacity-50"
-          disabled={isValidatingStock || isCreatingOrder}
-        >
-          ← Atrás
-        </button>
-
-        <button
-          onClick={handleValidateStock}
-          disabled={isValidatingStock || isCreatingOrder}
-          className="flex-1 px-4 py-3 bg-[#E2D4B7] text-[#1A1A1A] rounded-lg hover:bg-[#d8c8a6] transition-colors font-semibold disabled:opacity-50"
-        >
+ 
+      {/* Nav */}
+      <div className="or-step-nav">
+        <button onClick={() => useOrderCartStore.setState({currentStep:2})} disabled={isValidatingStock||isCreatingOrder} className="or-step-nav-btn or-step-nav-back">← Atrás</button>
+        <button onClick={handleValidateStock} disabled={isValidatingStock||isCreatingOrder} className="or-step-nav-btn or-step-nav-validate">
           {isValidatingStock ? '⏳ Validando...' : '✓ Validar Stock'}
         </button>
-
-        <button
-          onClick={handleCreateOrder}
-          disabled={isCreatingOrder || isValidatingStock}
-          className="flex-1 px-4 py-3 bg-gradient-to-r from-[#D4984E] to-[#B8860B] text-white rounded-lg hover:from-[#C2852D] hover:to-[#A67C09] transition-all font-semibold shadow-md hover:shadow-lg disabled:opacity-50"
-        >
-          {isCreatingOrder ? '⏳ Creando...' : '✓ Confirmar Pedido'}
+        <button onClick={handleCreateOrder} disabled={isCreatingOrder||isValidatingStock} className="or-step-nav-btn or-step-nav-next">
+          {isCreatingOrder ? '⏳ Creando...' : '✓ Confirmar'}
         </button>
       </div>
-
-      <p className="text-xs text-[#4b4b4b] text-center">
-        Los campos marcados con * son obligatorios
-      </p>
-
+ 
+      {/* Overlay de carga */}
       {isCreatingOrder && (
-        <div className="absolute inset-0 bg-transparent z-50 flex items-center justify-center pointer-events-none rounded-lg">
-          <div className="bg-white bg-opacity-95 px-6 py-4 rounded-md flex items-center gap-4 shadow pointer-events-auto">
-            <svg className="w-8 h-8 text-[#D4984E] animate-spin" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
-              <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeDasharray="31.4 31.4"></circle>
-            </svg>
-            <div className="text-lg font-semibold">Creando pedido...</div>
+        <div style={{ position:'absolute', inset:0, background:'rgba(17,16,9,.8)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:12 }}>
+          <div style={{ background:'var(--or-bg-panel)', border:'.5px solid var(--or-border)', borderRadius:12, padding:'16px 24px', display:'flex', alignItems:'center', gap:12 }}>
+            <div className="or-table-spinner" style={{ width:20, height:20 }} />
+            <span style={{ fontSize:13, color:'var(--or-text-primary)', fontWeight:500 }}>Creando pedido...</span>
           </div>
         </div>
       )}
     </div>
   );
 };
+ 

@@ -1,248 +1,140 @@
 import { useState } from 'react';
-import toast from 'react-hot-toast';
-import { useReservationStore } from '../store/useReservationStore.js';
-
+ 
 export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
   const [filterStatus, setFilterStatus] = useState('all');
-  const [expandedId, setExpandedId] = useState(null);
-
-  const filteredReservations =
-    filterStatus === 'all'
-      ? reservations
-      : reservations.filter((r) => r.estado?.toLowerCase() === filterStatus.toLowerCase());
-
-  const getStatusBadge = (status) => {
-    switch (status?.toUpperCase()) {
-      case 'CONFIRMADA':
-        return {
-          bg: 'bg-[#2D4F4F]',
-          text: 'text-white',
-          label: 'Confirmada',
-          icon: '✓',
-        };
-      case 'CANCELADA':
-        return {
-          bg: 'bg-[#5A5146]',
-          text: 'text-white',
-          label: 'Cancelada',
-          icon: '✗',
-        };
-      case 'COMPLETADA':
-        return {
-          bg: 'bg-[#2D4F4F]',
-          text: 'text-white',
-          label: 'Completada',
-          icon: '✓',
-        };
-      default:
-        return {
-          bg: 'bg-[#C49A2B]',
-          text: 'text-white',
-          label: 'Pendiente',
-          icon: '⏱',
-        };
-    }
-  };
-
+  const [expandedId, setExpandedId]     = useState(null);
+ 
+  /* ── Helpers — INTACTOS ── */
+  const filteredReservations = filterStatus==='all'
+    ? reservations
+    : reservations.filter(r => r.estado?.toLowerCase() === filterStatus.toLowerCase());
+ 
+  const STATUS_CSS   = { CONFIRMADA:'rv-status-badge--confirmada', CANCELADA:'rv-status-badge--cancelada', COMPLETADA:'rv-status-badge--completada' };
+  const STATUS_LABEL = { CONFIRMADA:'Confirmada', CANCELADA:'Cancelada', COMPLETADA:'Completada' };
+  const STATUS_ICON  = { CONFIRMADA:'ti-check', CANCELADA:'ti-x', COMPLETADA:'ti-circle-check' };
+  const getStatusCss = (s) => STATUS_CSS[s?.toUpperCase()] || 'rv-status-badge--pendiente';
+  const getStatusLabel = (s) => STATUS_LABEL[s?.toUpperCase()] || 'Pendiente';
+  const getStatusIcon  = (s) => STATUS_ICON[s?.toUpperCase()] || 'ti-clock';
+ 
   const getTimeStatus = (reservationDate, reservationTime) => {
     const now = new Date();
-    const reservationDateTime = new Date(`${reservationDate}T${reservationTime}`);
-
-    if (reservationDateTime < now) {
-      return 'passed';
-    } else if (reservationDateTime.getTime() - now.getTime() < 60 * 60 * 1000) {
-      return 'soon';
-    }
+    const dt = new Date(`${reservationDate}T${reservationTime}`);
+    if (dt < now) return 'passed';
+    if (dt.getTime() - now.getTime() < 60*60*1000) return 'soon';
     return 'upcoming';
   };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const formatTime = (timeString) => {
-    if (!timeString) return 'No especificada';
-    return timeString.slice(0, 5).replace(':', 'h');
-  };
-
-  const handleCancelReservation = async (reservationId) => {
-    if (
-      window.confirm(
-        '¿Estás seguro de que deseas cancelar esta reserva? Esta acción no se puede deshacer.'
-      )
-    ) {
-      await onCancel(reservationId);
+ 
+  const formatDate = (ds) => new Date(ds).toLocaleDateString('es-ES', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+  const formatTime = (ts) => { if (!ts) return 'No especificada'; return ts.slice(0,5).replace(':','h'); };
+ 
+  const handleCancelReservation = async (id) => {
+    if (window.confirm('¿Estás seguro de que deseas cancelar esta reserva? Esta acción no se puede deshacer.')) {
+      await onCancel(id);
     }
   };
-
+ 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Filtros */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="rvh-filters">
         {[
-          { value: 'all', label: 'Todas' },
-          { value: 'confirmada', label: 'Confirmadas' },
-          { value: 'completada', label: 'Completadas' },
-          { value: 'cancelada', label: 'Canceladas' },
-        ].map((filter) => (
-          <button
-            key={filter.value}
-            onClick={() => setFilterStatus(filter.value)}
-            className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${
-              filterStatus === filter.value
-                ? 'bg-[#C49A2B] text-white'
-                : 'border border-[#E8D4B8] bg-[#FDFBF7] text-gray-600 hover:border-[#C49A2B]'
-            }`}
-          >
+          { value:'all',       label:'Todas' },
+          { value:'confirmada',label:'Confirmadas' },
+          { value:'completada',label:'Completadas' },
+          { value:'cancelada', label:'Canceladas' },
+        ].map(filter => (
+          <button key={filter.value} onClick={() => setFilterStatus(filter.value)} className={`rvh-filter-btn${filterStatus===filter.value?' active':''}`}>
             {filter.label}
           </button>
         ))}
       </div>
-
-      {/* Lista de reservas */}
+ 
       {filteredReservations.length === 0 ? (
-        <div className="rounded-2xl border border-[#E8D4B8] bg-[#FDFBF7] p-10 text-center">
-          <div className="text-5xl mb-4">📭</div>
-          <p className="font-semibold text-[#1A1A1A]">No hay reservas</p>
-          <p className="text-sm text-[#5A5146] mt-2">
-            {filterStatus === 'all'
-              ? 'Aún no tienes reservas. ¡Haz tu primera reserva!'
-              : `No tienes reservas ${filterStatus}.`}
-          </p>
+        <div className="rvh-empty">
+          <span className="rvh-empty-icon">📭</span>
+          <div className="rvh-empty-title">No hay reservas</div>
+          <div className="rvh-empty-sub">
+            {filterStatus==='all' ? '¡Aún no tienes reservas! Haz tu primera reserva.' : `No tienes reservas ${filterStatus}.`}
+          </div>
         </div>
       ) : (
-        <div className="space-y-3">
-          {filteredReservations.map((reservation) => {
-            const statusBadge = getStatusBadge(reservation.estado);
+        <div className="rvh-list">
+          {filteredReservations.map(reservation => {
             const timeStatus = getTimeStatus(reservation.fecha, reservation.horaInicio);
             const isExpanded = expandedId === reservation._id;
-
             return (
-              <div
-                key={reservation._id}
-                className={`rounded-2xl border transition ${
-                  isExpanded ? 'border-[#C49A2B] bg-[#FDFBF7] shadow-lg' : 'border-[#E8D4B8] bg-[#FDFBF7]'
-                }`}
-              >
-                {/* Header */}
-                <button
-                  onClick={() => setExpandedId(isExpanded ? null : reservation._id)}
-                  className="w-full px-6 py-4 text-left hover:bg-[#F5EFEA]"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div>
-                          <h4 className="font-semibold text-[#1A1A1A]">
-                            {reservation.restaurante?.nombre || 'Restaurante'}
-                          </h4>
-                          <p className="text-sm text-[#5A5146]">
-                            📅 {formatDate(reservation.fecha)} • {formatTime(reservation.horaInicio)} -{' '}
-                            {formatTime(reservation.horaFin)}
-                          </p>
-                        </div>
+              <div key={reservation._id} className={`rvh-card${isExpanded?' expanded':''}`}>
+                <button className="rvh-card-header" onClick={() => setExpandedId(isExpanded?null:reservation._id)}>
+                  <div className="rvh-card-header-inner">
+                    <div style={{flex:1}}>
+                      <div className="rvh-card-name">{reservation.restaurante?.nombre||'Restaurante'}</div>
+                      <div className="rvh-card-meta">
+                        <i className="ti ti-calendar" aria-hidden="true" />
+                        {formatDate(reservation.fecha)} · {formatTime(reservation.horaInicio)} – {formatTime(reservation.horaFin)}
                       </div>
-
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadge.bg} ${statusBadge.text}`}
-                        >
-                          {statusBadge.icon} {statusBadge.label}
+                      <div className="rvh-card-badges">
+                        <span className={`rv-status-badge ${getStatusCss(reservation.estado)}`}>
+                          <i className={`ti ${getStatusIcon(reservation.estado)}`} aria-hidden="true" />
+                          {getStatusLabel(reservation.estado)}
                         </span>
-                        {timeStatus === 'soon' && (
-                          <span className="inline-flex items-center rounded-full bg-[#E8956B] px-3 py-1 text-xs font-semibold text-white">
-                            ⏰ Próximamente
-                          </span>
-                        )}
-                        <span className="text-xs text-[#5A5146]">👥 {reservation.personas} personas</span>
+                        {timeStatus==='soon' && <span className="rvh-badge-soon">⏰ Próximamente</span>}
+                        <span className="rvh-badge-people">
+                          <i className="ti ti-users" aria-hidden="true" />
+                          {reservation.personas} personas
+                        </span>
                       </div>
                     </div>
-
-                    <div className="text-2xl ml-2">{isExpanded ? '▼' : '▶'}</div>
+                    <i className={`ti ${isExpanded?'ti-chevron-up':'ti-chevron-right'} rvh-card-toggle`} aria-hidden="true" />
                   </div>
                 </button>
-
-                {/* Expanded Content */}
+ 
                 {isExpanded && (
-                  <div className="border-t border-[#E8D4B8] px-6 py-4 space-y-4">
-                    {/* Detalles */}
-                    <div className="space-y-2 bg-[#FDFBF7] border border-[#E8D4B8] rounded-lg p-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-[#5A5146]">🔔 Número de reserva:</span>
-                        <span className="font-mono font-semibold text-[#1A1A1A]">
-                          {reservation._id?.substring(reservation._id.length - 8).toUpperCase() || 'N/A'}
-                        </span>
+                  <div className="rvh-card-body">
+                    <div className="rvh-detail-list">
+                      <div className="rvh-detail-row">
+                        <span className="rvh-detail-key"><i className="ti ti-hash" aria-hidden="true" />Número de reserva</span>
+                        <span className="rvh-detail-val rvh-detail-val--mono">{reservation._id?.substring(reservation._id.length-8).toUpperCase()||'N/A'}</span>
                       </div>
-
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-[#5A5146]">🪑 Mesa asignada:</span>
-                        <span className="font-semibold text-[#1A1A1A]">
-                          {reservation.mesa?.numero || 'Por asignar'}
-                        </span>
+                      <div className="rvh-detail-row">
+                        <span className="rvh-detail-key"><i className="ti ti-armchair" aria-hidden="true" />Mesa asignada</span>
+                        <span className="rvh-detail-val">{reservation.mesa?.numero||'Por asignar'}</span>
                       </div>
-
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-[#5A5146]">📍 Ubicación:</span>
-                        <span className="font-semibold text-[#1A1A1A]">
-                          {reservation.mesa?.ubicacion || 'No especificada'}
-                        </span>
+                      <div className="rvh-detail-row">
+                        <span className="rvh-detail-key"><i className="ti ti-map-pin" aria-hidden="true" />Ubicación</span>
+                        <span className="rvh-detail-val">{reservation.mesa?.ubicacion||'No especificada'}</span>
                       </div>
-
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-[#5A5146]">📅 Creada:</span>
-                        <span className="font-semibold text-[#1A1A1A]">
-                          {new Date(reservation.creadaEn).toLocaleDateString('es-ES')}
-                        </span>
+                      <div className="rvh-detail-row">
+                        <span className="rvh-detail-key"><i className="ti ti-calendar-plus" aria-hidden="true" />Creada</span>
+                        <span className="rvh-detail-val">{new Date(reservation.creadaEn).toLocaleDateString('es-ES')}</span>
                       </div>
                     </div>
-
-                    {/* Notas */}
+ 
                     {reservation.notas && (
-                      <div className="rounded-lg border border-[#C49A2B] bg-[#FFF8E7] p-4">
-                        <p className="text-sm text-[#3D2C1E]">
-                          <strong>📝 Notas:</strong> {reservation.notas}
-                        </p>
+                      <div className="rvh-notes-box">
+                        <strong>📝 Notas:</strong> {reservation.notas}
                       </div>
                     )}
-
-                    {/* Razón de cancelación */}
-                    {reservation.estado?.toUpperCase() === 'CANCELADA' && reservation.razonCancelacion && (
-                      <div className="rounded-lg border border-red-300 bg-red-50 p-4">
-                        <p className="text-sm text-red-700">
-                          <strong>❌ Razón de cancelación:</strong> {reservation.razonCancelacion}
-                        </p>
+ 
+                    {reservation.estado?.toUpperCase()==='CANCELADA' && reservation.razonCancelacion && (
+                      <div className="rvh-cancel-box">
+                        <strong>❌ Razón de cancelación:</strong> {reservation.razonCancelacion}
                       </div>
                     )}
-
-                    {/* Acciones */}
-                    <div className="flex gap-2 pt-4 border-t border-[#E8D4B8]">
-                      {reservation.estado?.toUpperCase() === 'CONFIRMADA' &&
-                        getTimeStatus(reservation.fecha, reservation.horaInicio) !== 'passed' && (
-                          <button
-                            onClick={() => handleCancelReservation(reservation._id)}
-                            disabled={isLoading}
-                            className="flex-1 rounded-lg border border-red-600 bg-white px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-                          >
-                            Cancelar Reserva
-                          </button>
-                        )}
-                      {reservation.estado?.toUpperCase() === 'COMPLETADA' && (
-                        <button className="flex-1 rounded-lg border border-[#2D4F4F] bg-[#FDFBF7] px-4 py-2 text-sm font-semibold text-[#2D4F4F] transition hover:bg-[#F5EFEA]">
-                          ⭐ Dejar Reseña
+ 
+                    <div className="rvh-card-actions">
+                      {reservation.estado?.toUpperCase()==='CONFIRMADA' && timeStatus!=='passed' && (
+                        <button onClick={() => handleCancelReservation(reservation._id)} disabled={isLoading} className="rvh-cancel-btn">
+                          <i className="ti ti-trash" aria-hidden="true" />
+                          Cancelar Reserva
                         </button>
                       )}
-                      <button
-                        onClick={() => setExpandedId(null)}
-                        className="flex-1 rounded-lg border border-[#C87A55] bg-white px-4 py-2 text-sm font-semibold text-[#C87A55] transition hover:bg-[#E2D4B7]"
-                      >
-                        Cerrar
-                      </button>
+                      {reservation.estado?.toUpperCase()==='COMPLETADA' && (
+                        <button className="rvh-review-btn">
+                          <i className="ti ti-star" aria-hidden="true" />
+                          Dejar Reseña
+                        </button>
+                      )}
+                      <button onClick={() => setExpandedId(null)} className="rvh-close-btn">Cerrar</button>
                     </div>
                   </div>
                 )}
@@ -254,3 +146,4 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
     </div>
   );
 };
+ 

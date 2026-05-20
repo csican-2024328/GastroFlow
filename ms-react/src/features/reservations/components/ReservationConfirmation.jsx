@@ -1,128 +1,87 @@
 import { useEffect } from 'react';
-
+ 
 export const ReservationConfirmation = ({ reservation, restaurant, onClose }) => {
+  /* ── Auto-close — INTACTO ── */
   useEffect(() => {
-    // Auto-close después de 5 segundos
-    const timer = setTimeout(() => {
-      onClose();
-    }, 5000);
-
+    const timer = setTimeout(() => onClose(), 5000);
     return () => clearTimeout(timer);
   }, [onClose]);
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const formatTime = (timeString) => {
-    return timeString.slice(0, 5).replace(':', 'h');
-  };
-
+ 
+  const formatDate = (ds) => new Date(ds).toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const formatTime = (ts) => ts.slice(0,5).replace(':','h');
+ 
+  const isPending = reservation?.estado === 'PENDIENTE';
+ 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 p-4 z-50">
-      <div className="w-full max-w-md rounded-2xl bg-[#FDFBF7] border border-[#E8D4B8] p-8 shadow-2xl animate-in fade-in zoom-in">
-        {/* Success Icon */}
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#2D4F4F]">
-            <span className="text-3xl">✓</span>
-          </div>
+    <div className="rvc-overlay">
+      <div className="rvc-modal">
+ 
+        {/* Icono */}
+        <div className={`rvc-icon-wrap${isPending?' rvc-icon-wrap--pending':' rvc-icon-wrap--success'}`}>
+          <i className={`ti ${isPending?'ti-clock':'ti-check'}`} aria-hidden="true" />
         </div>
-
-        {/* Title */}
-        <h2 className="mb-2 text-center font-['Playfair_Display'] text-2xl font-bold text-gray-800">
-          {reservation?.estado === 'PENDIENTE' ? '⏳ Reservación Recibida' : '¡Reserva Confirmada!'}
-        </h2>
-        <p className="mb-6 text-center text-sm text-gray-600">
-          {reservation?.estado === 'PENDIENTE' 
-            ? 'Tu reservación está siendo observada por un administrador. Recibirás un email de confirmación pronto.'
-            : 'Tu reserva ha sido registrada exitosamente'}
+ 
+        {/* Título */}
+        <h2 className="rvc-title">{isPending ? '⏳ Reservación Recibida' : '¡Reserva Confirmada!'}</h2>
+        <p className="rvc-sub">
+          {isPending
+            ? 'Tu reservación está siendo revisada por un administrador. Recibirás un email de confirmación pronto.'
+            : 'Tu reserva ha sido registrada exitosamente.'}
         </p>
-
+ 
         {/* Resumen */}
-        <div className="mb-6 space-y-3 rounded-lg bg-[#F5EFEA] border border-[#E8D4B8] p-4">
+        <div className="rvc-summary">
+          <div className="rvc-summary-single">
+            <div className="rvc-s-label">Restaurante</div>
+            <div className="rvc-s-value">{restaurant?.name}</div>
+          </div>
+          <div className="rvc-summary-row">
+            <div>
+              <div className="rvc-s-label">Fecha</div>
+              <div className="rvc-s-value">{formatDate(reservation.date||reservation.fecha)}</div>
+            </div>
+            <div>
+              <div className="rvc-s-label">Hora</div>
+              <div className="rvc-s-value">{formatTime(reservation.timeStart||reservation.horaInicio)} – {formatTime(reservation.timeEnd||reservation.horaFin)}</div>
+            </div>
+          </div>
+          <div className="rvc-summary-row">
+            <div>
+              <div className="rvc-s-label">Personas</div>
+              <div className="rvc-s-value">{reservation.partySize||reservation.personas}</div>
+            </div>
+            <div>
+              <div className="rvc-s-label">Mesa</div>
+              <div className="rvc-s-value">Mesa {reservation.tableId?.numero||reservation.mesa?.numero}</div>
+            </div>
+          </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Restaurante</p>
-            <p className="font-semibold text-gray-800">{restaurant?.name}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#B59070]">Fecha</p>
-              <p className="font-semibold text-[#1A1A1A] text-sm">
-                {formatDate(reservation.date || reservation.fecha)}
-              </p>
+            <div className="rvc-s-label">Número de Reserva</div>
+            <div className="rvc-code">
+              {reservation._id?.substring(reservation._id.length-8).toUpperCase()||reservation.confirmationCode||'RES-'+new Date().getTime()}
             </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#B59070]">Hora</p>
-              <p className="font-semibold text-[#1A1A1A] text-sm">
-                {formatTime(reservation.timeStart || reservation.horaInicio)} -{' '}
-                {formatTime(reservation.timeEnd || reservation.horaFin)}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#B59070]">Personas</p>
-              <p className="font-semibold text-[#1A1A1A]">{reservation.partySize || reservation.personas}</p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#B59070]">Mesa</p>
-              <p className="font-semibold text-[#1A1A1A]">
-                Mesa {reservation.tableId?.numero || reservation.mesa?.numero}
-              </p>
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-[#E8D4B8]">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#B59070]">
-              Número de Reserva
-            </p>
-            <p className="font-mono font-bold text-[#C49A2B] text-lg">
-              {reservation._id?.substring(reservation._id.length - 8).toUpperCase() ||
-                reservation.confirmationCode ||
-                'RES-' + new Date().getTime()}
-            </p>
           </div>
         </div>
-
-        {/* Info Box */}
-        <div className={`mb-6 rounded-lg border p-4 ${
-          reservation?.estado === 'PENDIENTE' 
-            ? 'border-amber-400 bg-amber-50' 
-            : 'border-[#C49A2B] bg-[#FFF8E7]'
-        }`}>
-          <p className={`text-sm ${reservation?.estado === 'PENDIENTE' ? 'text-amber-900' : 'text-[#3D2C1E]'}`}>
-            {reservation?.estado === 'PENDIENTE' ? (
-              <>⏳ <strong>Tu reservación está bajo observación:</strong> Un administrador del restaurante la revisará en los próximos 15 minutos a 2 horas. Recibirás un email de confirmación cuando sea aprobada. NO confirmes tu asistencia hasta recibir ese email.</>
-            ) : (
-              <>📍 <strong>Importante:</strong> Por favor, llega con 15 minutos de anticipación. Tu reserva se mantendrá por 30 minutos después de la hora de inicio.</>
-            )}
-          </p>
+ 
+        {/* Info box */}
+        <div className={`rvc-info-box${isPending?' rvc-info-box--pending':' rvc-info-box--success'}`}>
+          <i className={`ti ${isPending?'ti-clock':'ti-map-pin'}`} aria-hidden="true" />
+          <span>
+            {isPending
+              ? <><strong style={{color:'var(--rv-text-primary)'}}>Tu reservación está bajo observación:</strong> Un administrador la revisará pronto. NO confirmes tu asistencia hasta recibir el email de aprobación.</>
+              : <><strong style={{color:'var(--rv-text-primary)'}}>Importante:</strong> Por favor, llega con 15 minutos de anticipación. Tu reserva se mantendrá por 30 minutos después de la hora de inicio.</>}
+          </span>
         </div>
-
-        {/* Email notification */}
-        <div className="mb-6 rounded-lg bg-[#FDFBF7] border border-[#E8D4B8] p-4 text-center">
-          <p className="text-sm text-[#5A5146]">
-            {reservation?.estado === 'PENDIENTE' 
-              ? '📧 Te hemos enviado un correo notificándote que tu reservación está siendo observada'
-              : '✉️ Se ha enviado un correo de confirmación a tu email'}
-          </p>
+ 
+        {/* Email */}
+        <div className="rvc-email-box">
+          <i className="ti ti-mail" aria-hidden="true" />
+          {isPending
+            ? 'Te hemos enviado un correo notificándote que tu reservación está siendo revisada'
+            : 'Se ha enviado un correo de confirmación a tu email'}
         </div>
-
-        {/* Buttons */}
-        <button
-          onClick={onClose}
-          className="w-full rounded-lg bg-gradient-to-r from-[#2C4035] to-[#1A1A1A] px-6 py-3 font-semibold text-white transition hover:shadow-lg"
-        >
-          Continuar
-        </button>
+ 
+        <button onClick={onClose} className="rvc-continue-btn">Continuar</button>
       </div>
     </div>
   );

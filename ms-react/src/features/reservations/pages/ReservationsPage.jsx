@@ -7,140 +7,98 @@ import { useReservationStore } from '../store/useReservationStore.js';
 import { ReservationForm } from '../components/ReservationForm.jsx';
 import { ReservationHistory } from '../components/ReservationHistory.jsx';
 import { ReservationConfirmation } from '../components/ReservationConfirmation.jsx';
-
+import '../../../styles/reservations.css';
+ 
 export const ReservationsPage = () => {
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
-  const token = useAuthStore((state) => state.token);
-
-  const restaurants = useRestaurantStore((s) => s.restaurants);
-  const fetchRestaurants = useRestaurantStore((s) => s.fetchRestaurants);
-
-  const reservations = useReservationStore((s) => s.reservations);
-  const availableTables = useReservationStore((s) => s.availableTables);
-  const loading = useReservationStore((s) => s.loading);
-  const error = useReservationStore((s) => s.error);
-  const createReservationAction = useReservationStore((s) => s.createReservationAction);
-  const fetchUserReservations = useReservationStore((s) => s.fetchUserReservations);
-  const fetchAvailableTables = useReservationStore((s) => s.fetchAvailableTables);
-  const cancelReservationAction = useReservationStore((s) => s.cancelReservationAction);
-
+  const user  = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+ 
+  const restaurants        = useRestaurantStore((s) => s.restaurants);
+  const fetchRestaurants   = useRestaurantStore((s) => s.fetchRestaurants);
+ 
+  const reservations             = useReservationStore((s) => s.reservations);
+  const availableTables          = useReservationStore((s) => s.availableTables);
+  const loading                  = useReservationStore((s) => s.loading);
+  const error                    = useReservationStore((s) => s.error);
+  const createReservationAction  = useReservationStore((s) => s.createReservationAction);
+  const fetchUserReservations    = useReservationStore((s) => s.fetchUserReservations);
+  const fetchAvailableTables     = useReservationStore((s) => s.fetchAvailableTables);
+  const cancelReservationAction  = useReservationStore((s) => s.cancelReservationAction);
+ 
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showConfirmation,   setShowConfirmation]   = useState(false);
   const [createdReservation, setCreatedReservation] = useState(null);
-  const [activeTab, setActiveTab] = useState('new'); // 'new' o 'history'
-
-  // Fetch restaurants on mount
-  useEffect(() => {
-    fetchRestaurants(1, 50);
-  }, [fetchRestaurants]);
-
-  // Fetch user reservations on mount
-  useEffect(() => {
-    if (token) {
-      fetchUserReservations(1, 20);
-    }
-  }, [token, fetchUserReservations]);
-
-  const handleRestaurantSelect = (restaurant) => {
-    setSelectedRestaurant(restaurant);
-  };
-
+  const [activeTab,          setActiveTab]          = useState('new');
+ 
+  /* ── Effects — INTACTOS ── */
+  useEffect(() => { fetchRestaurants(1, 50); }, [fetchRestaurants]);
+  useEffect(() => { if (token) fetchUserReservations(1, 20); }, [token, fetchUserReservations]);
+ 
+  /* ── Handlers — INTACTOS ── */
   const handleFormSubmit = async (reservationData) => {
-    const reservationResult = await createReservationAction(reservationData);
-
-    if (reservationResult.success) {
-      setCreatedReservation(reservationResult.data);
-      setShowConfirmation(true);
-      
-      if (reservationResult.data?.estado === 'PENDIENTE') {
-        toast.success('⏳ Tu reservación está siendo observada. Recibirás un email de confirmación pronto.');
-      } else {
-        toast.success('¡Reserva confirmada exitosamente!');
-      }
-
-      // Refresh reservations list
-      await fetchUserReservations(1, 20);
-    } else {
-      toast.error(reservationResult.error || 'Error al crear la reserva');
-    }
-  };
-
-  const handleCancelReservation = async (reservationId) => {
-    const result = await cancelReservationAction(reservationId, 'Cancelada por el usuario');
-
+    const result = await createReservationAction(reservationData);
     if (result.success) {
-      toast.success('Reserva cancelada exitosamente');
+      setCreatedReservation(result.data);
+      setShowConfirmation(true);
+      if (result.data?.estado==='PENDIENTE') toast.success('⏳ Tu reservación está siendo observada. Recibirás un email pronto.');
+      else toast.success('¡Reserva confirmada exitosamente!');
       await fetchUserReservations(1, 20);
-    } else {
-      toast.error(result.error || 'Error al cancelar la reserva');
-    }
+    } else { toast.error(result.error||'Error al crear la reserva'); }
   };
-
+ 
+  const handleCancelReservation = async (id) => {
+    const result = await cancelReservationAction(id, 'Cancelada por el usuario');
+    if (result.success) { toast.success('Reserva cancelada exitosamente'); await fetchUserReservations(1,20); }
+    else toast.error(result.error||'Error al cancelar la reserva');
+  };
+ 
   const handleConfirmationClose = () => {
-    setShowConfirmation(false);
-    setSelectedRestaurant(null);
-    setActiveTab('history');
+    setShowConfirmation(false); setSelectedRestaurant(null); setActiveTab('history');
   };
-
-  // Vista: Seleccionar restaurante
+ 
+  /* ── VISTA: Seleccionar restaurante ── */
   if (!selectedRestaurant) {
     return (
-      <div className="min-h-screen bg-[#FDFBF7] text-gray-800 fade-in">
-        <header className="border-b border-[#E8D4B8] bg-[#F5EFEA]">
-          <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
+      <div className="rvp-root">
+        <header className="rvp-header">
+          <div className="rvp-header-inner">
             <div>
-              <h1 className="font-['Playfair_Display'] text-3xl font-bold text-gray-800">
-                Reservaciones
-              </h1>
-              <p className="text-sm text-gray-600">{user?.name}, elige un restaurante</p>
+              <h1 className="rvp-header-title">Reservaciones</h1>
+              <p className="rvp-header-sub">{user?.name}, elige un restaurante para reservar</p>
             </div>
-            <button
-              onClick={() => navigate('/cliente')}
-              className="rounded-full border border-[#2D4F4F] bg-[#FDFBF7] px-4 py-2 text-sm font-semibold text-[#2D4F4F] hover:bg-[#F5EFEA]"
-            >
-              ← Menu Principal
-            </button>
+            <div className="rvp-header-actions">
+              <button onClick={() => navigate('/cliente')} className="rvp-btn-back">
+                <i className="ti ti-arrow-left" aria-hidden="true" />Menú Principal
+              </button>
+            </div>
           </div>
         </header>
-
-        <main className="mx-auto w-full max-w-6xl px-6 py-8">
-          <div className="mb-6">
-            <h2 className="mb-4 font-['Playfair_Display'] text-2xl font-bold text-gray-800">
-              Selecciona un restaurante
-            </h2>
-          </div>
-
+        <main className="rvp-main">
+          <h2 className="rvp-section-title">Selecciona un restaurante</h2>
           {restaurants.length === 0 ? (
-            <div className="rounded-2xl border border-[#E8D4B8] bg-[#FDFBF7] p-10 text-center">
-              <p className="text-gray-600">No hay restaurantes disponibles</p>
+            <div style={{ background:'var(--rv-bg-panel)', border:'.5px solid var(--rv-border)', borderRadius:14, padding:'48px 24px', textAlign:'center' }}>
+              <p style={{ fontSize:13, color:'var(--rv-text-tertiary)' }}>No hay restaurantes disponibles</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {restaurants.map((restaurant) => (
-                <button
-                  key={restaurant._id}
-                  onClick={() => handleRestaurantSelect(restaurant)}
-                  className="overflow-hidden rounded-2xl border border-[#E8D4B8] bg-[#FDFBF7] text-left transition hover:-translate-y-1 hover:shadow-lg"
-                >
-                  <div className="h-32 bg-gradient-to-br from-[#F5EFEA] to-[#FDFBF7]">
-                    {restaurant.fotos && restaurant.fotos.length > 0 ? (
-                      <img
-                        src={restaurant.fotos[0]}
-                        alt={restaurant.name}
-                        className="h-full w-full object-cover"
-                      />
+            <div className="rvp-restaurant-grid">
+              {restaurants.map((restaurant, idx) => (
+                <button key={restaurant._id} onClick={() => setSelectedRestaurant(restaurant)} className="rvp-restaurant-card" style={{ animationDelay:`${idx*.05}s` }}>
+                  <div className="rvp-restaurant-img">
+                    {restaurant.fotos?.length > 0 ? (
+                      <img src={restaurant.fotos[0]} alt={restaurant.name} />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-3xl">🍽️</div>
+                      <div className="rvp-restaurant-no-img">🍽️</div>
                     )}
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-['Playfair_Display'] text-lg font-bold text-gray-800">
-                      {restaurant.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">{restaurant.category || 'Restaurante'}</p>
-                    {restaurant.direccion && (
-                      <p className="mt-2 text-xs text-gray-500">📍 {restaurant.direccion}</p>
+                  <div className="rvp-restaurant-body">
+                    <div className="rvp-restaurant-name">{restaurant.name}</div>
+                    {restaurant.category && <div className="rvp-restaurant-cat">{restaurant.category}</div>}
+                    {(restaurant.direccion||restaurant.address) && (
+                      <div className="rvp-restaurant-addr">
+                        <i className="ti ti-map-pin" aria-hidden="true" />
+                        {restaurant.direccion||restaurant.address}
+                      </div>
                     )}
                   </div>
                 </button>
@@ -151,68 +109,43 @@ export const ReservationsPage = () => {
       </div>
     );
   }
-
-  // Vista: Formulario de reserva o historial
+ 
+  /* ── VISTA: Formulario / Historial ── */
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-gray-800 fade-in">
-      <header className="border-b border-[#E8D4B8] bg-[#F5EFEA]">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
+    <div className="rvp-root">
+      <header className="rvp-header">
+        <div className="rvp-header-inner">
           <div>
-            <h1 className="font-['Playfair_Display'] text-3xl font-bold text-gray-800">
-              {selectedRestaurant?.name || 'Reservaciones'}
-            </h1>
-            <p className="text-sm text-[#5A5146]">Sistema de reservas</p>
+            <h1 className="rvp-header-title">{selectedRestaurant?.name||'Reservaciones'}</h1>
+            <p className="rvp-header-sub">Sistema de reservas</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSelectedRestaurant(null)}
-              className="rounded-full border border-[#E8956B] bg-[#FDFBF7] px-4 py-2 text-sm font-semibold text-[#E8956B] hover:bg-[#F5EFEA]"
-            >
-              ← Cambiar Restaurante
+          <div className="rvp-header-actions">
+            <button onClick={() => setSelectedRestaurant(null)} className="rvp-btn-back rvp-btn-back--gold">
+              <i className="ti ti-arrow-left" aria-hidden="true" />Cambiar Restaurante
             </button>
-            <button
-              onClick={() => navigate('/cliente')}
-              className="rounded-full border border-[#2C4035] bg-white px-4 py-2 text-sm font-semibold text-[#2C4035] hover:bg-[#E2D4B7]"
-            >
-              ← Menu Principal
+            <button onClick={() => navigate('/cliente')} className="rvp-btn-back">
+              <i className="ti ti-arrow-left" aria-hidden="true" />Menú Principal
             </button>
           </div>
         </div>
       </header>
-
-      <main className="mx-auto w-full max-w-6xl px-6 py-8">
+ 
+      <main className="rvp-main">
         {/* Tabs */}
-        <div className="mb-8 flex gap-2 border-b border-[#E8D4B8]">
-          <button
-            onClick={() => setActiveTab('new')}
-            className={`px-4 py-3 font-semibold border-b-2 transition ${
-              activeTab === 'new'
-                ? 'border-[#C49A2B] text-[#C49A2B]'
-                : 'border-transparent text-[#5A5146] hover:text-[#1A1A1A]'
-            }`}
-          >
+        <div className="rvp-tabs">
+          <button onClick={() => setActiveTab('new')} className={`rvp-tab${activeTab==='new'?' active':''}`}>
             📅 Nueva Reserva
           </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`px-4 py-3 font-semibold border-b-2 transition ${
-              activeTab === 'history'
-                ? 'border-[#C49A2B] text-[#C49A2B]'
-                : 'border-transparent text-[#5A5146] hover:text-[#1A1A1A]'
-            }`}
-          >
+          <button onClick={() => setActiveTab('history')} className={`rvp-tab${activeTab==='history'?' active':''}`}>
             📋 Mis Reservaciones ({reservations.length})
           </button>
         </div>
-
-        {/* Tab Content */}
-        {activeTab === 'new' && (
-          <div className="space-y-6">
+ 
+        {activeTab==='new' && (
+          <div>
             {error && (
-              <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-                <p>
-                  <strong>⚠️ Error:</strong> {error}
-                </p>
+              <div className="rvp-error-box">
+                <strong>⚠️ Error:</strong> {error}
               </div>
             )}
             <ReservationForm
@@ -224,8 +157,8 @@ export const ReservationsPage = () => {
             />
           </div>
         )}
-
-        {activeTab === 'history' && (
+ 
+        {activeTab==='history' && (
           <ReservationHistory
             reservations={reservations}
             onCancel={handleCancelReservation}
@@ -233,8 +166,7 @@ export const ReservationsPage = () => {
           />
         )}
       </main>
-
-      {/* Confirmation Modal */}
+ 
       {showConfirmation && createdReservation && (
         <ReservationConfirmation
           reservation={createdReservation}
