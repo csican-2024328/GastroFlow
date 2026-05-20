@@ -37,12 +37,12 @@ const benefits = [
 
 const Field = ({ label, type = 'text', placeholder }) => {
   return (
-    <label className="flex min-w-0 flex-1 flex-col gap-2 rounded-2xl border border-[#e9ddc8] bg-white/90 px-4 py-3 shadow-[0_10px_24px_rgba(26,26,26,0.04)]">
-      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7a715f]">{label}</span>
+    <label className="flex min-w-0 flex-1 flex-col gap-2 rounded-2xl border border-[#2f2218] bg-[#111009] px-4 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#c9a66a]">{label}</span>
       <input
         type={type}
         placeholder={placeholder}
-        className="w-full bg-transparent text-[15px] text-[var(--gf-graphite)] outline-none placeholder:text-[#a59c8d]"
+        className="w-full bg-transparent text-[15px] text-[#f5ede0] outline-none placeholder:text-[#8e7a63]"
       />
     </label>
   );
@@ -50,13 +50,13 @@ const Field = ({ label, type = 'text', placeholder }) => {
 
 const BenefitItem = ({ benefit }) => {
   return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-[#eadfcb] bg-[rgba(255,255,255,0.72)] p-4 sm:p-5">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--gf-cream)] text-[var(--gf-green)]">
+    <div className="flex h-full flex-col gap-4 rounded-2xl border border-[#2f2218] bg-[#111009] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.24)] sm:p-5">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#1a1a14] text-[#c88c28]">
         {benefit.icon}
       </div>
       <div className="min-w-0">
-        <h3 className="text-base font-semibold text-[var(--gf-graphite)]">{benefit.title}</h3>
-        <p className="mt-2 text-sm leading-6 text-[#5f5a50]">{benefit.description}</p>
+        <h3 className="text-base font-semibold text-[#f5ede0]">{benefit.title}</h3>
+        <p className="mt-2 text-sm leading-6 text-[#b8a48a]">{benefit.description}</p>
       </div>
     </div>
   );
@@ -64,17 +64,17 @@ const BenefitItem = ({ benefit }) => {
 
 export const QuickReservationSection = () => {
   return (
-    <section id="reservas" className="relative overflow-hidden bg-[linear-gradient(180deg,#f7f1e8_0%,#f4ece0_100%)] px-4 py-14 sm:px-6 lg:px-10 lg:py-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_25%,rgba(226,212,183,0.45),transparent_18%),radial-gradient(circle_at_85%_40%,rgba(44,64,53,0.08),transparent_22%)]" />
+    <section id="reservas" className="relative overflow-hidden border-t border-[#2f2218] bg-[linear-gradient(180deg,#111009_0%,#0b0a08_100%)] px-4 py-14 sm:px-6 lg:px-10 lg:py-16">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_25%,rgba(200,140,40,0.10),transparent_18%),radial-gradient(circle_at_85%_40%,rgba(44,64,53,0.16),transparent_22%)]" />
 
       <div className="relative mx-auto grid max-w-[1440px] items-start gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
         <span id="contacto" className="sr-only" />
         <div className="self-start">
-          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[var(--gf-terracotta)]">Reserva tu mesa</p>
-          <h2 className="mt-3 font-serif text-[2.4rem] leading-tight text-[var(--gf-graphite)] sm:text-[3.2rem]">
+          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[#c88c28]">Reserva tu mesa</p>
+          <h2 className="mt-3 font-serif text-[2.4rem] leading-tight text-[#f5ede0] sm:text-[3.2rem]">
             Hagamos de tu visita algo inolvidable
           </h2>
-          <p className="mt-4 max-w-xl text-base leading-8 text-[#5f5a50] sm:text-lg">
+          <p className="mt-4 max-w-xl text-base leading-8 text-[#b8a48a] sm:text-lg">
             Reserva con pocos pasos y disfruta una experiencia cuidada al detalle desde tu llegada.
           </p>
 
@@ -85,7 +85,7 @@ export const QuickReservationSection = () => {
           </div>
         </div>
 
-        <div className="self-start rounded-[2rem] border border-white/80 bg-[rgba(255,255,255,0.72)] p-5 shadow-[0_22px_60px_rgba(26,26,26,0.08)] backdrop-blur-sm sm:p-6 lg:p-8">
+        <div className="self-start rounded-[2rem] border border-[#2f2218] bg-[#111009]/90 p-5 shadow-[0_22px_60px_rgba(0,0,0,0.35)] backdrop-blur-sm sm:p-6 lg:p-8">
           <form className="space-y-5">
             <div className="grid gap-4 md:grid-cols-3">
               <Field label="Fecha" type="date" placeholder="dd/mm/aaaa" />
@@ -100,14 +100,14 @@ export const QuickReservationSection = () => {
 
             <button
               type="submit"
-              className="inline-flex w-full items-center justify-center rounded-full bg-[var(--gf-green)] px-6 py-4 text-base font-semibold text-white shadow-[0_16px_34px_rgba(44,64,53,0.24)] transition hover:-translate-y-0.5 hover:bg-[#344b3e]"
+              className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#c88c28] to-[#9a6a18] px-6 py-4 text-base font-semibold text-[#0a0a08] shadow-[0_16px_34px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:opacity-90"
             >
               Reservar Ahora
             </button>
           </form>
 
-          <div className="mt-6 border-t border-[#eadfcb] pt-5 text-sm text-[#6d685f]">
-            <p className="font-semibold text-[var(--gf-graphite)]">Contacto</p>
+          <div className="mt-6 border-t border-[#2f2218] pt-5 text-sm text-[#b8a48a]">
+            <p className="font-semibold text-[#f5ede0]">Contacto</p>
             <p className="mt-1">reservas@gastroflow.com · +34 600 000 000</p>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { QuickReservationSection } from '../../features/landing/components/Quick
 
 export const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-[var(--gf-cream)] text-[var(--gf-graphite)] overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden bg-[#0b0a08] text-[#f5ede0]">
       <LandingNavbar />
 
       <main>
