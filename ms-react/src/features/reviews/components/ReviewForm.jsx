@@ -50,12 +50,12 @@ export const ReviewForm = ({ restaurantID, platoID, onReviewCreated }) => {
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
               >
-                <svg width="30" height="30" viewBox="0 0 24 24"
+                <svg width="30" height="30" viewBox="0 0 26 26"
                   fill={star<=display ? '#c88c28' : 'rgba(200,140,40,0.08)'}
                   stroke={star<=display ? '#c88c28' : 'rgba(200,140,40,.28)'}
                   strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
                 >
-                  <polygon points={STAR_PATH} />
+                  <path d={STAR_PATH} />
                 </svg>
               </span>
             ))}
@@ -100,11 +100,11 @@ const StarsRow = ({ rating, size = 14 }) => (
   <div className="rw-stars">
     {[1,2,3,4,5].map(s => (
       <span key={s} className="rw-star">
-        <svg width={size} height={size} viewBox="0 0 24 24"
+        <svg width={size} height={size} viewBox="0 0 26 26"
           fill={s<=rating?'var(--rw-star)':'var(--rw-star-empty)'}
           stroke={s<=rating?'var(--rw-star)':'rgba(200,140,40,.3)'}
           strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-        ><polygon points={STAR_PATH_SM} /></svg>
+        ><path d={STAR_PATH_SM} /></svg>
       </span>
     ))}
     <span className="rw-star-label">{rating}/5</span>

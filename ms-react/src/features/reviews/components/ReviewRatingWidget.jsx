@@ -7,11 +7,11 @@ const STAR_PATH = "M12 2 15.09 10.26 24 10.35 17.77 16.88 20.16 25.54 12 20.01 3
 const MiniStars = ({ rating }) => (
   <div className="rw-widget-stars">
     {[1,2,3,4,5].map(s => (
-      <svg key={s} width="11" height="11" viewBox="0 0 24 24"
+      <svg key={s} width="11" height="11" viewBox="0 0 26 26"
         fill={s<=Math.round(rating)?'var(--rw-star)':'var(--rw-star-empty)'}
         stroke={s<=Math.round(rating)?'var(--rw-star)':'rgba(200,140,40,.28)'}
         strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-      ><polygon points={STAR_PATH} /></svg>
+      ><path d={STAR_PATH} /></svg>
     ))}
   </div>
 );
@@ -109,11 +109,11 @@ const StarsInline = ({ rating, size=16 }) => (
   <div className="rw-stars">
     {[1,2,3,4,5].map(s => (
       <span key={s} className="rw-star">
-        <svg width={size} height={size} viewBox="0 0 24 24"
+        <svg width={size} height={size} viewBox="0 0 26 26"
           fill={s<=rating?'var(--rw-star)':'var(--rw-star-empty)'}
           stroke={s<=rating?'var(--rw-star)':'rgba(200,140,40,.28)'}
           strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-        ><polygon points={STAR_PATH_H} /></svg>
+        ><path d={STAR_PATH_H} /></svg>
       </span>
     ))}
     <span className="rw-star-label">{rating}/5</span>

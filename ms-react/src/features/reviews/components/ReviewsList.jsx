@@ -10,14 +10,14 @@ const StarRating = ({ rating }) => {
           key={star}
           width="16"
           height="16"
-          viewBox="0 0 24 24"
+          viewBox="0 0 26 26"
           fill={star <= rating ? '#c88c28' : 'none'}
           stroke={star <= rating ? '#c88c28' : 'rgba(200,140,40,.28)'}
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <polygon points="12 2 15.09 10.26 24 10.35 17.77 16.88 20.16 25.54 12 20.01 3.84 25.54 6.23 16.88 0 10.35 8.91 10.26 12 2"></polygon>
+          <path d="M12 2 15.09 10.26 24 10.35 17.77 16.88 20.16 25.54 12 20.01 3.84 25.54 6.23 16.88 0 10.35 8.91 10.26 12 2" />
         </svg>
       ))}
     </div>

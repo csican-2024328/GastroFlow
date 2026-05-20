@@ -9,11 +9,11 @@ const StarRating = ({ rating, size=13 }) => (
   <div className="rw-stars">
     {[1,2,3,4,5].map(s => (
       <span key={s} className="rw-star">
-        <svg width={size} height={size} viewBox="0 0 24 24"
+        <svg width={size} height={size} viewBox="0 0 26 26"
           fill={s<=rating?'var(--rw-star)':'var(--rw-star-empty)'}
           stroke={s<=rating?'var(--rw-star)':'rgba(200,140,40,.3)'}
           strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-        ><polygon points={STAR_PATH} /></svg>
+        ><path d={STAR_PATH} /></svg>
       </span>
     ))}
     <span className="rw-star-label">{rating}/5</span>
