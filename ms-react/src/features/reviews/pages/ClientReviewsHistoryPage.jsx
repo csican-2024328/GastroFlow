@@ -11,8 +11,8 @@ const StarRating = ({ rating }) => (
         width="16"
         height="16"
         viewBox="0 0 24 24"
-        fill={star <= rating ? '#2D4F4F' : 'none'}
-        stroke="#2D4F4F"
+        fill={star <= rating ? 'var(--rw-star)' : 'none'}
+        stroke={star <= rating ? 'var(--rw-star)' : 'rgba(200,140,40,.28)'}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"

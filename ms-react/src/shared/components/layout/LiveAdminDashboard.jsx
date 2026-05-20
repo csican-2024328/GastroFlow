@@ -51,11 +51,11 @@ const endOfMonth = () => {
 };
  
 const BRAND_COLORS = {
-  cream: [248, 245, 240],
-  graphite: [26, 26, 26],
-  beige: [226, 212, 183],
-  green: [44, 64, 53],
-  terracotta: [200, 122, 85],
+  cream: [245, 239, 228],      // Light piel/beige background #f5efe4
+  graphite: [45, 45, 45],      // Dark text #2d2d2d
+  beige: [226, 212, 183],      // Piel/beige alternating rows #e2d4b7
+  green: [200, 140, 40],       // Gold #c88c28
+  terracotta: [154, 106, 24],  // Gold dark #9a6a18
 };
  
 const toDataUrl = (imageSrc) =>
@@ -289,7 +289,7 @@ export const LiveAdminDashboard = ({ restaurantId = '' }) => {
         ],
         styles: { fontSize: 10, cellPadding: 6, textColor: BRAND_COLORS.graphite },
         headStyles: { fillColor: BRAND_COLORS.green, textColor: [255, 255, 255] },
-        alternateRowStyles: { fillColor: [252, 249, 243] },
+        alternateRowStyles: { fillColor: BRAND_COLORS.beige },
         columnStyles: { 0: { fontStyle: 'bold' } },
       });
  
@@ -299,7 +299,7 @@ export const LiveAdminDashboard = ({ restaurantId = '' }) => {
         body: recentReservations.map((r) => [r._id?.slice(-8).toUpperCase() || '-', r.clienteNombre || '-', r.estado || '-', formatDate(r.fechaReserva)]),
         styles: { fontSize: 9, cellPadding: 5, textColor: BRAND_COLORS.graphite },
         headStyles: { fillColor: BRAND_COLORS.terracotta, textColor: [255, 255, 255] },
-        alternateRowStyles: { fillColor: [252, 249, 243] },
+        alternateRowStyles: { fillColor: BRAND_COLORS.beige },
       });
  
       autoTable(doc, {
@@ -308,7 +308,7 @@ export const LiveAdminDashboard = ({ restaurantId = '' }) => {
         body: recentOrders.map((o) => [o.numeroOrden || o._id?.slice(-6) || '-', o.restaurantID?.nombre || o.restaurantID?.name || '-', o.estado || '-', formatCurrency(o.total)]),
         styles: { fontSize: 9, cellPadding: 5, textColor: BRAND_COLORS.graphite },
         headStyles: { fillColor: BRAND_COLORS.green, textColor: [255, 255, 255] },
-        alternateRowStyles: { fillColor: [252, 249, 243] },
+        alternateRowStyles: { fillColor: BRAND_COLORS.beige },
       });
  
       for (let i = 0; i < restaurants.length; i += 1) {
@@ -339,7 +339,7 @@ export const LiveAdminDashboard = ({ restaurantId = '' }) => {
           ],
           styles: { fontSize: 10, cellPadding: 6, textColor: BRAND_COLORS.graphite },
           headStyles: { fillColor: BRAND_COLORS.terracotta, textColor: [255, 255, 255] },
-          alternateRowStyles: { fillColor: [252, 249, 243] },
+          alternateRowStyles: { fillColor: BRAND_COLORS.beige },
           columnStyles: { 0: { fontStyle: 'bold' } },
         });
       }

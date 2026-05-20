@@ -37,10 +37,27 @@ export const RestaurantsPage = () => {
   const handleCloseModal        = () => { setIsModalOpen(false); setSelectedRestaurant(null); };
  
   const handleDeleteRestaurant = async (id) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este restaurante?')) return;
-    const result = await deleteRestaurantAction(id);
+    // open confirm dialog instead of using native confirm
+    setPendingDeleteId(id);
+    setShowConfirm(true);
+  };
+
+  // Confirmation modal state and handlers
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteId) return setShowConfirm(false);
+    setShowConfirm(false);
+    const result = await deleteRestaurantAction(pendingDeleteId);
+    setPendingDeleteId(null);
     if (result.success) notyfSuccess('Restaurante eliminado correctamente');
     else notyfError(result.error || 'Error al eliminar restaurante');
+  };
+
+  const handleCancelDelete = () => {
+    setPendingDeleteId(null);
+    setShowConfirm(false);
   };
  
   /* ── Loading ── */
@@ -202,6 +219,24 @@ export const RestaurantsPage = () => {
  
       {/* MODAL */}
       <RestaurantModal isOpen={isModalOpen} onClose={handleCloseModal} restaurant={selectedRestaurant} />
+      {/* Custom confirmation modal (replaces native confirm) */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[#2f2218] bg-[#111009] p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold text-[#f5ede0]">Confirmar eliminación</h3>
+            <p className="mt-2 text-sm text-[#b8a48a]">¿Estás seguro de que deseas eliminar este restaurante? Esta acción no se puede deshacer.</p>
+
+            <div className="mt-6 flex gap-3 justify-end">
+              <button onClick={handleCancelDelete} className="rounded-xl border border-[#2f2218] px-4 py-2 text-sm font-semibold text-[#c88c28] hover:bg-[#1a1a14]">
+                Cancelar
+              </button>
+              <button onClick={handleConfirmDelete} className="rounded-xl bg-gradient-to-r from-[#c87a55] to-[#c49a2b] px-4 py-2 text-sm font-semibold text-[#0a0a08]">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

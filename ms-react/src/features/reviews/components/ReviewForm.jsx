@@ -51,8 +51,8 @@ export const ReviewForm = ({ restaurantID, platoID, onReviewCreated }) => {
                 onMouseLeave={() => setHoverRating(0)}
               >
                 <svg width="30" height="30" viewBox="0 0 24 24"
-                  fill={star<=display ? 'var(--rw-star)' : 'var(--rw-star-empty)'}
-                  stroke={star<=display ? 'var(--rw-star)' : 'rgba(200,140,40,.35)'}
+                  fill={star<=display ? '#c88c28' : 'rgba(200,140,40,0.08)'}
+                  stroke={star<=display ? '#c88c28' : 'rgba(200,140,40,.28)'}
                   strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
                 >
                   <polygon points={STAR_PATH} />

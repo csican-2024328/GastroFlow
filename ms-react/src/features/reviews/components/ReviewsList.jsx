@@ -11,8 +11,8 @@ const StarRating = ({ rating }) => {
           width="16"
           height="16"
           viewBox="0 0 24 24"
-          fill={star <= rating ? '#2D4F4F' : 'none'}
-          stroke="#2D4F4F"
+          fill={star <= rating ? '#c88c28' : 'none'}
+          stroke={star <= rating ? '#c88c28' : 'rgba(200,140,40,.28)'}
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -55,7 +55,7 @@ export const ReviewsList = ({ restaurantID = null, platoID = null, showDeleteBut
   if (loading && reviews.length === 0) {
     return (
       <div className="flex justify-center items-center py-8">
-        <p className="text-[#2D4F4F]">Cargando reseñas...</p>
+        <p className="text-[#c88c28]">Cargando reseñas...</p>
       </div>
     );
   }
@@ -68,7 +68,7 @@ export const ReviewsList = ({ restaurantID = null, platoID = null, showDeleteBut
           <div className="flex flex-col">
             <p className="text-sm text-gray-600 mb-2">Calificación Promedio</p>
             <div className="flex items-center gap-2">
-              <span className="text-3xl font-bold text-[#2D4F4F]">
+              <span className="text-3xl font-bold text-[#c88c28]">
                 {averageRating.toFixed(1)}
               </span>
               <div className="flex flex-col">
@@ -88,18 +88,18 @@ export const ReviewsList = ({ restaurantID = null, platoID = null, showDeleteBut
           {reviews.map((review) => (
             <div
               key={review._id}
-              className="bg-white border border-[#E8D4B8] rounded-lg p-4 hover:border-[#2D4F4F] transition-all duration-200"
+              className="bg-white border border-[#E8D4B8] rounded-lg p-4 hover:border-[#c88c28] transition-all duration-200"
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <StarRating rating={review.rating} />
-                    <span className="text-sm font-semibold text-[#2D4F4F]">
+                    <span className="text-sm font-semibold text-[#c88c28]">
                       {review.rating} de 5
                     </span>
                   </div>
                   {review.userID?.full_name && (
-                    <p className="text-sm font-medium text-[#2D4F4F]">
+                    <p className="text-sm font-medium text-[#f5ede0]">
                       {review.userID.full_name}
                     </p>
                   )}
@@ -139,7 +139,7 @@ export const ReviewsList = ({ restaurantID = null, platoID = null, showDeleteBut
                 )}
               </div>
 
-              <p className="text-sm text-[#2D4F4F] leading-relaxed">
+              <p className="text-sm text-[#b8a48a] leading-relaxed">
                 {review.comment}
               </p>
             </div>
