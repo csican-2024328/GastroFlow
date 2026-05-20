@@ -16,12 +16,14 @@ export const DashboardContainer = () => {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
 
-        <main className={`flex-1 overflow-y-auto ${(showWelcome || isMenusRoute || isReportsRoute) ? 'p-0 bg-[#0a0a08] text-[#f5ede0]' : 'p-6 bg-[#F8F5F0] text-[#1A1A1A]'}`}>
-          {showWelcome ? (
-            <LiveAdminDashboard />
-          ) : (
-            <Outlet />
-          )}
+        <main className={`pl-0 md:pl-64 relative z-20 flex-1 overflow-y-auto bg-[#0a0a08] text-[#f5ede0] flex justify-center`}>
+          <div className={`w-full max-w-[1200px] md:pl-6 ${(showWelcome || isMenusRoute || isReportsRoute) ? 'p-0' : 'p-6 bg-[#F8F5F0] text-[#1A1A1A]'}`}>
+            {showWelcome ? (
+              <LiveAdminDashboard />
+            ) : (
+              <Outlet />
+            )}
+          </div>
         </main>
       </div>
       <ProfileModal />

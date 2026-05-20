@@ -21,8 +21,8 @@ export const Sidebar = () => {
         {label: "Usuarios", to: "/dashboard/users", adminOnly: true},
         {label: "Asignacion", to: "/dashboard/asignacion"},
     ]
-  return (
-    <aside className='w-64 bg-[#0d0d0b] border-r border-[#c88c28]/10 min-h-[calc(100vh-4rem)] p-4 overflow-y-auto custom-scrollbar'>
+    return (
+        <aside className='fixed left-0 top-16 w-64 bg-[#0d0d0b] border-r border-[#c88c28]/10 h-[calc(100vh-4rem)] p-4 overflow-y-auto custom-scrollbar z-40'>
         <div className="mb-6 px-4 py-3 rounded-2xl bg-[#c88c28]/5 border border-[#c88c28]/10">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c88c28]/80 mb-1">Menú de Gestión</p>
             <p className="text-[11px] text-[#f5ede0]/40 leading-relaxed">Control centralizado del sistema GastroFlow</p>
