@@ -314,15 +314,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/register",
+              "raw": "http://localhost:3007/api/v1/auth/register",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "register"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -350,15 +350,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/login",
+              "raw": "http://localhost:3007/api/v1/auth/login",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "login"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -386,15 +386,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/verify-email",
+              "raw": "http://localhost:3007/api/v1/auth/verify-email",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "verify-email"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -422,15 +422,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/resend-verification",
+              "raw": "http://localhost:3007/api/v1/auth/resend-verification",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "resend-verification"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -458,15 +458,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/forgot-password",
+              "raw": "http://localhost:3007/api/v1/auth/forgot-password",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "forgot-password"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -494,15 +494,15 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/reset-password",
+              "raw": "http://localhost:3007/api/v1/auth/reset-password",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "reset-password"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -523,15 +523,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/profile",
+              "raw": "http://localhost:3007/api/v1/auth/profile",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "profile"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -566,16 +566,16 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/profile/by-id",
+              "raw": "http://localhost:3007/api/v1/auth/profile/by-id",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "profile",
                 "by-id"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -598,15 +598,15 @@
               "raw": "{\n  \"emailOrUsername\": \"bpineda-2024427@kinal.edu.gt\",\n  \"password\": \"Password123!\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/login",
+              "raw": "http://localhost:3007/api/v1/auth/login",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "auth",
                 "login"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -1081,7 +1081,7 @@
                   "type": "text"
                 },
                 {
-                  "key": "restaurantID",
+                  "key": "restaurantId",
                   "value": "{{restaurantId}}",
                   "type": "text"
                 },
@@ -1113,6 +1113,11 @@
                   "value": "69a4d40b08f0c9812574202d",
                   "type": "text",
                   "uuid": "b73dc3f6-1ce0-4565-8be4-b3966f697cfe"
+                },
+                {
+                  "key": "ingredientes",
+                  "value": "69a4d40b08f0c9812574202d",
+                  "type": "text"
                 },
                 {
                   "key": "disponible",
@@ -1215,21 +1220,20 @@
           "name": "Update Plato",
           "request": {
             "method": "PUT",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "nombre",
-                  "value": "Pizza Margarita XL",
-                  "type": "text"
-                },
-                {
-                  "key": "foto",
-                  "type": "file",
-                  "value": ""
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Pizza Margarita XL\",\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"ingredientes\": [\"69a4d40b08f0c9812574202d\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/{{apiVersion}}/platos/{{platoId}}",
@@ -1314,7 +1318,7 @@
                   "type": "text"
                 },
                 {
-                  "key": "restaurantID",
+                  "key": "restaurantId",
                   "value": "{{restaurantId}}",
                   "type": "text"
                 },
@@ -1337,7 +1341,7 @@
                   "uuid": "76459c0c-5991-4f4d-b1b8-6a8a1506a195"
                 },
                 {
-                  "key": "descripcion ",
+                  "key": "descripcion",
                   "value": "Es un menu muy bueno",
                   "type": "text",
                   "uuid": "e3aa98fd-eade-495a-b1d0-113f2c1962b6"
@@ -1389,13 +1393,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/menus/menu/{{restaurantId}}",
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/menu/{{restaurantId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "menus",
+                "menu",
                 "menu",
                 "{{restaurantId}}"
               ]
@@ -1446,13 +1450,13 @@
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/menus/{{menuId}}",
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/{{menuId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "menus",
+                "menu",
                 "{{menuId}}"
               ]
             }
@@ -1465,13 +1469,13 @@
             "method": "PUT",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/menus/{{menuId}}/activate",
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/{{menuId}}/activate",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "menus",
+                "menu",
                 "{{menuId}}",
                 "activate"
               ]
@@ -1485,13 +1489,13 @@
             "method": "PUT",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/menus/{{menuId}}/deactivate",
+              "raw": "{{baseUrl}}/{{apiVersion}}/menu/{{menuId}}/deactivate",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "menus",
+                "menu",
                 "{{menuId}}",
                 "deactivate"
               ]
@@ -1747,7 +1751,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Sañ\",\n  \"stock\": 100,\n  \"unidadMedida\": \"kg\",\n  \"restaurantID\": \"{{restaurantId}}\"\n}",
+              "raw": "{\n  \"nombre\": \"Sal\",\n  \"stock\": 100,\n  \"unidadMedida\": \"kg\",\n  \"restaurantId\": \"{{restaurantId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1818,7 +1822,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cantidad\": 90\n}",
+              "raw": "{\n  \"stock\": 90,\n  \"restaurantId\": \"{{restaurantId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1863,6 +1867,37 @@
     {
       "name": "Orders",
       "item": [
+        {
+          "name": "Check Stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoPedido\": \"EN_MESA\",\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"mesaID\": \"{{mesaId}}\",\n  \"clienteNombre\": \"Cliente Validacion Stock\",\n  \"items\": [\n    {\n      \"tipo\": \"PLATO\",\n      \"plato\": \"{{platoId}}\",\n      \"cantidad\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/orders/check-stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "orders",
+                "check-stock"
+              ]
+            }
+          }
+        },
         {
           "name": "Create Order",
           "request": {
@@ -3028,15 +3063,15 @@
               "raw": "{\n  \"name\": \"Carlos\",\n  \"surname\": \"Ramirez\",\n  \"restaurantId\": \"{{restaurantId}}\",\n  \"role\": \"Mesero\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/staff/create",
+              "raw": "http://localhost:3007/api/v1/staff/create",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "staff",
                 "create"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -3052,12 +3087,11 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/staff/get?restaurantId={{restaurantId}}",
+              "raw": "http://localhost:3007/api/v1/staff/get?restaurantId={{restaurantId}}",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "staff",
                 "get"
               ],
@@ -3066,7 +3100,8 @@
                   "key": "restaurantId",
                   "value": "{{restaurantId}}"
                 }
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -3082,15 +3117,15 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/staff/{{staffId}}",
+              "raw": "http://localhost:3007/api/v1/staff/{{staffId}}",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
               "path": [
-                "{{apiVersion}}",
                 "staff",
                 "{{staffId}}"
-              ]
+              ],
+              "port": "3007"
             }
           },
           "response": []
@@ -3129,18 +3164,83 @@
               "raw": "{\n  \"motivo\": \"Ya no deseo usar el servicio\",\n  \"confirmacion\": true\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/{{apiVersion}}/auth/profile",
+              "raw": "http://localhost:3007/api/v1/auth/profile",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "auth",
+                "profile"
+              ],
+              "port": "3007"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auditoria Inventario",
+      "item": [
+        {
+          "name": "Get Auditoria",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/inventory-auditoria/get?restaurantId={{restaurantId}}&page=1&limit=20",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "{{apiVersion}}",
-                "auth",
-                "profile"
+                "inventory-auditoria",
+                "get"
+              ],
+              "query": [
+                {
+                  "key": "restaurantId",
+                  "value": "{{restaurantId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
               ]
             }
-          },
-          "response": []
+          }
+        },
+        {
+          "name": "Get Auditoria By Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/inventory-auditoria/{{movementId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{apiVersion}}",
+                "inventory-auditoria",
+                "{{movementId}}"
+              ]
+            }
+          }
         }
       ]
     }
@@ -3227,6 +3327,10 @@
     {
       "key": "legacyAuthBasePath",
       "value": "{{baseUrl}}/{{apiVersion}}/user/auth"
+    },
+    {
+      "key": "movementId",
+      "value": ""
     }
   ]
 }
