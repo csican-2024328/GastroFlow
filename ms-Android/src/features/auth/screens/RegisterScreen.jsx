@@ -187,7 +187,7 @@ const RegisterScreen = ({ navigation }) => {
               <Input
                 label="Contraseña"
                 placeholder="••••••••"
-                secureTextEntry
+                isPassword
                 onChangeText={onChange}
                 value={value}
                 error={errors.password?.message}
@@ -206,7 +206,7 @@ const RegisterScreen = ({ navigation }) => {
               <Input
                 label="Confirmar contraseña"
                 placeholder="••••••••"
-                secureTextEntry
+                isPassword
                 onChangeText={onChange}
                 value={value}
                 error={errors.passwordConfirm?.message}

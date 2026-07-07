@@ -1,15 +1,36 @@
-import { TextInput, View, Text, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { TextInput, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZE } from '../constants/theme';
 
-const Input = ({ label, error, ...props }) => {
+const Input = ({ label, error, isPassword, secureTextEntry, ...props }) => {
+  const [visible, setVisible] = useState(false);
+  const hideText = isPassword ? !visible : secureTextEntry;
+
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <TextInput
-        style={[styles.input, error && styles.inputError]}
-        placeholderTextColor={COLORS.secondary}
-        {...props}
-      />
+      <View style={styles.inputWrap}>
+        <TextInput
+          style={[styles.input, isPassword && styles.inputWithIcon, error && styles.inputError]}
+          placeholderTextColor={COLORS.secondary}
+          secureTextEntry={hideText}
+          {...props}
+        />
+        {isPassword && (
+          <TouchableOpacity
+            style={styles.eyeButton}
+            onPress={() => setVisible((current) => !current)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <MaterialCommunityIcons
+              name={visible ? 'eye-off' : 'eye'}
+              size={20}
+              color={COLORS.secondary}
+            />
+          </TouchableOpacity>
+        )}
+      </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
@@ -26,6 +47,9 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginBottom: SPACING.xs,
   },
+  inputWrap: {
+    justifyContent: 'center',
+  },
   input: {
     backgroundColor: COLORS.surface,
     borderWidth: 1,
@@ -35,6 +59,13 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
     fontSize: FONT_SIZE.md,
     color: COLORS.text,
+  },
+  inputWithIcon: {
+    paddingRight: SPACING.xl,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: SPACING.md,
   },
   inputError: {
     borderColor: COLORS.error,
