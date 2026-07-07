@@ -12,6 +12,7 @@ import { useForm, Controller, useWatch } from 'react-hook-form';
 import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
+import { FloatingUtensilsBackground } from '../../../shared/components/FloatingUtensilsBackground';
 import { useAuth } from '../hooks/useAuth';
 
 import gastroFlowLogo from '../../../../assets/images/logo.png';
@@ -67,6 +68,7 @@ const RegisterScreen = ({ navigation }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
+      <FloatingUtensilsBackground />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Image source={gastroFlowLogo} style={styles.logo} resizeMode="contain" />
@@ -235,7 +237,7 @@ const RegisterScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#26221a',
   },
   scrollContent: {
     flexGrow: 1,
