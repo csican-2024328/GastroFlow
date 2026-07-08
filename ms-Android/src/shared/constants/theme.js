@@ -10,6 +10,7 @@ export const COLORS = {
   success: '#22c55e',
   warning: '#f59e0b',
   border: '#2a2620',
+  screenBackground: '#26221a',
 };
 
 export const SPACING = {

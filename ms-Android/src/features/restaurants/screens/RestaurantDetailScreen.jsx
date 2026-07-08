@@ -1,14 +1,13 @@
 import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
 import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
 import { Card } from '../../../shared/components/Common';
-import { FloatingUtensilsBackground } from '../../../shared/components/FloatingUtensilsBackground';
+import ScreenBackground from '../../../shared/components/ScreenBackground';
 
 const RestaurantDetailScreen = ({ route }) => {
   const { restaurant } = route.params;
 
   return (
-    <View style={styles.container}>
-      <FloatingUtensilsBackground />
+    <ScreenBackground>
       <ScrollView>
         {restaurant.image ? (
           <Image source={{ uri: restaurant.image }} style={styles.headerImage} />
@@ -36,15 +35,11 @@ const RestaurantDetailScreen = ({ route }) => {
           </Card>
         </View>
       </ScrollView>
-    </View>
+    </ScreenBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#26221a',
-  },
   headerImage: {
     width: '100%',
     height: 250,

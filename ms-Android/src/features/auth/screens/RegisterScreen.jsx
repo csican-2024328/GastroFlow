@@ -11,7 +11,7 @@ import { useForm, Controller, useWatch } from 'react-hook-form';
 import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
-import { FloatingUtensilsBackground } from '../../../shared/components/FloatingUtensilsBackground';
+import ScreenBackground from '../../../shared/components/ScreenBackground';
 import AppAlertModal from '../../../shared/components/AppAlertModal';
 import { useAppAlert } from '../../../shared/hooks/useAppAlert';
 import { getErrorMessage } from '../../../shared/utils/getErrorMessage';
@@ -66,10 +66,10 @@ const RegisterScreen = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={styles.keyboardView}
     >
-      <FloatingUtensilsBackground />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScreenBackground>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Image source={gastroFlowLogo} style={styles.logo} resizeMode="contain" />
           <Text style={styles.subtitle}>Únete a GastroFlow</Text>
@@ -229,16 +229,16 @@ const RegisterScreen = ({ navigation }) => {
             </Text>
           </View>
         </View>
-      </ScrollView>
-      <AppAlertModal {...alertProps} />
+        </ScrollView>
+        <AppAlertModal {...alertProps} />
+      </ScreenBackground>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  keyboardView: {
     flex: 1,
-    backgroundColor: '#26221a',
   },
   scrollContent: {
     flexGrow: 1,

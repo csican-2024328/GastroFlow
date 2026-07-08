@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
 import Button from '../../../shared/components/Button';
 import AppAlertModal from '../../../shared/components/AppAlertModal';
-import { FloatingUtensilsBackground } from '../../../shared/components/FloatingUtensilsBackground';
+import ScreenBackground from '../../../shared/components/ScreenBackground';
 import { useAppAlert } from '../../../shared/hooks/useAppAlert';
 import { useAuthStore } from '../../../shared/store/authStore';
 
@@ -15,8 +15,7 @@ const ProfileScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <FloatingUtensilsBackground />
+    <ScreenBackground>
       <ScrollView>
         <View style={styles.header}>
           <Text style={styles.userName}>{user?.name || 'Usuario'}</Text>
@@ -29,15 +28,11 @@ const ProfileScreen = () => {
         </View>
       </ScrollView>
       <AppAlertModal {...alertProps} confirmText="Aceptar" cancelText="Cancelar" />
-    </View>
+    </ScreenBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#26221a',
-  },
   header: {
     paddingVertical: SPACING.xxl,
     backgroundColor: COLORS.surface,

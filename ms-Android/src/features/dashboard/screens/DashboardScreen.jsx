@@ -5,7 +5,7 @@ import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
 import { Card, LoadingSpinner, EmptyState } from '../../../shared/components/Common';
 import AppAlertModal from '../../../shared/components/AppAlertModal';
 import SideDrawer from '../../../shared/components/SideDrawer';
-import { FloatingUtensilsBackground } from '../../../shared/components/FloatingUtensilsBackground';
+import ScreenBackground from '../../../shared/components/ScreenBackground';
 import { useAppAlert } from '../../../shared/hooks/useAppAlert';
 import { useAuthStore } from '../../../shared/store/authStore';
 import { useRestaurants } from '../../restaurants/hooks/useRestaurants';
@@ -79,8 +79,7 @@ const DashboardScreen = () => {
   const featuredRestaurants = restaurants.slice(0, 9);
 
   return (
-    <View style={styles.container}>
-      <FloatingUtensilsBackground />
+    <ScreenBackground>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
@@ -146,15 +145,11 @@ const DashboardScreen = () => {
         user={user}
         items={drawerItems}
       />
-    </View>
+    </ScreenBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#26221a',
-  },
   scrollContent: {
     padding: SPACING.md,
     paddingBottom: SPACING.xxl,

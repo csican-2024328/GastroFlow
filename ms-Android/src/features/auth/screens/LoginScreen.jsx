@@ -11,7 +11,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
-import { FloatingUtensilsBackground } from '../../../shared/components/FloatingUtensilsBackground';
+import ScreenBackground from '../../../shared/components/ScreenBackground';
 import AppAlertModal from '../../../shared/components/AppAlertModal';
 import { useAppAlert } from '../../../shared/hooks/useAppAlert';
 import { getErrorMessage } from '../../../shared/utils/getErrorMessage';
@@ -45,72 +45,72 @@ const LoginScreen = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={styles.keyboardView}
     >
-      <FloatingUtensilsBackground />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Image source={gastroFlowLogo} style={styles.logo} resizeMode="contain" />
-        </View>
-
-        <View style={styles.form}>
-          <Controller
-            control={control}
-            rules={{ required: 'Correo o usuario requerido' }}
-            render={({ field: { onChange, value } }) => (
-              <Input
-                label="Correo o usuario"
-                placeholder="chef@gastroflow.com"
-                onChangeText={onChange}
-                value={value}
-                autoCapitalize="none"
-                error={errors.emailOrUsername?.message}
-              />
-            )}
-            name="emailOrUsername"
-          />
-
-          <Controller
-            control={control}
-            rules={{ required: 'Contraseña requerida' }}
-            render={({ field: { onChange, value } }) => (
-              <Input
-                label="Contraseña"
-                placeholder="••••••••"
-                secureTextEntry
-                onChangeText={onChange}
-                value={value}
-                autoCapitalize="none"
-                error={errors.password?.message}
-              />
-            )}
-            name="password"
-          />
-
-          <Button
-            title="Ingresar al sistema"
-            onPress={handleSubmit(onSubmit)}
-            loading={loading}
-            style={styles.button}
-          />
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>¿Crear cuenta?</Text>
-            <Text style={styles.link} onPress={() => navigation.navigate('Register')}>
-              Solicitar acceso
-            </Text>
+      <ScreenBackground>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <Image source={gastroFlowLogo} style={styles.logo} resizeMode="contain" />
           </View>
-        </View>
-      </ScrollView>
-      <AppAlertModal {...alertProps} />
+
+          <View style={styles.form}>
+            <Controller
+              control={control}
+              rules={{ required: 'Correo o usuario requerido' }}
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  label="Correo o usuario"
+                  placeholder="chef@gastroflow.com"
+                  onChangeText={onChange}
+                  value={value}
+                  autoCapitalize="none"
+                  error={errors.emailOrUsername?.message}
+                />
+              )}
+              name="emailOrUsername"
+            />
+
+            <Controller
+              control={control}
+              rules={{ required: 'Contraseña requerida' }}
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  label="Contraseña"
+                  placeholder="••••••••"
+                  secureTextEntry
+                  onChangeText={onChange}
+                  value={value}
+                  autoCapitalize="none"
+                  error={errors.password?.message}
+                />
+              )}
+              name="password"
+            />
+
+            <Button
+              title="Ingresar al sistema"
+              onPress={handleSubmit(onSubmit)}
+              loading={loading}
+              style={styles.button}
+            />
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>¿Crear cuenta?</Text>
+              <Text style={styles.link} onPress={() => navigation.navigate('Register')}>
+                Solicitar acceso
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+        <AppAlertModal {...alertProps} />
+      </ScreenBackground>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  keyboardView: {
     flex: 1,
-    backgroundColor: '#26221a',
   },
   scrollContent: {
     flexGrow: 1,
