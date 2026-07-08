@@ -6,12 +6,20 @@ import { COLORS } from '../shared/constants/theme';
 import RestaurantsScreen from '../features/restaurants/screens/RestaurantsScreen';
 import RestaurantDetailScreen from '../features/restaurants/screens/RestaurantDetailScreen';
 import ProfileScreen from '../features/profile/screens/ProfileScreen';
+import DashboardScreen from '../features/dashboard/screens/DashboardScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 const RestaurantsStack = () => (
-  <Stack.Navigator>
+  <Stack.Navigator
+    screenOptions={{
+      headerStyle: { backgroundColor: COLORS.surface },
+      headerTintColor: COLORS.text,
+      headerTitleStyle: { color: COLORS.text },
+      headerShadowVisible: false,
+    }}
+  >
     <Stack.Screen
       name="RestaurantsList"
       component={RestaurantsScreen}
@@ -42,18 +50,27 @@ const MainTabs = () => {
         },
         tabBarIcon: ({ color, size }) => {
           let iconName;
-          if (route.name === 'Restaurants') iconName = 'restaurant';
+          if (route.name === 'Dashboard') iconName = 'home';
+          else if (route.name === 'Restaurants') iconName = 'restaurant';
           else if (route.name === 'Profile') iconName = 'person';
 
           return <MaterialIcons name={iconName} size={size} color={color} />;
         },
       })}
     >
+      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Inicio' }} />
       <Tab.Screen name="Restaurants" component={RestaurantsStack} options={{ title: 'Restaurantes' }} />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ title: 'Perfil', headerShown: true }}
+        options={{
+          title: 'Perfil',
+          headerShown: true,
+          headerStyle: { backgroundColor: COLORS.surface },
+          headerTintColor: COLORS.text,
+          headerTitleStyle: { color: COLORS.text },
+          headerShadowVisible: false,
+        }}
       />
     </Tab.Navigator>
   );

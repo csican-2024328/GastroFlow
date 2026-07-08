@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, RefreshContr
 import { useRestaurants } from '../hooks/useRestaurants';
 import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
 import { LoadingSpinner, EmptyState, Card } from '../../../shared/components/Common';
+import { FloatingUtensilsBackground } from '../../../shared/components/FloatingUtensilsBackground';
 
 const RestaurantCard = ({ item, onPress }) => (
   <TouchableOpacity style={styles.cardContainer} onPress={onPress}>
@@ -39,6 +40,7 @@ const RestaurantsScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <FloatingUtensilsBackground />
       {error && !restaurants.length ? (
         <EmptyState message={error} />
       ) : (
@@ -65,7 +67,7 @@ const RestaurantsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#26221a',
   },
   listContent: {
     padding: SPACING.md,

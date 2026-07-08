@@ -6,19 +6,22 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import { FloatingUtensilsBackground } from '../../../shared/components/FloatingUtensilsBackground';
+import AppAlertModal from '../../../shared/components/AppAlertModal';
+import { useAppAlert } from '../../../shared/hooks/useAppAlert';
+import { getErrorMessage } from '../../../shared/utils/getErrorMessage';
 import { useAuth } from '../hooks/useAuth';
 
 import gastroFlowLogo from '../../../../assets/images/logo.png';
 
 const LoginScreen = ({ navigation }) => {
   const { handleLogin, loading } = useAuth();
+  const { alertProps, showAlert } = useAppAlert();
 
   const {
     control,
@@ -35,8 +38,7 @@ const LoginScreen = ({ navigation }) => {
     try {
       await handleLogin(data);
     } catch (error) {
-      const message = error.response?.data?.message || 'Error al iniciar sesión';
-      Alert.alert('Error', message);
+      showAlert('error', 'No se pudo iniciar sesión', getErrorMessage(error, 'Error al iniciar sesión'));
     }
   };
 
@@ -100,6 +102,7 @@ const LoginScreen = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
+      <AppAlertModal {...alertProps} />
     </KeyboardAvoidingView>
   );
 };

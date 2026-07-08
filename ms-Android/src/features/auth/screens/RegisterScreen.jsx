@@ -5,7 +5,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   Image,
 } from 'react-native';
 import { useForm, Controller, useWatch } from 'react-hook-form';
@@ -13,6 +12,9 @@ import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import { FloatingUtensilsBackground } from '../../../shared/components/FloatingUtensilsBackground';
+import AppAlertModal from '../../../shared/components/AppAlertModal';
+import { useAppAlert } from '../../../shared/hooks/useAppAlert';
+import { getErrorMessage } from '../../../shared/utils/getErrorMessage';
 import { useAuth } from '../hooks/useAuth';
 
 import gastroFlowLogo from '../../../../assets/images/logo.png';
@@ -24,6 +26,7 @@ const phonePattern = /^[2-9]\d{7}$/;
 
 const RegisterScreen = ({ navigation }) => {
   const { handleRegister, loading } = useAuth();
+  const { alertProps, showAlert } = useAppAlert();
   const {
     control,
     handleSubmit,
@@ -44,22 +47,19 @@ const RegisterScreen = ({ navigation }) => {
 
   const onSubmit = async (data) => {
     if (data.password !== data.passwordConfirm) {
-      Alert.alert('Error', 'Las contraseñas no coinciden');
+      showAlert('error', 'Contraseñas distintas', 'Las contraseñas no coinciden');
       return;
     }
     try {
       await handleRegister(data);
-      Alert.alert(
+      showAlert(
+        'success',
         'Registro exitoso',
         'Se te ha enviado un correo para verificar tu cuenta',
-        [{ text: 'OK', onPress: () => navigation.navigate('Login') }],
+        () => navigation.navigate('Login'),
       );
     } catch (error) {
-      const backendErrors = error.response?.data?.errors;
-      const message = Array.isArray(backendErrors) && backendErrors.length > 0
-        ? backendErrors.map((item) => item.message).join(' · ')
-        : error.response?.data?.message || 'No fue posible crear la cuenta';
-      Alert.alert('Error', message);
+      showAlert('error', 'No se pudo crear la cuenta', getErrorMessage(error, 'No fue posible crear la cuenta'));
     }
   };
 
@@ -230,6 +230,7 @@ const RegisterScreen = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
+      <AppAlertModal {...alertProps} />
     </KeyboardAvoidingView>
   );
 };
