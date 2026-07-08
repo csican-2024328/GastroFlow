@@ -1,0 +1,89 @@
+import { Router } from 'express';
+import {
+    createReservation,
+    getAvailableTables,
+    getReservations,
+    getReservationById,
+    updateReservation,
+    deleteReservation,
+    approveOrRejectReservation,
+    debugManagedRestaurants,
+} from './reservation.controller.js';
+import { autenticar, autorizarRole } from '../../middlewares/auth.middleware.js';
+import { validarCampos } from '../../middlewares/validator.middleware.js';
+import {
+    validateCreateReservation,
+    validateUpdateReservation,
+    validateReservationId,
+    validateDeleteReservation,
+} from '../../middlewares/reservation.validator.js';
+
+const router = Router();
+
+router.post(
+    '/',
+    autenticar,
+    autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateCreateReservation,
+    validarCampos,
+    createReservation
+);
+
+router.get(
+    '/available',
+    autenticar,
+    autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    getAvailableTables
+);
+
+router.get(
+    '/',
+    autenticar,
+    autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    getReservations
+);
+
+router.get(
+    '/:id',
+    autenticar,
+    autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateReservationId,
+    validarCampos,
+    getReservationById
+);
+
+router.put(
+    '/:id',
+    autenticar,
+    autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateUpdateReservation,
+    validarCampos,
+    updateReservation
+);
+
+router.delete(
+    '/:id',
+    autenticar,
+    autorizarRole('CLIENT', 'RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateDeleteReservation,
+    validarCampos,
+    deleteReservation
+);
+
+router.post(
+    '/:id/approve-or-reject',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    validateReservationId,
+    validarCampos,
+    approveOrRejectReservation
+);
+
+router.get(
+    '/debug/managed',
+    autenticar,
+    autorizarRole('RESTAURANT_ADMIN', 'PLATFORM_ADMIN'),
+    debugManagedRestaurants
+);
+
+export default router;

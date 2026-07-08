@@ -1,0 +1,3 @@
+export const ADMIN_ROLE = 'PLATFORM_ADMIN';
+export const USER_ROLE = 'CLIENT';
+export const ALLOWED_ROLES = [ADMIN_ROLE, USER_ROLE, 'RESTAURANT_ADMIN'];
