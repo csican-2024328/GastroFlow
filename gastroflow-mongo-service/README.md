@@ -35,7 +35,7 @@ Copia este contenido en un archivo `.env` en la raíz del proyecto:
 NODE_ENV = development
 PORT = 3006
  
-# MongoDB (Restaurantes, Mesas, Platos) - Local sin autenticación
+# MongoDB (Restaurantes, Mesas, Platos) - MongoDB Local
 MONGODB_URI=mongodb://localhost:27017/GastroFlow
  
 JWT_SECRET=MyVerySecretKeyForJWTTokenAuthenticationWith256Bits!
