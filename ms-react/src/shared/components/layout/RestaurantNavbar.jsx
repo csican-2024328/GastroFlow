@@ -1,6 +1,6 @@
 import { Typography } from '@material-tailwind/react';
 import { Link } from 'react-router-dom';
-import Logo from '../../../assets/img/logo.png';
+import Logo from '../../../assets/img/Logo.png';
 import { AvatarUser } from '../ui/AvatarUser.jsx';
 
 export const RestaurantNavbar = () => {

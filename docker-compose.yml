@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  mongo-service:
+    build:
+      context: ./gastroflow-mongo-service
+      dockerfile: Dockerfile
+    container_name: gastroflow-mongo-api
+    ports:
+      - "3006:3006"
+    env_file:
+      - ./gastroflow-mongo-service/.env
+    restart: always
+
+  postgres-service:
+    build:
+      context: ./gastroflow-postgres-service
+      dockerfile: Dockerfile
+    container_name: gastroflow-postgres-api
+    ports:
+      - "3007:3007"
+    env_file:
+      - ./gastroflow-postgres-service/.env
+    restart: always
+
+  frontend:
+    build:
+      context: ./ms-react
+      dockerfile: Dockerfile
+    container_name: gastroflow-frontend
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./ms-react/.env
+    restart: always
+    depends_on:
+      - mongo-service
+      - postgres-service

@@ -1,0 +1,8 @@
+node_modules
+dist
+.git
+.gitignore
+.dockerignore
+*.log
+postgres_dump.sql
+migrate-mongo.js

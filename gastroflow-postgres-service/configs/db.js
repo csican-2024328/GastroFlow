@@ -2,28 +2,51 @@
 
 import { Sequelize } from 'sequelize';
 
-export const sequelize = new Sequelize({
-  dialect: 'postgres',
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  logging: process.env.DB_SQL_LOGGING === 'true' ? console.log : false,
-  define: {
-    freezeTableName: true,
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-    underscored: true,
-  },
-  pool: {
-    max: 10,
-    min: 0,
-    acquire: 30000,
-    idle: 10000,
-  },
-});
+export const sequelize = process.env.DATABASE_URL
+  ? new Sequelize(process.env.DATABASE_URL, {
+      dialect: 'postgres',
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      },
+      define: {
+        freezeTableName: true,
+        timestamps: true,
+        createdAt: 'created_at',
+        updatedAt: 'updated_at',
+        underscored: true,
+      },
+      pool: {
+        max: 10,
+        min: 0,
+        acquire: 30000,
+        idle: 10000,
+      },
+    })
+  : new Sequelize({
+      dialect: 'postgres',
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      database: process.env.DB_NAME,
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      logging: process.env.DB_SQL_LOGGING === 'true' ? console.log : false,
+      define: {
+        freezeTableName: true,
+        timestamps: true,
+        createdAt: 'created_at',
+        updatedAt: 'updated_at',
+        underscored: true,
+      },
+      pool: {
+        max: 10,
+        min: 0,
+        acquire: 30000,
+        idle: 10000,
+      },
+    });
 
 export const dbConnection = async () => {
   try {
