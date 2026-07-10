@@ -24,6 +24,8 @@ export const useAuthStore = create(
 
       setToken: (token, expiresAt) => set({ token, expiresAt: expiresAt ?? get().expiresAt }),
 
+      setUser: (user) => set({ user }),
+
       logout: () => {
         set({
           token: null,

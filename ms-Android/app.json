@@ -27,7 +27,14 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "GastroFlow necesita acceso a tus fotos para actualizar tu foto de perfil.",
+          "cameraPermission": "GastroFlow necesita acceso a la cámara para tomar tu foto de perfil."
+        }
+      ]
     ]
   }
 }
