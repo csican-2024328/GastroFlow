@@ -1,10 +1,44 @@
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
-import { Card } from '../../../shared/components/Common';
+import { Card, LoadingSpinner, EmptyState } from '../../../shared/components/Common';
 import ScreenBackground from '../../../shared/components/ScreenBackground';
+import { useRestaurants } from '../hooks/useRestaurants';
+
+const InfoRow = ({ icon, label, value }) => (
+  <View style={styles.infoRow}>
+    <MaterialCommunityIcons name={icon} size={18} color={COLORS.primary} style={styles.infoIcon} />
+    <View style={styles.infoTextWrap}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
+  </View>
+);
 
 const RestaurantDetailScreen = ({ route }) => {
-  const { restaurant } = route.params;
+  const { restaurantId } = route.params;
+  const { getRestaurantById, detailLoading, detailError } = useRestaurants({ autoFetch: false });
+  const [restaurant, setRestaurant] = useState(null);
+
+  useEffect(() => {
+    getRestaurantById(restaurantId)
+      .then(setRestaurant)
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurantId]);
+
+  if (detailLoading && !restaurant) return <LoadingSpinner />;
+
+  if (detailError && !restaurant) {
+    return (
+      <ScreenBackground>
+        <EmptyState message={detailError} />
+      </ScreenBackground>
+    );
+  }
+
+  if (!restaurant) return null;
 
   return (
     <ScreenBackground>
@@ -13,18 +47,34 @@ const RestaurantDetailScreen = ({ route }) => {
           <Image source={{ uri: restaurant.image }} style={styles.headerImage} />
         ) : (
           <View style={[styles.headerImage, styles.placeholder]}>
-            <Text style={styles.placeholderText}>Imagen no disponible</Text>
+            <MaterialCommunityIcons name="silverware-variant" size={48} color={COLORS.secondary} />
           </View>
         )}
 
         <View style={styles.content}>
           <View style={styles.header}>
             <Text style={styles.name}>{restaurant.name}</Text>
+            <View style={styles.badgeRow}>
+              {!!restaurant.category && (
+                <View style={styles.categoryBadge}>
+                  <Text style={styles.categoryBadgeText}>{restaurant.category}</Text>
+                </View>
+              )}
+              <View style={[styles.statusBadge, restaurant.isAvailable ? styles.available : styles.unavailable]}>
+                <Text style={styles.statusText}>{restaurant.isAvailable ? 'Abierto' : 'Cerrado'}</Text>
+              </View>
+            </View>
           </View>
 
-          <Card style={styles.descriptionCard}>
-            <Text style={styles.sectionTitle}>Dirección</Text>
-            <Text style={styles.description}>{restaurant.address || 'No disponible'}</Text>
+          <Card style={styles.infoCard}>
+            <InfoRow icon="map-marker-outline" label="Dirección" value={`${restaurant.address || 'No disponible'}${restaurant.city ? `, ${restaurant.city}` : ''}`} />
+            {!!restaurant.openingHours && (
+              <InfoRow icon="clock-outline" label="Horario" value={restaurant.openingHours} />
+            )}
+            {!!restaurant.phone && <InfoRow icon="phone-outline" label="Teléfono" value={restaurant.phone} />}
+            {!!restaurant.averagePrice && (
+              <InfoRow icon="cash" label="Precio promedio" value={`Q${restaurant.averagePrice}`} />
+            )}
           </Card>
 
           <Card style={styles.descriptionCard}>
@@ -49,12 +99,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  placeholderText: {
-    color: COLORS.secondary,
-    fontWeight: '700',
-  },
   content: {
     padding: SPACING.lg,
+    maxWidth: 600,
+    width: '100%',
+    alignSelf: 'center',
   },
   header: {
     marginBottom: SPACING.md,
@@ -63,6 +112,64 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.xxl,
     fontWeight: '800',
     color: COLORS.text,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+  },
+  categoryBadge: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: `${COLORS.primary}20`,
+  },
+  categoryBadgeText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  statusBadge: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  available: {
+    backgroundColor: `${COLORS.success}20`,
+  },
+  unavailable: {
+    backgroundColor: `${COLORS.error}20`,
+  },
+  statusText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
+  infoCard: {
+    marginBottom: SPACING.md,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: SPACING.xs,
+  },
+  infoIcon: {
+    marginTop: 2,
+    marginRight: SPACING.sm,
+  },
+  infoTextWrap: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.secondary,
+  },
+  infoValue: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.text,
+    fontWeight: '600',
+    marginTop: 1,
   },
   sectionTitle: {
     fontSize: FONT_SIZE.md,
