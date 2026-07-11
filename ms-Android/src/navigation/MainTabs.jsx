@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../shared/constants/theme';
 
-import RestaurantsScreen from '../features/restaurants/screens/RestaurantsScreen';
+import RestaurantsListScreen from '../features/restaurants/screens/RestaurantsListScreen';
 import RestaurantDetailScreen from '../features/restaurants/screens/RestaurantDetailScreen';
 import ProfileScreen from '../features/profile/screens/ProfileScreen';
 import DashboardScreen from '../features/dashboard/screens/DashboardScreen';
@@ -22,7 +22,7 @@ const RestaurantsStack = () => (
   >
     <Stack.Screen
       name="RestaurantsList"
-      component={RestaurantsScreen}
+      component={RestaurantsListScreen}
       options={{ title: 'Restaurantes' }}
     />
     <Stack.Screen
