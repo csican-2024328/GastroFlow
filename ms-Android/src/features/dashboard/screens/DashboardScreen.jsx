@@ -72,6 +72,8 @@ const DashboardScreen = ({ navigation }) => {
     setDrawerVisible(false);
     if (key === 'reservations') {
       navigation.navigate('Reservations');
+    } else if (key === 'myOrders') {
+      navigation.navigate('MyOrders');
     } else {
       handleComingSoon(label);
     }

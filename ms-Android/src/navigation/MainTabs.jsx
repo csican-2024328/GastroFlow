@@ -9,6 +9,8 @@ import ProfileScreen from '../features/profile/screens/ProfileScreen';
 import DashboardScreen from '../features/dashboard/screens/DashboardScreen';
 import ReservationsScreen from '../features/reservations/screens/ReservationsScreen';
 import NewReservationScreen from '../features/reservations/screens/NewReservationScreen';
+import MyOrdersScreen from '../features/orders/screens/MyOrdersScreen';
+import OrderTrackingScreen from '../features/orders/screens/OrderTrackingScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -57,7 +59,9 @@ const ReservationsStack = () => (
   </Stack.Navigator>
 );
 
-const MainTabs = () => {
+const RootStack = createNativeStackNavigator();
+
+const MainBottomTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -99,6 +103,35 @@ const MainTabs = () => {
         }}
       />
     </Tab.Navigator>
+  );
+};
+
+const MainTabs = () => {
+  return (
+    <RootStack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: COLORS.surface },
+        headerTintColor: COLORS.text,
+        headerTitleStyle: { color: COLORS.text },
+        headerShadowVisible: false,
+      }}
+    >
+      <RootStack.Screen
+        name="MainBottomTabs"
+        component={MainBottomTabs}
+        options={{ headerShown: false }}
+      />
+      <RootStack.Screen
+        name="MyOrders"
+        component={MyOrdersScreen}
+        options={{ title: 'Mis Pedidos' }}
+      />
+      <RootStack.Screen
+        name="OrderTracking"
+        component={OrderTrackingScreen}
+        options={{ title: 'Seguimiento de Pedido' }}
+      />
+    </RootStack.Navigator>
   );
 };
 
