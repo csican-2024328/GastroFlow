@@ -7,6 +7,8 @@ import RestaurantsListScreen from '../features/restaurants/screens/RestaurantsLi
 import RestaurantDetailScreen from '../features/restaurants/screens/RestaurantDetailScreen';
 import ProfileScreen from '../features/profile/screens/ProfileScreen';
 import DashboardScreen from '../features/dashboard/screens/DashboardScreen';
+import ReservationsScreen from '../features/reservations/screens/ReservationsScreen';
+import NewReservationScreen from '../features/reservations/screens/NewReservationScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -33,6 +35,28 @@ const RestaurantsStack = () => (
   </Stack.Navigator>
 );
 
+const ReservationsStack = () => (
+  <Stack.Navigator
+    screenOptions={{
+      headerStyle: { backgroundColor: COLORS.surface },
+      headerTintColor: COLORS.text,
+      headerTitleStyle: { color: COLORS.text },
+      headerShadowVisible: false,
+    }}
+  >
+    <Stack.Screen
+      name="ReservationsList"
+      component={ReservationsScreen}
+      options={{ title: 'Mis Reservaciones' }}
+    />
+    <Stack.Screen
+      name="NewReservation"
+      component={NewReservationScreen}
+      options={{ title: 'Nueva Reservación' }}
+    />
+  </Stack.Navigator>
+);
+
 const MainTabs = () => {
   return (
     <Tab.Navigator
@@ -52,6 +76,7 @@ const MainTabs = () => {
           let iconName;
           if (route.name === 'Dashboard') iconName = 'home';
           else if (route.name === 'Restaurants') iconName = 'restaurant';
+          else if (route.name === 'Reservations') iconName = 'event-available';
           else if (route.name === 'Profile') iconName = 'person';
 
           return <MaterialIcons name={iconName} size={size} color={color} />;
@@ -60,6 +85,7 @@ const MainTabs = () => {
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Inicio' }} />
       <Tab.Screen name="Restaurants" component={RestaurantsStack} options={{ title: 'Restaurantes' }} />
+      <Tab.Screen name="Reservations" component={ReservationsStack} options={{ title: 'Reservaciones' }} />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}

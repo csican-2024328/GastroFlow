@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
 import { Card, LoadingSpinner, EmptyState } from '../../../shared/components/Common';
 import ScreenBackground from '../../../shared/components/ScreenBackground';
+import Button from '../../../shared/components/Button';
 import { useRestaurants } from '../hooks/useRestaurants';
 
 const InfoRow = ({ icon, label, value }) => (
@@ -16,7 +17,7 @@ const InfoRow = ({ icon, label, value }) => (
   </View>
 );
 
-const RestaurantDetailScreen = ({ route }) => {
+const RestaurantDetailScreen = ({ route, navigation }) => {
   const { restaurantId } = route.params;
   const { getRestaurantById, detailLoading, detailError } = useRestaurants({ autoFetch: false });
   const [restaurant, setRestaurant] = useState(null);
@@ -27,6 +28,14 @@ const RestaurantDetailScreen = ({ route }) => {
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
+
+  const handleReservePress = () => {
+    if (!restaurant) return;
+    navigation.navigate('Reservations', {
+      screen: 'NewReservation',
+      params: { restaurant },
+    });
+  };
 
   if (detailLoading && !restaurant) return <LoadingSpinner />;
 
@@ -83,6 +92,12 @@ const RestaurantDetailScreen = ({ route }) => {
               {restaurant.description || 'Disfruta de la mejor experiencia gastronómica.'}
             </Text>
           </Card>
+
+          <Button
+            title="Reservar Mesa"
+            onPress={handleReservePress}
+            style={styles.reserveBtn}
+          />
         </View>
       </ScrollView>
     </ScreenBackground>
@@ -184,6 +199,10 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.md,
     color: COLORS.secondary,
     lineHeight: 22,
+  },
+  reserveBtn: {
+    marginTop: SPACING.md,
+    marginBottom: SPACING.xl,
   },
 });
 

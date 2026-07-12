@@ -17,14 +17,27 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
   const getStatusIcon  = (s) => STATUS_ICON[s?.toUpperCase()] || 'ti-clock';
  
   const getTimeStatus = (reservationDate, reservationTime) => {
+    if (!reservationDate) return 'upcoming';
     const now = new Date();
-    const dt = new Date(`${reservationDate}T${reservationTime}`);
+    const cleanDate = reservationDate.includes('T') ? reservationDate.split('T')[0] : reservationDate;
+    const dt = new Date(`${cleanDate}T${reservationTime || '00:00'}`);
+    if (isNaN(dt.getTime())) return 'upcoming';
     if (dt < now) return 'passed';
     if (dt.getTime() - now.getTime() < 60*60*1000) return 'soon';
     return 'upcoming';
   };
  
-  const formatDate = (ds) => new Date(ds).toLocaleDateString('es-ES', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+  const formatDate = (ds) => {
+    if (!ds) return 'Fecha no especificada';
+    const cleanDate = ds.includes('T') ? ds.split('T')[0] : ds;
+    const date = new Date(cleanDate + 'T00:00:00');
+    if (isNaN(date.getTime())) {
+      const fallback = new Date(ds);
+      if (isNaN(fallback.getTime())) return 'Fecha inválida';
+      return fallback.toLocaleDateString('es-ES', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+    }
+    return date.toLocaleDateString('es-ES', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+  };
   const formatTime = (ts) => { if (!ts) return 'No especificada'; return ts.slice(0,5).replace(':','h'); };
  
   const handleCancelReservation = async (id) => {
@@ -60,7 +73,7 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
       ) : (
         <div className="rvh-list">
           {filteredReservations.map(reservation => {
-            const timeStatus = getTimeStatus(reservation.fecha, reservation.horaInicio);
+            const timeStatus = getTimeStatus(reservation.fechaReserva || reservation.fecha, reservation.horaInicio);
             const isExpanded = expandedId === reservation._id;
             return (
               <div key={reservation._id} className={`rvh-card${isExpanded?' expanded':''}`}>
@@ -70,7 +83,7 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
                       <div className="rvh-card-name">{reservation.restaurante?.nombre||'Restaurante'}</div>
                       <div className="rvh-card-meta">
                         <i className="ti ti-calendar" aria-hidden="true" />
-                        {formatDate(reservation.fecha)} · {formatTime(reservation.horaInicio)} – {formatTime(reservation.horaFin)}
+                        {formatDate(reservation.fechaReserva || reservation.fecha)} · {formatTime(reservation.horaInicio)} – {formatTime(reservation.horaFin)}
                       </div>
                       <div className="rvh-card-badges">
                         <span className={`rv-status-badge ${getStatusCss(reservation.estado)}`}>
@@ -105,7 +118,7 @@ export const ReservationHistory = ({ reservations, onCancel, isLoading }) => {
                       </div>
                       <div className="rvh-detail-row">
                         <span className="rvh-detail-key"><i className="ti ti-calendar-plus" aria-hidden="true" />Creada</span>
-                        <span className="rvh-detail-val">{new Date(reservation.creadaEn).toLocaleDateString('es-ES')}</span>
+                        <span className="rvh-detail-val">{new Date(reservation.createdAt || reservation.creadaEn || new Date()).toLocaleDateString('es-ES')}</span>
                       </div>
                     </div>
  

@@ -57,7 +57,7 @@ const FeaturedRestaurantCard = ({ item }) => (
   </View>
 );
 
-const DashboardScreen = () => {
+const DashboardScreen = ({ navigation }) => {
   const user = useAuthStore((state) => state.user);
   const { restaurants, loading, error } = useRestaurants();
   const { alertProps, showAlert } = useAppAlert();
@@ -68,11 +68,20 @@ const DashboardScreen = () => {
     showAlert('info', label, 'Esta sección estará disponible próximamente.');
   };
 
+  const handleActionPress = (key, label) => {
+    setDrawerVisible(false);
+    if (key === 'reservations') {
+      navigation.navigate('Reservations');
+    } else {
+      handleComingSoon(label);
+    }
+  };
+
   const drawerItems = [
     { key: 'home', label: 'Inicio', icon: 'home', active: true, onPress: () => setDrawerVisible(false) },
     ...QUICK_ACTIONS.map((action) => ({
       ...action,
-      onPress: () => handleComingSoon(action.label),
+      onPress: () => handleActionPress(action.key, action.label),
     })),
   ];
 
@@ -116,7 +125,7 @@ const DashboardScreen = () => {
               key={action.key}
               icon={action.icon}
               label={action.label}
-              onPress={() => handleComingSoon(action.label)}
+              onPress={() => handleActionPress(action.key, action.label)}
             />
           ))}
         </View>
