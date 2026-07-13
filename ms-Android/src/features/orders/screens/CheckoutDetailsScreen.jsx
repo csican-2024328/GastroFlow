@@ -10,6 +10,8 @@ import { useAuthStore } from '../../../shared/store/authStore';
 import { validateOrderFields } from '../../../shared/store/orderCartStore';
 import { useOrderCart } from '../hooks/useOrderCart';
 import { useCoupons } from '../../coupons/hooks/useCoupons';
+import { useEvents } from '../../events/hooks/useEvents';
+import { COLORS } from '../../../shared/constants/theme';
 import styles from './CheckoutDetailsScreen.styles';
 
 const formatCurrency = (value) => `Q ${Number(value || 0).toFixed(2)}`;
@@ -44,10 +46,12 @@ const CheckoutDetailsScreen = ({ navigation }) => {
     setScheduledTime,
     setCustomerNotes,
     appliedCoupon,
+    appliedEvent,
   } = useOrderCart();
   const { alertProps, showAlert } = useAppAlert();
   const [couponInput, setCouponInput] = useState('');
   const { validateAndApplyCoupon, removeCoupon, loading: couponLoading } = useCoupons();
+  const { removeEvent } = useEvents();
 
   useEffect(() => {
     if (!customerName && user?.name) setCustomerName(user.name);
@@ -191,6 +195,27 @@ const CheckoutDetailsScreen = ({ navigation }) => {
             <Button 
               title="Ver cupones vigentes" 
               onPress={() => navigation.navigate('Coupons', { restaurantId, fromCheckout: true })} 
+              variant="outline" 
+            />
+          </View>
+        </Card>
+
+        <Card style={styles.section}>
+          <Text style={styles.sectionLabel}>Ofertas y Eventos Especiales</Text>
+          {appliedEvent ? (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 8, backgroundColor: '#E8F5E9', borderRadius: 8 }}>
+              <Text style={{ color: '#2E7D32', fontWeight: 'bold' }}>Promo aplicada: {appliedEvent.name}</Text>
+              <TouchableOpacity onPress={() => removeEvent()}>
+                <Text style={{ color: '#C62828', fontWeight: 'bold', fontSize: 12 }}>Quitar</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <Text style={{ fontSize: 13, color: COLORS.secondary, marginBottom: 8 }}>No tienes ninguna promoción aplicada.</Text>
+          )}
+          <View style={{ marginTop: 8 }}>
+            <Button 
+              title="Ver ofertas y eventos" 
+              onPress={() => navigation.navigate('Events', { restaurantId, fromCheckout: true })} 
               variant="outline" 
             />
           </View>

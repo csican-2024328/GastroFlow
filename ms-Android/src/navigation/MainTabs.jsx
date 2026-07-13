@@ -20,6 +20,11 @@ import RestaurantListScreen from '../features/orders/screens/RestaurantListScree
 import OrderSuccessScreen from '../features/orders/screens/OrderSuccessScreen';
 import GlobalMenuScreen from '../features/catalog/screens/GlobalMenuScreen';
 import CouponsScreen from '../features/coupons/screens/CouponsScreen';
+import EventsScreen from '../features/events/screens/EventsScreen';
+import RestaurantReviewsScreen from '../features/reviews/screens/RestaurantReviewsScreen';
+import MyReviewsScreen from '../features/reviews/screens/MyReviewsScreen';
+
+
 
 
 const Tab = createBottomTabNavigator();
@@ -185,6 +190,21 @@ const MainTabs = () => {
         name="Coupons"
         component={CouponsScreen}
         options={{ title: 'Cupones' }}
+      />
+      <RootStack.Screen
+        name="Events"
+        component={EventsScreen}
+        options={{ title: 'Ofertas y Eventos' }}
+      />
+      <RootStack.Screen
+        name="RestaurantReviews"
+        component={RestaurantReviewsScreen}
+        options={{ title: 'Reseñas' }}
+      />
+      <RootStack.Screen
+        name="MyReviews"
+        component={MyReviewsScreen}
+        options={{ title: 'Mis Reseñas' }}
       />
     </RootStack.Navigator>
   );
