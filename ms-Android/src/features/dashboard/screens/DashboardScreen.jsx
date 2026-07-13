@@ -74,6 +74,8 @@ const DashboardScreen = ({ navigation }) => {
       navigation.navigate('Reservations');
     } else if (key === 'myOrders') {
       navigation.navigate('MyOrders');
+    } else if (key === 'order') {
+      navigation.navigate('RestaurantList');
     } else {
       handleComingSoon(label);
     }

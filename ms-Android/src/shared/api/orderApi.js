@@ -50,3 +50,30 @@ export const cancelOrder = async (orderId, motivo = '') => {
   });
   return data;
 };
+
+/**
+ * CHECK STOCK availability for the items currently in the cart
+ * @param {Object} payload - { tipoPedido, restaurantID, mesaID, clienteNombre, items: [{ tipo, plato|menu, cantidad }] }
+ */
+export const checkOrderStock = async (payload) => {
+  const { data } = await apiClient.post('/orders/check-stock', payload);
+  return data;
+};
+
+/**
+ * CHECK EVENTS: previsualiza descuentos por eventos/promociones vigentes
+ * @param {Object} payload - mismo shape que checkOrderStock
+ */
+export const checkOrderEvents = async (payload) => {
+  const { data } = await apiClient.post('/orders/check-events', payload);
+  return data;
+};
+
+/**
+ * CREATE Order from the client's cart
+ * @param {Object} payload - { tipoPedido, restaurantID, mesaID, clienteNombre, items, couponCode, notas }
+ */
+export const createOrder = async (payload) => {
+  const { data } = await apiClient.post('/orders/create', payload);
+  return data;
+};
