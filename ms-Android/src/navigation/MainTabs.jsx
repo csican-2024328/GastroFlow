@@ -11,6 +11,14 @@ import ReservationsScreen from '../features/reservations/screens/ReservationsScr
 import NewReservationScreen from '../features/reservations/screens/NewReservationScreen';
 import MyOrdersScreen from '../features/orders/screens/MyOrdersScreen';
 import OrderTrackingScreen from '../features/orders/screens/OrderTrackingScreen';
+import MakeOrderScreen from '../features/orders/screens/MakeOrderScreen';
+import SelectTableScreen from '../features/orders/screens/SelectTableScreen';
+import PaymentScreen from '../features/orders/screens/PaymentScreen';
+import OrderTypeScreen from '../features/orders/screens/OrderTypeScreen';
+import CheckoutDetailsScreen from '../features/orders/screens/CheckoutDetailsScreen';
+import RestaurantListScreen from '../features/orders/screens/RestaurantListScreen';
+import OrderSuccessScreen from '../features/orders/screens/OrderSuccessScreen';
+import GlobalMenuScreen from '../features/catalog/screens/GlobalMenuScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -130,6 +138,46 @@ const MainTabs = () => {
         name="OrderTracking"
         component={OrderTrackingScreen}
         options={{ title: 'Seguimiento de Pedido' }}
+      />
+      <RootStack.Screen
+        name="MakeOrder"
+        component={MakeOrderScreen}
+        options={{ title: 'Hacer Pedido' }}
+      />
+      <RootStack.Screen
+        name="SelectTable"
+        component={SelectTableScreen}
+        options={{ title: 'Seleccionar Mesa' }}
+      />
+      <RootStack.Screen
+        name="Payment"
+        component={PaymentScreen}
+        options={{ title: 'Método de Pago' }}
+      />
+      <RootStack.Screen
+        name="RestaurantList"
+        component={RestaurantListScreen}
+        options={{ title: 'Restaurantes' }}
+      />
+      <RootStack.Screen
+        name="GlobalMenu"
+        component={GlobalMenuScreen}
+        options={{ title: 'Catálogo' }}
+      />
+      <RootStack.Screen
+        name="OrderType"
+        component={OrderTypeScreen}
+        options={{ title: 'Tipo de Pedido' }}
+      />
+      <RootStack.Screen
+        name="CheckoutDetails"
+        component={CheckoutDetailsScreen}
+        options={{ title: 'Detalles del Pedido' }}
+      />
+      <RootStack.Screen
+        name="OrderSuccess"
+        component={OrderSuccessScreen}
+        options={{ title: 'Pedido Exitoso' }}
       />
     </RootStack.Navigator>
   );
