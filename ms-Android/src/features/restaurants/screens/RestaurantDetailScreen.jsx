@@ -93,6 +93,21 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             </Text>
           </Card>
 
+          <Card style={styles.reviewsCard}>
+            <View style={styles.reviewsHeader}>
+              <View style={styles.reviewsHeaderLeft}>
+                <MaterialCommunityIcons name="star" size={24} color={COLORS.primary} style={{ marginRight: 8 }} />
+                <Text style={styles.reviewsTitle}>Reseñas y Opiniones</Text>
+              </View>
+              <Button
+                title="Ver"
+                onPress={() => navigation.navigate('RestaurantReviews', { restaurantId, restaurantName: restaurant.name })}
+                variant="secondary"
+                style={{ height: 36, paddingVertical: 0, width: 80 }}
+              />
+            </View>
+          </Card>
+
           <Button
             title="Reservar Mesa"
             onPress={handleReservePress}
@@ -203,6 +218,23 @@ const styles = StyleSheet.create({
   reserveBtn: {
     marginTop: SPACING.md,
     marginBottom: SPACING.xl,
+  },
+  reviewsCard: {
+    marginBottom: SPACING.md,
+  },
+  reviewsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reviewsHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reviewsTitle: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '700',
+    color: COLORS.text,
   },
 });
 
