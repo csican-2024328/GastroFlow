@@ -76,6 +76,8 @@ const DashboardScreen = ({ navigation }) => {
       navigation.navigate('MyOrders');
     } else if (key === 'order') {
       navigation.navigate('RestaurantList');
+    } else if (key === 'coupons') {
+      navigation.navigate('Coupons');
     } else {
       handleComingSoon(label);
     }

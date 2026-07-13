@@ -19,6 +19,8 @@ import CheckoutDetailsScreen from '../features/orders/screens/CheckoutDetailsScr
 import RestaurantListScreen from '../features/orders/screens/RestaurantListScreen';
 import OrderSuccessScreen from '../features/orders/screens/OrderSuccessScreen';
 import GlobalMenuScreen from '../features/catalog/screens/GlobalMenuScreen';
+import CouponsScreen from '../features/coupons/screens/CouponsScreen';
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -178,6 +180,11 @@ const MainTabs = () => {
         name="OrderSuccess"
         component={OrderSuccessScreen}
         options={{ title: 'Pedido Exitoso' }}
+      />
+      <RootStack.Screen
+        name="Coupons"
+        component={CouponsScreen}
+        options={{ title: 'Cupones' }}
       />
     </RootStack.Navigator>
   );
