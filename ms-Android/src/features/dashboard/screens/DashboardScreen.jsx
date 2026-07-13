@@ -43,8 +43,8 @@ const QuickActionButton = ({ icon, label, onPress }) => (
   </TouchableOpacity>
 );
 
-const FeaturedRestaurantCard = ({ item }) => (
-  <View style={styles.featuredCard}>
+const FeaturedRestaurantCard = ({ item, onPress }) => (
+  <TouchableOpacity style={styles.featuredCard} onPress={onPress} activeOpacity={0.7}>
     {item.image ? (
       <Image source={{ uri: item.image }} style={styles.featuredImage} resizeMode="cover" />
     ) : (
@@ -54,10 +54,10 @@ const FeaturedRestaurantCard = ({ item }) => (
     )}
     <Text style={styles.featuredName} numberOfLines={1}>{item.name}</Text>
     <Text style={styles.featuredCategory} numberOfLines={1}>{item.category || 'Restaurante'}</Text>
-  </View>
+  </TouchableOpacity>
 );
 
-const DashboardScreen = () => {
+const DashboardScreen = ({ navigation }) => {
   const user = useAuthStore((state) => state.user);
   const { restaurants, loading, error } = useRestaurants();
   const { alertProps, showAlert } = useAppAlert();
@@ -68,11 +68,30 @@ const DashboardScreen = () => {
     showAlert('info', label, 'Esta sección estará disponible próximamente.');
   };
 
+  const handleActionPress = (key, label) => {
+    setDrawerVisible(false);
+    if (key === 'reservations') {
+      navigation.navigate('Reservations');
+    } else if (key === 'myOrders') {
+      navigation.navigate('MyOrders');
+    } else if (key === 'reviews') {
+      navigation.navigate('MyReviews');
+    } else if (key === 'order') {
+      navigation.navigate('RestaurantList');
+    } else if (key === 'coupons') {
+      navigation.navigate('Coupons');
+    } else if (key === 'events') {
+      navigation.navigate('Events');
+    } else {
+      handleComingSoon(label);
+    }
+  };
+
   const drawerItems = [
     { key: 'home', label: 'Inicio', icon: 'home', active: true, onPress: () => setDrawerVisible(false) },
     ...QUICK_ACTIONS.map((action) => ({
       ...action,
-      onPress: () => handleComingSoon(action.label),
+      onPress: () => handleActionPress(action.key, action.label),
     })),
   ];
 
@@ -116,7 +135,7 @@ const DashboardScreen = () => {
               key={action.key}
               icon={action.icon}
               label={action.label}
-              onPress={() => handleComingSoon(action.label)}
+              onPress={() => handleActionPress(action.key, action.label)}
             />
           ))}
         </View>
@@ -130,7 +149,17 @@ const DashboardScreen = () => {
           <FlatList
             data={featuredRestaurants}
             keyExtractor={(item) => item._id}
-            renderItem={({ item }) => <FeaturedRestaurantCard item={item} />}
+            renderItem={({ item }) => (
+              <FeaturedRestaurantCard
+                item={item}
+                onPress={() =>
+                  navigation.navigate('Restaurants', {
+                    screen: 'RestaurantDetail',
+                    params: { restaurantId: item._id },
+                  })
+                }
+              />
+            )}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.featuredList}

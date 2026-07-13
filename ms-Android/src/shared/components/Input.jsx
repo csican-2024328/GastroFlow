@@ -3,7 +3,7 @@ import { TextInput, View, Text, StyleSheet, TouchableOpacity } from 'react-nativ
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZE } from '../constants/theme';
 
-const Input = ({ label, error, isPassword, secureTextEntry, ...props }) => {
+const Input = ({ label, error, isPassword, secureTextEntry, style, ...props }) => {
   const [visible, setVisible] = useState(false);
   const hideText = isPassword ? !visible : secureTextEntry;
 
@@ -12,7 +12,7 @@ const Input = ({ label, error, isPassword, secureTextEntry, ...props }) => {
       {label && <Text style={styles.label}>{label}</Text>}
       <View style={styles.inputWrap}>
         <TextInput
-          style={[styles.input, isPassword && styles.inputWithIcon, error && styles.inputError]}
+          style={[styles.input, isPassword && styles.inputWithIcon, error && styles.inputError, style]}
           placeholderTextColor={COLORS.secondary}
           secureTextEntry={hideText}
           {...props}

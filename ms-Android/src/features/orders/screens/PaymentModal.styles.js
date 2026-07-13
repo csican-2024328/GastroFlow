@@ -1,0 +1,148 @@
+import { StyleSheet } from 'react-native';
+import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
+
+export default StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.md,
+    zIndex: 1000,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 500,
+    maxHeight: '90%',
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: SPACING.lg,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+  },
+  title: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '800',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.secondary,
+    marginBottom: SPACING.md,
+  },
+  summaryCard: {
+    backgroundColor: `${COLORS.border}20`,
+    borderColor: COLORS.border,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    gap: SPACING.xs,
+  },
+  summaryTitle: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 2,
+  },
+  summaryLabel: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.secondary,
+  },
+  summaryValue: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  totalRow: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: SPACING.sm,
+    marginTop: SPACING.xs,
+  },
+  totalLabel: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '800',
+    color: COLORS.text,
+  },
+  totalValue: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
+  fieldLabel: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    marginTop: SPACING.xs,
+  },
+  methodRow: {
+    flexDirection: 'row',
+    gap: SPACING.xs,
+    marginBottom: SPACING.md,
+  },
+  methodTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: 'transparent',
+  },
+  methodTabActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  methodTabText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.secondary,
+  },
+  methodTabTextActive: {
+    color: COLORS.background,
+  },
+  inputsGrid: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  inputGroup: {
+    flex: 1,
+  },
+  input: {
+    backgroundColor: `${COLORS.border}20`,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 8,
+    color: COLORS.text,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+  },
+  button: {
+    flex: 1,
+  },
+});

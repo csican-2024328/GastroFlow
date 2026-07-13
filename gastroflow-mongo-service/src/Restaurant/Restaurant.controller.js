@@ -121,13 +121,25 @@ export const createRestaurant = asyncHandler(async (req, res) => {
 
 export const getRestaurants = asyncHandler(async (req, res) => {
   try {
-    const { page = 1, limit = 10, isActive = true } = req.query;
+    const { page = 1, limit = 10, isActive = true, search = '' } = req.query;
     const filter = { isActive };
+
+    // El cliente móvil (TM#6) filtraba solo lo ya paginado en memoria, lo que
+    // daba falsos negativos: un restaurante existente no aparecía si estaba
+    // en una página que el usuario no había cargado todavía. ?search= corre
+    // el filtro contra toda la colección en vez de solo la página actual.
+    const trimmedSearch = search.toString().trim();
+    if (trimmedSearch) {
+      const escapedSearch = trimmedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = { $regex: escapedSearch, $options: 'i' };
+      filter.$or = [{ name: searchRegex }, { category: searchRegex }];
+    }
 
     console.log('📋 [GET RESTAURANTS] Parámetros:', {
       page,
       limit,
       isActive,
+      search: trimmedSearch,
       filter,
     });
 
