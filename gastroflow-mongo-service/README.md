@@ -34,10 +34,10 @@ Copia este contenido en un archivo `.env` en la raíz del proyecto:
 ```env
 NODE_ENV = development
 PORT = 3006
- 
+
 # MongoDB (Restaurantes, Mesas, Platos) - MongoDB Atlas en la nube
 MONGODB_URI=mongodb+srv://csican2024328_db_user:5RMATyWH1FUB8uKi@gastroflow.kqrrig8.mongodb.net/GastroFlow?retryWrites=true&w=majority&appName=GastroFlow
- 
+
 JWT_SECRET=MyVerySecretKeyForJWTTokenAuthenticationWith256Bits!
 JWT_EXPIRES_IN=30m
 JWT_REFRESH_EXPIRES_IN=7d
