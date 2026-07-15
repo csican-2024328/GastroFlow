@@ -36,3 +36,18 @@ services:
     depends_on:
       - mongo-service
       - postgres-service
+
+  android-service:
+    build:
+      context: ./ms-Android
+      dockerfile: Dockerfile
+    container_name: gastroflow-android
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./ms-Android/.env
+    restart: always
+    depends_on:
+      - mongo-service
+      - postgres-service
+

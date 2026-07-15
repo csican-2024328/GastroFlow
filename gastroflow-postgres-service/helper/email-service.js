@@ -10,6 +10,9 @@ let smtpValidationErrors = [];
  * @throws {Error} Si hay variables de entorno faltantes
  */
 const validateSMTPEnvironment = () => {
+    if (process.env.BREVO_API_KEY && process.env.BREVO_API_KEY.trim()) {
+        return true;
+    }
     const requiredVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USERNAME', 'SMTP_PASSWORD'];
     const missingVars = requiredVars.filter(
         varName => !process.env[varName] || !process.env[varName].trim()
@@ -37,6 +40,45 @@ const createTransporter = () => {
     if (!validateSMTPEnvironment()) {
         console.warn('⚠️  Email service: Variables SMTP inválidas o incompletas');
         return null;
+    }
+
+    if (process.env.BREVO_API_KEY && process.env.BREVO_API_KEY.trim()) {
+        smtpConfigured = true;
+        return {
+            sendMail: async (mailOptions) => {
+                const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                    method: 'POST',
+                    headers: {
+                        'accept': 'application/json',
+                        'api-key': process.env.BREVO_API_KEY.trim(),
+                        'content-type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sender: {
+                            name: process.env.EMAIL_FROM_NAME || 'GastroFlow',
+                            email: process.env.EMAIL_FROM || 'narutoshippude745@gmail.com'
+                        },
+                        to: [
+                            {
+                                email: mailOptions.to,
+                                name: mailOptions.to.split('@')[0]
+                            }
+                        ],
+                        subject: mailOptions.subject,
+                        htmlContent: mailOptions.html
+                    })
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`Error en Brevo API (${response.status}): ${errText}`);
+                }
+
+                const data = await response.json();
+                return { messageId: data.messageId };
+            },
+            verify: async () => true
+        };
     }
 
     try {
